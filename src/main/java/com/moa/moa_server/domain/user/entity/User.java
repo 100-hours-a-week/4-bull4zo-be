@@ -1,0 +1,60 @@
+package com.moa.moa_server.domain.user.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@Table(name = "user") // 보통 테이블명은 복수형
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(length = 50, nullable = false, unique = true)
+    private String nickname;
+
+    @Column(length = 255, nullable = false, unique = true)
+    private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private Role role; // ex) USER, ADMIN
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private UserStatus userStatus;
+
+    @Column(name = "last_active_at", nullable = false)
+    private LocalDateTime lastActiveAt;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "withdrawn_at", nullable = false)
+    private LocalDateTime withdrawn_at;
+
+    public enum Role {
+        USER,
+        ADMIN
+    }
+
+    public enum UserStatus {
+        ACTIVE,
+        WITHDRAWN,
+        DORMANT,
+    }
+}
