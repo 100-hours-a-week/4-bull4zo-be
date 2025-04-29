@@ -1,9 +1,8 @@
 package com.moa.moa_server.domain.user.entity;
 
+import com.moa.moa_server.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Table(name = "user") // 보통 테이블명은 복수형
-public class User {
+public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,22 +26,14 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    private Role role; // ex) USER, ADMIN
+    private Role role; // USER, ADMIN
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
+    @Column(name = "user_status", length = 20, nullable = false)
     private UserStatus userStatus;
 
     @Column(name = "last_active_at", nullable = false)
     private LocalDateTime lastActiveAt;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     @Column(name = "withdrawn_at", nullable = false)
     private LocalDateTime withdrawn_at;
