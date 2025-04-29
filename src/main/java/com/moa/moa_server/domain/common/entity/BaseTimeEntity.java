@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.global;
+package com.moa.moa_server.domain.common.entity;
 
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
@@ -19,6 +19,6 @@ public abstract class BaseTimeEntity {
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 }

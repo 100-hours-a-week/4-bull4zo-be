@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.user.entity;
 
-import com.moa.moa_server.domain.common.BaseTimeEntity;
+import com.moa.moa_server.domain.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "user") // 보통 테이블명은 복수형
+@Table(name = "user")
 public class User extends BaseTimeEntity {
 
     @Id
@@ -21,7 +21,7 @@ public class User extends BaseTimeEntity {
     @Column(length = 50, nullable = false, unique = true)
     private String nickname;
 
-    @Column(length = 255, nullable = false, unique = true)
+    @Column(length = 255, unique = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
@@ -35,7 +35,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "last_active_at", nullable = false)
     private LocalDateTime lastActiveAt;
 
-    @Column(name = "withdrawn_at", nullable = false)
+    @Column(name = "withdrawn_at")
     private LocalDateTime withdrawn_at;
 
     public enum Role {

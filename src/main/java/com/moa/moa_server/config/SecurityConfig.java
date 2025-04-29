@@ -10,6 +10,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.moa.moa_server.config.SecurityConstants.ALLOWED_URLS;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -22,7 +24,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login/oauth").permitAll()
+                        .requestMatchers(ALLOWED_URLS).permitAll()
                         .anyRequest().authenticated()
                 );
 
