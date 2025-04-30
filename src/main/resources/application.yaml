@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: moa-server
+  profiles:
+    active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+
+jwt:
+  secret: ${JWT_SECRET}
+
+kakao:
+  token-uri: https://kauth.kakao.com/oauth/token
+  user-info-uri: https://kapi.kakao.com/v2/user/me
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+ai:
+  server-url: http://localhost:8080/mock-ai
+mock:
+  ai:
+    enabled: true
