@@ -3,10 +3,9 @@ package com.moa.moa_server.domain.auth.service.strategy;
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
 import com.moa.moa_server.domain.auth.entity.OAuth;
-import com.moa.moa_server.domain.auth.entity.Token;
 import com.moa.moa_server.domain.auth.repository.OAuthRepository;
-import com.moa.moa_server.domain.auth.repository.TokenRepository;
 import com.moa.moa_server.domain.auth.service.JwtTokenProvider;
+import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +33,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     private final UserRepository userRepository;
     private final OAuthRepository oAuthRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final TokenRepository tokenRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${kakao.client-id}")
     private String kakaoClientId;
@@ -48,9 +46,6 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
 
     @Value("${kakao.user-info-uri}")
     private String kakaoUserInfoUri;
-
-    @Value("${jwt.refresh-token-expiration}")
-    private long jwtRefreshTokenExpiration;
 
     @Transactional
     @Override
@@ -84,19 +79,9 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
                     return newUser;
                 });
 
-        // 4. 액세스 토큰과 리프레시 토큰 발급 후 Dto 리턴
+        // 4. 액세스 토큰과 리프레시 토큰 발급
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-        // 리프레시 토큰 저장
-        LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime expiresAt = issuedAt.plus(Duration.ofMillis(jwtRefreshTokenExpiration));
-        Token token = Token.builder()
-                .refreshToken(refreshToken)
-                .user(user)
-                .issuedAt(issuedAt)
-                .expiresAt(expiresAt)
-                .build();
-        tokenRepository.save(token);
+        String refreshToken = refreshTokenService.issueRefreshToken(user); // 발급 및 저장
 
         LoginResponseDto loginResponseDto = new LoginResponseDto(accessToken, user.getId(), user.getNickname());
         return new LoginResult(loginResponseDto, refreshToken);

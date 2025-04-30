@@ -8,7 +8,9 @@ public class UserValidator {
     }
 
     public static void validateActive(User user) {
-        if (user == null || user.getUserStatus() == User.UserStatus.WITHDRAWN) {
+        if (user == null ||
+                user.getUserStatus() == User.UserStatus.WITHDRAWN ||
+                user.getUserStatus() == User.UserStatus.DORMANT) {
             throw new IllegalStateException("USER_NOT_FOUND");
         }
     }

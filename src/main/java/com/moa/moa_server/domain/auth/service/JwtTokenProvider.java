@@ -22,30 +22,19 @@ public class JwtTokenProvider {
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpirationMillis;
 
-    @Value("${jwt.refresh-token-expiration}")
-    private long refreshTokenExpirationMillis;
-
     private SecretKey key;
 
-    @PostConstruct // 의존성 주입이 이루어진 후 초기화를 수행하는 메서드에 사용
+    @PostConstruct
     protected void init() {
         // 주입받은 secret을 Base64로 디코딩하여 SecretKey 생성
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // 액세스 토큰 생성
     public String createAccessToken(Long userId) {
-        return createToken(userId, accessTokenExpirationMillis);
-    }
-
-    public String createRefreshToken(Long userId) {
-        return createToken(userId, refreshTokenExpirationMillis);
-    }
-
-    // 토큰 생성
-    public String createToken(Long userId, long expirationMillis) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expirationMillis);
+        Date expiryDate = new Date(now.getTime() + accessTokenExpirationMillis);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId)) // 사용자 정보 저장
@@ -55,7 +44,7 @@ public class JwtTokenProvider {
                 .compact();                     // JWS(최종 서명된 JWT) 문자열 생성
     }
 
-    // 토큰 검사
+    // JWT 토큰 검사
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -67,7 +56,6 @@ public class JwtTokenProvider {
             log.warn("Invalid JWT token: {}", e.getMessage());
             return false;
         }
-
     }
 
     public int getAccessTokenExpirationSeconds() {
