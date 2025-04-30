@@ -1,7 +1,8 @@
-package com.moa.moa_server.domain.auth.service;
+package com.moa.moa_server.domain.auth.service.impl;
 
 import com.moa.moa_server.domain.auth.entity.Token;
 import com.moa.moa_server.domain.auth.repository.TokenRepository;
+import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.util.UserValidator;
 import lombok.RequiredArgsConstructor;

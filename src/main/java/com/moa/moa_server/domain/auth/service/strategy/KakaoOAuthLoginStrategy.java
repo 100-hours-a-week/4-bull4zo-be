@@ -4,7 +4,7 @@ import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
 import com.moa.moa_server.domain.auth.entity.OAuth;
 import com.moa.moa_server.domain.auth.repository.OAuthRepository;
-import com.moa.moa_server.domain.auth.service.JwtTokenProvider;
+import com.moa.moa_server.domain.auth.service.JwtTokenService;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
@@ -32,7 +32,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
 
     private final UserRepository userRepository;
     private final OAuthRepository oAuthRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
 
     @Value("${kakao.client-id}")
@@ -80,7 +80,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
                 });
 
         // 4. 액세스 토큰과 리프레시 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId());
+        String accessToken = jwtTokenService.createAccessToken(user.getId());
         String refreshToken = refreshTokenService.issueRefreshToken(user); // 발급 및 저장
 
         LoginResponseDto loginResponseDto = new LoginResponseDto(accessToken, user.getId(), user.getNickname());

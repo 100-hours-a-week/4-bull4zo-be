@@ -18,7 +18,7 @@ import java.util.Map;
 public class AuthService {
 
     private final Map<String, OAuthLoginStrategy> strategies;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
 
     public LoginResult login(String provider, String code) {
@@ -39,8 +39,8 @@ public class AuthService {
         User user = token.getUser();
 
         // 새 액세스 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-        int expiresIn = jwtTokenProvider.getAccessTokenExpirationSeconds();
+        String accessToken = jwtTokenService.createAccessToken(user.getId());
+        int expiresIn = jwtTokenService.getAccessTokenExpirationSeconds();
 
         // 응답 반환
         return new TokenRefreshResponseDto(accessToken, expiresIn);
