@@ -48,6 +48,7 @@ public class AuthService {
 
         // DB에 저장된 토큰의 만료 시간 확인
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            tokenRepository.delete(token); // 만료 시 DB에서 삭제
             throw new IllegalStateException("FORBIDDEN"); // 403
         }
 
