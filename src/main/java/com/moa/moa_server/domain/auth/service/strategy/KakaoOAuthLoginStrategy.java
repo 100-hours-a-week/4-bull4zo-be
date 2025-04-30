@@ -78,7 +78,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
                 });
 
         // 자체 액세스 토큰과 리프레시 토큰 발급
-        String accessToken = jwtTokenService.createAccessToken(user.getId());
+        String accessToken = jwtTokenService.issueAccessToken(user.getId());
         String refreshToken = refreshTokenService.issueRefreshToken(user); // 발급 및 DB 저장
 
         LoginResponseDto loginResponseDto = new LoginResponseDto(accessToken, user.getId(), user.getNickname());

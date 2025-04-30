@@ -21,9 +21,7 @@ public class JwtTokenService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.access-token-expiration}")
-    private long accessTokenExpirationMillis;
-
+    private final long accessTokenExpirationMillis = 3600000;
     private SecretKey key;
 
     @PostConstruct
@@ -34,7 +32,7 @@ public class JwtTokenService {
     }
 
     // 액세스 토큰 생성
-    public String createAccessToken(Long userId) {
+    public String issueAccessToken(Long userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpirationMillis);
 
@@ -47,7 +45,7 @@ public class JwtTokenService {
     }
 
     // JWT 토큰 검사
-    public void validateToken(String token) {
+    public void validateAccessToken(String token) {
         try {
             Jwts.parser()
                     .verifyWith(key)

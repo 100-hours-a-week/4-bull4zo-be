@@ -45,7 +45,7 @@ public class AuthService {
         User user = token.getUser();
 
         // 새 액세스 토큰 발급
-        String accessToken = jwtTokenService.createAccessToken(user.getId());
+        String accessToken = jwtTokenService.issueAccessToken(user.getId());
         int expiresIn = jwtTokenService.getAccessTokenExpirationSeconds();
 
         // 응답 반환
