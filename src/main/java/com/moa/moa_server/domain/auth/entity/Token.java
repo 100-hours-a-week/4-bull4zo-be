@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Token {
 
     @Id
-    @Column(name = "refresh_token", length = 36)
+    @Column(name = "refresh_token", length = 512)
     private String refreshToken;
 
     @OneToOne

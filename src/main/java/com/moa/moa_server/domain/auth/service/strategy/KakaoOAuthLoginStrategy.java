@@ -22,6 +22,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -88,7 +89,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         // 리프레시 토큰 저장
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime expiresAt = issuedAt.plusSeconds(jwtRefreshTokenExpiration);
+        LocalDateTime expiresAt = issuedAt.plus(Duration.ofMillis(jwtRefreshTokenExpiration));
         Token token = Token.builder()
                 .refreshToken(refreshToken)
                 .user(user)
