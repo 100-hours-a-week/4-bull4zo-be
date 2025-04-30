@@ -1,10 +1,12 @@
 package com.moa.moa_server.domain.auth.service.impl;
 
 import com.moa.moa_server.domain.auth.entity.Token;
+import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
+import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.repository.TokenRepository;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.user.entity.User;
-import com.moa.moa_server.domain.user.util.UserValidator;
+import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,15 +41,15 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public Token getValidRefreshToken(String refreshToken) {
         // 토큰 DB 존재 여부 확인
         Token token = tokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new SecurityException("FORBIDDEN"));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_TOKEN));
 
         // 토큰 만료 여부 확인
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new SecurityException("FORBIDDEN");
+            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         }
 
         // 유저 유효성 확인
-        UserValidator.validateActive(token.getUser()); // 존재하지 않는 유저, 탈퇴한 유저 처리
+        AuthUserValidator.validateActive(token.getUser()); // 존재하지 않는 유저, 탈퇴한 유저 처리
         return token;
     }
 

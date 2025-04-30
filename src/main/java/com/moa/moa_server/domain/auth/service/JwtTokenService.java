@@ -1,5 +1,7 @@
 package com.moa.moa_server.domain.auth.service;
 
+import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
+import com.moa.moa_server.domain.auth.handler.AuthException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -45,16 +47,16 @@ public class JwtTokenService {
     }
 
     // JWT 토큰 검사
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token); // 유효성 검사 실행: 서명 위조 여부, 만료 여부, 형식 오류
-            return true;
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JwtException e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
-            return false;
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN);
         }
     }
 

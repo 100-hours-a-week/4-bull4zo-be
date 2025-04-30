@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.common.entity;
+package com.moa.moa_server.domain.global.entity;
 
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;

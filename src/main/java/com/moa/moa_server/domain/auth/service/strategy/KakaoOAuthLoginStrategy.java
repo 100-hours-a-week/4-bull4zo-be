@@ -3,6 +3,8 @@ package com.moa.moa_server.domain.auth.service.strategy;
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
 import com.moa.moa_server.domain.auth.entity.OAuth;
+import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
+import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.repository.OAuthRepository;
 import com.moa.moa_server.domain.auth.service.JwtTokenService;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
@@ -50,17 +52,13 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     @Transactional
     @Override
     public LoginResult login(String code) {
-        // 1. 인가코드로 액세스 토큰 요청
+        // 인가코드로 카카오 액세스 토큰 요청
         String kakaoAccessToken = getAccessToken(code);
 
-        // 2. 액세스 토큰으로 사용자 정보 요청
+        // 카카오 액세스 토큰으로 사용자 정보 요청
         Long kakaoId = getUserInfo(kakaoAccessToken);
 
-        // 3. 사용자 정보 DB 조회 또는 저장
-        // OAuth 테이블에서 kakaoId로 OAuth 엔티티 조회
-        // a) 조회 안되면, 회원가입 (User 새로 생성해서 저장, OAuth 엔티티 새로 생성해서 저장)
-        // b) 조회 되면, OAuth.userId로 User 조회
-        // 최종적으로 User 객체 확보한 뒤, 액세스 토큰 + 리프레시 토큰 발급. 리프레시 토큰은 Token 테이블에 저장.
+        // 사용자 정보 DB 조회
         Optional<OAuth> oAuthOptional = oAuthRepository.findById(kakaoId);
         User user = oAuthOptional
                 .map(OAuth::getUser)
@@ -79,9 +77,9 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
                     return newUser;
                 });
 
-        // 4. 액세스 토큰과 리프레시 토큰 발급
+        // 자체 액세스 토큰과 리프레시 토큰 발급
         String accessToken = jwtTokenService.createAccessToken(user.getId());
-        String refreshToken = refreshTokenService.issueRefreshToken(user); // 발급 및 저장
+        String refreshToken = refreshTokenService.issueRefreshToken(user); // 발급 및 DB 저장
 
         LoginResponseDto loginResponseDto = new LoginResponseDto(accessToken, user.getId(), user.getNickname());
         return new LoginResult(loginResponseDto, refreshToken);
@@ -105,7 +103,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
             ResponseEntity<Map> response = restTemplate.postForEntity(kakaoTokenUri, request, Map.class);
             return (String) response.getBody().get("access_token");
         } catch (Exception e) {
-            throw new RuntimeException("카카오 토큰 요청 실패", e);
+            throw new AuthException(AuthErrorCode.KAKAO_TOKEN_FAILED);
         }
     }
 
@@ -122,7 +120,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
             ResponseEntity<Map> response = restTemplate.postForEntity(kakaoUserInfoUri, request, Map.class);
             return (Long) response.getBody().get("id");
         } catch (Exception e) {
-            throw new RuntimeException("카카오 사용자 정보 요청 실패", e);
+            throw new AuthException(AuthErrorCode.KAKAO_USERINFO_FAILED);
         }
     }
 }

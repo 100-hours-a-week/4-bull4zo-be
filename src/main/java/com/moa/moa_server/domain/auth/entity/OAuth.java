@@ -4,6 +4,8 @@ import com.moa.moa_server.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Arrays;
+
 @Entity
 @Table(name = "oauth", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "provider_code"})
@@ -27,6 +29,11 @@ public class OAuth {
     private ProviderCode providerCode;
 
     public enum ProviderCode {
-        KAKAO
+        KAKAO;
+
+        public static boolean isSupported(String provider) {
+            return Arrays.stream(values())
+                    .anyMatch(p -> p.name().equalsIgnoreCase(provider));
+        }
     }
 }

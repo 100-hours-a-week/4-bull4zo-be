@@ -2,7 +2,10 @@ package com.moa.moa_server.domain.auth.service;
 
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 import com.moa.moa_server.domain.auth.dto.response.TokenRefreshResponseDto;
+import com.moa.moa_server.domain.auth.entity.OAuth;
 import com.moa.moa_server.domain.auth.entity.Token;
+import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
+import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.strategy.OAuthLoginStrategy;
 import com.moa.moa_server.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +25,11 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
 
     public LoginResult login(String provider, String code) {
+        if (!OAuth.ProviderCode.isSupported(provider)) {
+            throw new AuthException(AuthErrorCode.INVALID_PROVIDER);
+        }
+
         OAuthLoginStrategy strategy = strategies.get(provider.toLowerCase());
-        if (strategy == null) throw new IllegalArgumentException("지원하지 않는 로그인 제공자입니다: " + provider);
         return strategy.login(code);
     }
 
@@ -31,7 +37,7 @@ public class AuthService {
     public TokenRefreshResponseDto refreshAccessToken(String refreshToken) {
         // 토큰이 존재하지 않는 경우
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new IllegalArgumentException("NO_TOKEN"); // 401
+            throw new AuthException(AuthErrorCode.NO_TOKEN);
         }
 
         // 토큰 검증

@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.user.entity;
 
-import com.moa.moa_server.domain.common.entity.BaseTimeEntity;
+import com.moa.moa_server.domain.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
