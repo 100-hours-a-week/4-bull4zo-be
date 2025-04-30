@@ -9,6 +9,7 @@ import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -21,7 +22,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private static final long refreshTokenExpirySeconds = 7 * 24 * 60 * 60;
 
     @Override
+    @Transactional
     public String issueRefreshToken(User user) {
+        // 기존 리프레시 토큰 삭제 (동시 로그인 방지)
+        tokenRepository.deleteByUserId(user.getId());
+
         String refreshToken = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusSeconds(refreshTokenExpirySeconds);
