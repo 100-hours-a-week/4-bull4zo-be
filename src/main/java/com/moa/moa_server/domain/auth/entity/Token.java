@@ -22,9 +22,9 @@ public class Token {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(name = "expires_at", nullable = false, updatable = false)
     private LocalDateTime expiresAt;
 
-    @Column(name = "issued_at", nullable = false)
+    @Column(name = "issued_at", nullable = false, updatable = false)
     private LocalDateTime issuedAt;
 }

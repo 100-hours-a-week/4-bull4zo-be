@@ -1,7 +1,7 @@
 package com.moa.moa_server.domain.auth.service.strategy;
 
-import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
+import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 
 public interface OAuthLoginStrategy {
-    LoginResponseDto login(String code);
+    LoginResult login(String code);
 }

@@ -1,8 +1,11 @@
 package com.moa.moa_server.domain.auth.service.strategy;
 
+import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
 import com.moa.moa_server.domain.auth.entity.OAuth;
+import com.moa.moa_server.domain.auth.entity.Token;
 import com.moa.moa_server.domain.auth.repository.OAuthRepository;
+import com.moa.moa_server.domain.auth.repository.TokenRepository;
 import com.moa.moa_server.domain.auth.service.JwtTokenProvider;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
@@ -31,6 +34,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     private final UserRepository userRepository;
     private final OAuthRepository oAuthRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenRepository tokenRepository;
 
     @Value("${kakao.client-id}")
     private String kakaoClientId;
@@ -44,9 +48,12 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     @Value("${kakao.user-info-uri}")
     private String kakaoUserInfoUri;
 
+    @Value("${jwt.refresh-token-expiration}")
+    private long jwtRefreshTokenExpiration;
+
     @Transactional
     @Override
-    public LoginResponseDto login(String code) {
+    public LoginResult login(String code) {
         // 1. 인가코드로 액세스 토큰 요청
         String kakaoAccessToken = getAccessToken(code);
 
@@ -59,29 +66,39 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         // b) 조회 되면, OAuth.userId로 User 조회
         // 최종적으로 User 객체 확보한 뒤, 액세스 토큰 + 리프레시 토큰 발급. 리프레시 토큰은 Token 테이블에 저장.
         Optional<OAuth> oAuthOptional = oAuthRepository.findById(kakaoId);
-        User user;
+        User user = oAuthOptional
+                .map(OAuth::getUser)
+                .orElseGet(() -> {
+                    // 신규 회원가입
+                    User newUser = User.builder()
+                            .nickname("kakao_" + kakaoId)
+                            .role(User.Role.USER)
+                            .userStatus(User.UserStatus.ACTIVE)
+                            .lastActiveAt(LocalDateTime.now())
+                            .email(null)
+                            .withdrawn_at(null)
+                            .build();
+                    userRepository.save(newUser);
+                    oAuthRepository.save(new OAuth(kakaoId, newUser, OAuth.ProviderCode.KAKAO));
+                    return newUser;
+                });
 
-        if (oAuthOptional.isEmpty()) {
-            // 신규 회원가입
-            User newUser = User.builder()
-                    .nickname("kakao_" + kakaoId)
-                    .role(User.Role.USER)
-                    .userStatus(User.UserStatus.ACTIVE)
-                    .lastActiveAt(LocalDateTime.now())
-                    .email(null)
-                    .withdrawn_at(null)
-                    .build();
-            user = userRepository.save(newUser);
-
-            oAuthRepository.save(new OAuth(kakaoId, user, OAuth.ProviderCode.KAKAO));
-        } else {
-            // 기존 사용자 조회
-            user = oAuthOptional.get().getUser();
-        }
-
-        // 4. 액세스 토큰 발급 후 ResponseDto 리턴
+        // 4. 액세스 토큰과 리프레시 토큰 발급 후 Dto 리턴
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-        return new LoginResponseDto(accessToken, user.getId(), user.getNickname());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+        // 리프레시 토큰 저장
+        LocalDateTime issuedAt = LocalDateTime.now();
+        LocalDateTime expiresAt = issuedAt.plusSeconds(jwtRefreshTokenExpiration);
+        Token token = Token.builder()
+                .refreshToken(refreshToken)
+                .user(user)
+                .issuedAt(issuedAt)
+                .expiresAt(expiresAt)
+                .build();
+        tokenRepository.save(token);
+
+        LoginResponseDto loginResponseDto = new LoginResponseDto(accessToken, user.getId(), user.getNickname());
+        return new LoginResult(loginResponseDto, refreshToken);
     }
 
     private String getAccessToken(String code) {
@@ -96,7 +113,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         body.add("code", code);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate(); // 나중에 WebClient로 변경
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(kakaoTokenUri, request, Map.class);
