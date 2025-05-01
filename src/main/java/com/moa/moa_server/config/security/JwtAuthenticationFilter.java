@@ -1,11 +1,13 @@
 package com.moa.moa_server.config.security;
 
+import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.JwtTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -27,25 +29,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 헤더에서 토큰 추출
-        extractAccessTokenFromHeader(request).ifPresent(token -> {
-            // 토큰 검증 및 userId 추출
-            Long userId = jwtTokenService.validateAndExtractUserId(token);
+        try {
+            // 헤더에서 토큰 추출
+            Optional<String> tokenOptional = extractToken(request);
 
-            // 인증 객체 생성
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, null);
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource().buildDetails(request)); // 추가적인 인증 요청 정보 설정
+            if (tokenOptional.isPresent()) {
+                // 토큰 검증 및 userId 추출
+                String token = tokenOptional.get();
+                Long userId = jwtTokenService.validateAndExtractUserId(token);
 
-            // SecurityContext에 저장
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        });
+                // 인증 객체 생성
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userId, null, null);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-        filterChain.doFilter(request, response);
+                // SecurityContext에 저장
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (AuthException e) {
+            // AuthException을 AuthenticationException으로 감싸서 Spring Security로 위임
+            throw new AuthenticationCredentialsNotFoundException(e.getCode(), e);
+        }
     }
 
-    private Optional<String> extractAccessTokenFromHeader(HttpServletRequest request) {
+    private Optional<String> extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return Optional.of(authHeader.substring(7));
