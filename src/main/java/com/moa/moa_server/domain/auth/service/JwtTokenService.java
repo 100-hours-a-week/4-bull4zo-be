@@ -2,8 +2,7 @@ package com.moa.moa_server.domain.auth.service;
 
 import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
 import com.moa.moa_server.domain.auth.handler.AuthException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -44,14 +43,17 @@ public class JwtTokenService {
                 .compact();                     // JWS(최종 서명된 JWT) 문자열 생성
     }
 
-    // JWT 토큰 검사
-    public void validateAccessToken(String token) {
+    // JWT 토큰 검사 및 userId 추출
+    public Long validateAndExtractUserId(String token) {
         try {
-            Jwts.parser()
+            Jws<Claims> claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
-                    .parseSignedClaims(token); // 유효성 검사 실행: 서명 위조 여부, 만료 여부, 형식 오류
-        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                    .parseSignedClaims(token); // 유효성 검사 실행
+
+            String subject = claims.getPayload().getSubject();
+            return Long.valueOf(subject);
+        } catch (ExpiredJwtException e) {
             throw new AuthException(AuthErrorCode.TOKEN_EXPIRED);
         } catch (JwtException e) {
             throw new AuthException(AuthErrorCode.INVALID_TOKEN);
@@ -61,4 +63,5 @@ public class JwtTokenService {
     public int getAccessTokenExpirationSeconds() {
         return (int) (accessTokenExpirationMillis / 1000);
     }
+
 }
