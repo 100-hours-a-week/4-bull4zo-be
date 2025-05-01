@@ -9,11 +9,15 @@ import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.AuthService;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
+import com.moa.moa_server.domain.user.entity.User;
+import com.moa.moa_server.domain.user.repository.UserRepository;
+import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +27,8 @@ public class AuthController {
 
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
+
+    private final UserRepository userRepository;
 
     @PostMapping("/login/oauth")
     public ResponseEntity<ApiResponse> oAuthLogin(@RequestBody LoginRequestDto request, HttpServletResponse response) {
@@ -53,6 +59,36 @@ public class AuthController {
         TokenRefreshResponseDto tokenRefreshResponseDto = authService.refreshAccessToken(refreshToken);
 
         return ResponseEntity.ok(new ApiResponse("SUCCESS", tokenRefreshResponseDto));
+    }
+
+    @DeleteMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(
+            @AuthenticationPrincipal Long userId,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        if (userId == null) {
+            throw new AuthException(AuthErrorCode.NO_TOKEN);
+        }
+        // 유저 조회 및 상태 검증
+        User user = userRepository.findById(userId).orElse(null);
+        AuthUserValidator.validateActive(user);
+
+        // 로그아웃 처리
+        boolean logout = authService.logout(userId);
+
+        // refreshToken 쿠키 무효화
+        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0) // 즉시 만료
+                .sameSite("None")
+                .build();
+        response.addHeader("Set-Cookie", expiredCookie.toString());
+
+        String resultMessage = logout ? "SUCCESS" : "ALREADY_LOGGED_OUT";
+        return ResponseEntity.ok(new ApiResponse(resultMessage, null));
     }
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {

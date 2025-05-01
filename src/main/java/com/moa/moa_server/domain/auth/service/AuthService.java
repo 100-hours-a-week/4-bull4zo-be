@@ -51,4 +51,8 @@ public class AuthService {
         // 응답 반환
         return new TokenRefreshResponseDto(accessToken, expiresIn);
     }
+
+    public boolean logout(Long userId) {
+        return refreshTokenService.deleteRefreshTokenByUserId(userId); // true면 SUCCESS, false면 ALREADY_LOGGED_OUT
+    }
 }

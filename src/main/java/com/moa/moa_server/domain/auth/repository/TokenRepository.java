@@ -12,10 +12,9 @@ import java.util.Optional;
 public interface TokenRepository extends JpaRepository<Token, Long> {
 
     Optional<Token> findByRefreshToken(String refreshToken);
-    void deleteByRefreshToken(String refreshToken);
 
     @Modifying
     @Transactional
     @Query("DELETE FROM Token t WHERE t.user.id = :userId")
-    void deleteByUserId(@Param("userId") Long userId);
+    int deleteByUserId(@Param("userId") Long userId);
 }
