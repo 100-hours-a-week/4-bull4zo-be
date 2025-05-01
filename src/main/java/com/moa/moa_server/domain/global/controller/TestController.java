@@ -23,9 +23,4 @@ public class TestController {
     public ResponseEntity<String> authTest(@AuthenticationPrincipal Long userId) {
         return ResponseEntity.ok("Authenticated user ID: " + userId);
     }
-
-    @PostMapping("/ai-votes")
-    public ResponseEntity<String> aiVotesTest() {
-        return ResponseEntity.ok("AI vote received (mock)");
-    }
 }
