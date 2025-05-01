@@ -13,7 +13,10 @@ spring:
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
-  redirect-uri: ${SERVICE_DOMAIN}/auth/callback
+  redirect-uri: ${FRONTEND_URL}/auth/callback
+
+frontend:
+  url: ${FRONTEND_URL}
 
 ai:
   server-url: ${AI_SERVER_URL}

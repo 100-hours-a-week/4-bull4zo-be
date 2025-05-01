@@ -1,5 +1,6 @@
 package com.moa.moa_server.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -10,18 +11,27 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 import static com.moa.moa_server.config.SecurityConstants.ALLOWED_URLS;
 
+@EnableWebSecurity
 @Configuration
 @Profile("dev")
 public class DevSecurityConfig {
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
-                .csrf(csrf -> {}) // csrf 활성화
-                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
@@ -30,6 +40,23 @@ public class DevSecurityConfig {
                 );
 
         return http.build();
+    }
+
+    /**
+     * CORS 정책을 설정하고, 이를 Spring Security에 등록하는 Bean을 반환
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOriginPatterns(List.of(frontendUrl)); // 요청을 허용할 출처(origin) 패턴을 설정
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); // 허용할 HTTP 메서드 목록 지정
+        config.setAllowedHeaders(List.of("*")); // 모든 요청 헤더 허용
+        config.setAllowCredentials(true); // 인증 정보를 포함한 요청(Cookie 등)을 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource(); // 경로 별로 다른 CORS 설정을 적용할 수 있도록 지원하는 구현체
+        source.registerCorsConfiguration("/**", config); // 모든 경로에 위에서 설정한 CORS 정책을 적용
+        return source;
     }
 
     @Bean
