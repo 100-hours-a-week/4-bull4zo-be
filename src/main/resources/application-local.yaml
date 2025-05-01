@@ -1,9 +1,30 @@
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
   datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/moa?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: http://localhost:8080/api/v1/auth/login/oauth
+
+ai:
+  server-url: http://localhost:8080/mock-ai
+mock:
+  ai:
+    enabled: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
