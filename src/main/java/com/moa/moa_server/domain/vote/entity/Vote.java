@@ -41,6 +41,10 @@ public class Vote extends BaseTimeEntity {
     @Column(name = "closed_at", nullable = false)
     private LocalDateTime closedAt;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean anonymous = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "vote_status", nullable = false, length = 20)
     @Builder.Default
