@@ -39,18 +39,17 @@ public class VoteService {
         VoteValidator.validateUrl(request.imageUrl());
         VoteValidator.validateClosedAt(request.closedAt());
 
-        // anonymous 기본값 처리
-        boolean anonymous = Boolean.TRUE.equals(request.anonymous());
+        boolean adminVote = false;
 
         // Vote 생성 및 저장
-        Vote vote = Vote.builder()
-                .user(user)
-                .group(group)
-                .content(request.content())
-                .imageUrl(request.imageUrl())
-                .closedAt(request.closedAt())
-                .anonymous(anonymous)
-                .build();
+        Vote vote = Vote.createUserVote(
+                user,
+                group,
+                request.content(),
+                request.imageUrl(),
+                request.closedAt(),
+                adminVote
+        );
 
         voteRepository.save(vote);
 
