@@ -1,6 +1,7 @@
 package com.moa.moa_server.domain.vote.entity;
 
 import com.moa.moa_server.domain.global.entity.BaseTimeEntity;
+import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,9 +28,9 @@ public class Vote extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "group_id", nullable = false)
-//    private Group group;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", nullable = false)
+    private Group group;
 
     @Column(length = 500, nullable = false)
     private String content;
