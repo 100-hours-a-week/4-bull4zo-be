@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "user")
+@Table(name = "`user`")
 public class User extends BaseTimeEntity {
 
     @Id
