@@ -1,5 +1,5 @@
 package com.moa.moa_server.domain.vote.dto.response;
 
-public record VoteCreateResponseDto(
+public record VoteCreateResponse(
     Long voteId
 ) {}

@@ -1,10 +1,8 @@
 package com.moa.moa_server.domain.vote.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
-import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequestDto;
-import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponseDto;
-import com.moa.moa_server.domain.vote.entity.Vote;
-import com.moa.moa_server.domain.vote.repository.VoteRepository;
+import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
+import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +22,13 @@ public class VoteController {
     @PostMapping
     public ResponseEntity<ApiResponse> vote(
             @AuthenticationPrincipal Long userId,
-            @RequestBody VoteCreateRequestDto request
+            @RequestBody VoteCreateRequest request
     ) {
         // 투표 등록 로직 수행
         Long voteId = voteService.createVote(userId, request);
 
         return ResponseEntity
                 .status(201)
-                .body(new ApiResponse("SUCCESS", new VoteCreateResponseDto(voteId)));
+                .body(new ApiResponse("SUCCESS", new VoteCreateResponse(voteId)));
     }
 }

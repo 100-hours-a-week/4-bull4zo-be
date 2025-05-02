@@ -1,7 +1,7 @@
 package com.moa.moa_server.domain.auth.service.strategy;
 
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
-import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
+import com.moa.moa_server.domain.auth.dto.response.LoginResponse;
 import com.moa.moa_server.domain.auth.entity.OAuth;
 import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
 import com.moa.moa_server.domain.auth.handler.AuthException;
@@ -81,7 +81,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         String accessToken = jwtTokenService.issueAccessToken(user.getId());
         String refreshToken = refreshTokenService.issueRefreshToken(user); // 발급 및 DB 저장
 
-        LoginResponseDto loginResponseDto = new LoginResponseDto(accessToken, user.getId(), user.getNickname());
+        LoginResponse loginResponseDto = new LoginResponse(accessToken, user.getId(), user.getNickname());
         return new LoginResult(loginResponseDto, refreshToken);
     }
 

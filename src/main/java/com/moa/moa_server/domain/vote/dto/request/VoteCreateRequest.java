@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.dto.request;
 
-public record VoteCreateRequestDto (
+public record VoteCreateRequest(
         Long groupId,
         String content,
         String imageUrl,

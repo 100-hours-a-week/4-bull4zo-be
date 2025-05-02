@@ -1,7 +1,7 @@
 package com.moa.moa_server.domain.auth.service;
 
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
-import com.moa.moa_server.domain.auth.dto.response.TokenRefreshResponseDto;
+import com.moa.moa_server.domain.auth.dto.response.TokenRefreshResponse;
 import com.moa.moa_server.domain.auth.entity.OAuth;
 import com.moa.moa_server.domain.auth.entity.Token;
 import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
@@ -34,7 +34,7 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public TokenRefreshResponseDto refreshAccessToken(String refreshToken) {
+    public TokenRefreshResponse refreshAccessToken(String refreshToken) {
         // 토큰이 존재하지 않는 경우
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new AuthException(AuthErrorCode.NO_TOKEN);
@@ -49,7 +49,7 @@ public class AuthService {
         int expiresIn = jwtTokenService.getAccessTokenExpirationSeconds();
 
         // 응답 반환
-        return new TokenRefreshResponseDto(accessToken, expiresIn);
+        return new TokenRefreshResponse(accessToken, expiresIn);
     }
 
     public boolean logout(Long userId) {

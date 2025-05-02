@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequestDto;
+import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class VoteService {
 
-    public Long createVote(Long userId, VoteCreateRequestDto request) {
+    public Long createVote(Long userId, VoteCreateRequest request) {
         return null;
     }
 }

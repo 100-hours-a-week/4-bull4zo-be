@@ -1,9 +1,9 @@
 package com.moa.moa_server.domain.auth.controller;
 
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
-import com.moa.moa_server.domain.auth.dto.request.LoginRequestDto;
-import com.moa.moa_server.domain.auth.dto.response.LoginResponseDto;
-import com.moa.moa_server.domain.auth.dto.response.TokenRefreshResponseDto;
+import com.moa.moa_server.domain.auth.dto.request.LoginRequest;
+import com.moa.moa_server.domain.auth.dto.response.LoginResponse;
+import com.moa.moa_server.domain.auth.dto.response.TokenRefreshResponse;
 import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
 import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.AuthService;
@@ -31,10 +31,13 @@ public class AuthController {
     private final UserRepository userRepository;
 
     @PostMapping("/login/oauth")
-    public ResponseEntity<ApiResponse> oAuthLogin(@RequestBody LoginRequestDto request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse> oAuthLogin(
+            @RequestBody LoginRequest request,
+            HttpServletResponse response
+    ) {
         // OAuth 로그인 서비스 로직 수행
         LoginResult dto = authService.login(request.provider(), request.code());
-        LoginResponseDto loginResponseDto = dto.loginResponseDto();
+        LoginResponse loginResponseDto = dto.loginResponseDto();
         String refreshToken = dto.refreshToken();
 
         // 리프레시 토큰 쿠키 설정
@@ -56,7 +59,7 @@ public class AuthController {
         String refreshToken = extractRefreshTokenFromCookie(request);
 
         // 액세스 토큰 재발급 서비스 로직 수행
-        TokenRefreshResponseDto tokenRefreshResponseDto = authService.refreshAccessToken(refreshToken);
+        TokenRefreshResponse tokenRefreshResponseDto = authService.refreshAccessToken(refreshToken);
 
         return ResponseEntity.ok(new ApiResponse("SUCCESS", tokenRefreshResponseDto));
     }
