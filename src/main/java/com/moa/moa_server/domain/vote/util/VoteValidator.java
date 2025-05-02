@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class VoteValidator {
 
     public static void validateContent(String content) {
-        if (content == null || content.isBlank() || content.length() > 255) {
+        if (content == null || content.isBlank() || content.length() > 255 || content.length() < 2) {
             throw new RuntimeException("INVALID_CONTENT");
         }
     }

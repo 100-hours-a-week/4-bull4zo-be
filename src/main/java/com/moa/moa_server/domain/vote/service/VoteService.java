@@ -4,6 +4,7 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
+import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
@@ -22,9 +23,10 @@ public class VoteService {
 
     @Transactional
     public Long createVote(Long userId, VoteCreateRequest request) {
-        // 유저 조회
+        // 유저 조회 및 유효성 검사
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+        AuthUserValidator.validateActive(user);
 
         // 그룹 조회 및 멤버십 확인
         Group group = groupRepository.findById(request.groupId())
