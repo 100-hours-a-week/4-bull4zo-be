@@ -46,7 +46,7 @@ public class VoteController {
             @PathVariable Long voteId,
             @RequestBody VoteSubmitRequest request
     ) {
-        // voteService.submitVote(userId, voteId, request);
+        voteService.submitVote(userId, voteId, request);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", null));
     }
 }

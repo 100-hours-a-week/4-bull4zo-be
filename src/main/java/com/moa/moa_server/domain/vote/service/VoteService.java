@@ -10,8 +10,10 @@ import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
+import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
+import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
@@ -19,6 +21,7 @@ import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -79,8 +82,7 @@ public class VoteService {
         AuthUserValidator.validateActive(user);
 
         // 투표 조회
-        Vote vote = voteRepository.findById(voteId)
-                .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+        Vote vote = findVoteOrThrow(voteId);
 
         // 접근 권한 확인
         validateGroupAccess(user, vote);
@@ -96,8 +98,64 @@ public class VoteService {
         );
     }
 
+    @Transactional
+    public void submitVote(Long userId, Long voteId, VoteSubmitRequest request) {
+        // 유저 조회 및 유효성 검사
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 응답 값 유효성 검증
+        int response = request.userResponse();
+        if (response < 0 || response > 2) {
+            throw new VoteException(VoteErrorCode.INVALID_OPTION);
+        }
+
+        // 투표 조회
+        Vote vote = findVoteOrThrow(voteId);
+
+        // 투표 상태 체크
+//        if (!vote.getVoteStatus().isOpen()) {
+//            throw new VoteException(VoteErrorCode.VOTE_NOT_OPENED);
+//        }
+
+        // 투표 권한 조회
+        Group group = vote.getGroup();
+        if (!group.isPublicGroup()) {
+            boolean isGroupMember = groupMemberRepository
+                    .findByGroupAndUserIncludingDeleted(group, user)
+                    .filter(m -> m.getDeletedAt() == null)
+                    .isPresent();
+
+            if (!isGroupMember) {
+                throw new VoteException(VoteErrorCode.NOT_GROUP_MEMBER);
+            }
+        }
+
+        // 중복 투표 확인
+        if (voteResponseRepository.existsByVoteAndUser(vote, user)) {
+            throw new VoteException(VoteErrorCode.ALREADY_VOTED);
+        }
+
+        // 투표 응답 저장
+        VoteResponse voteResponse = VoteResponse.create(vote, user, response);
+        try {
+            voteResponseRepository.save(voteResponse);
+        } catch (DataIntegrityViolationException e) {
+            throw new VoteException(VoteErrorCode.ALREADY_VOTED);
+        }
+    }
+
     /**
-     * 그룹에 소속된 유저인지 검사 (등록/수정 등에 사용)
+     * 투표 조회
+     */
+    private Vote findVoteOrThrow(Long voteId) {
+        return voteRepository.findById(voteId)
+                .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+    }
+
+    /**
+     * 그룹에 소속된 유저인지 검사 (등록/참여에 사용)
      */
     private GroupMember validateGroupMembership(User user, Group group) {
         if (group.isPublicGroup()) return null;
