@@ -15,6 +15,7 @@ import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
+import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class VoteService {
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final VoteResponseRepository voteResponseRepository;
 
     @Transactional
     public Long createVote(Long userId, VoteCreateRequest request) {
@@ -124,6 +126,6 @@ public class VoteService {
     }
 
     private boolean hasParticipated(User user, Vote vote) {
-        return true; // TODO: voteResponseRepository.existsByVoteAndUser(vote, user)
+        return voteResponseRepository.existsByVoteAndUser(vote, user);
     }
 }
