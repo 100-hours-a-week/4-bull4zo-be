@@ -89,4 +89,8 @@ public class Vote extends BaseTimeEntity {
                 .lastAnonymousNumber(0)
                 .build();
     }
+
+    public boolean isOpen() {
+        return this.voteStatus == VoteStatus.OPEN;
+    }
 }

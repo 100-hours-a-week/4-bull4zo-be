@@ -115,9 +115,9 @@ public class VoteService {
         Vote vote = findVoteOrThrow(voteId);
 
         // 투표 상태 체크
-//        if (!vote.getVoteStatus().isOpen()) {
-//            throw new VoteException(VoteErrorCode.VOTE_NOT_OPENED);
-//        }
+        if (!vote.isOpen()) {
+            throw new VoteException(VoteErrorCode.VOTE_NOT_OPENED);
+        }
 
         // 투표 권한 조회
         Group group = vote.getGroup();
