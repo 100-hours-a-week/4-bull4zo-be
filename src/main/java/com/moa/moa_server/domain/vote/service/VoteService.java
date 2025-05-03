@@ -10,6 +10,7 @@ import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
+import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
@@ -42,6 +43,7 @@ public class VoteService {
         // 멤버십 확인
         GroupMember groupMember = validateGroupMembership(user, group);
 
+        // 관리자 투표 여부 판단
         boolean adminVote = groupMember != null && switch (groupMember.getRole()) {
             case OWNER, MANAGER -> true;
             default -> false;
@@ -67,6 +69,34 @@ public class VoteService {
         return vote.getId();
     }
 
+    @Transactional
+    public VoteDetailResponse getVoteDetail(Long userId, Long voteId) {
+        // 유저 조회 및 유효성 검사
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 투표 조회
+        Vote vote = voteRepository.findById(voteId)
+                .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+
+        // 접근 권한 확인
+        validateGroupAccess(user, vote);
+
+        return new VoteDetailResponse(
+                vote.getId(),
+                vote.getGroup().getId(),
+                vote.getUser().getNickname(),
+                vote.getContent(),
+                vote.getImageUrl(),
+                vote.getCreatedAt(),
+                vote.getClosedAt()
+        );
+    }
+
+    /**
+     * 그룹에 소속된 유저인지 검사 (등록/수정 등에 사용)
+     */
     private GroupMember validateGroupMembership(User user, Group group) {
         if (group.isPublicGroup()) return null;
 
@@ -74,5 +104,26 @@ public class VoteService {
                 .findByGroupAndUserIncludingDeleted(group, user)
                 .filter(GroupMember::isActive)
                 .orElseThrow(() -> new VoteException(VoteErrorCode.NOT_GROUP_MEMBER));
+    }
+
+    /**
+     * 그룹 조회 권한 검사 (읽기 접근에 사용)
+     */
+    private void validateGroupAccess(User user, Vote vote) {
+        if (vote.getGroup().isPublicGroup()) return;
+
+        if (isVoteAuthor(user, vote)) return;
+        if (hasParticipated(user, vote)) return;
+
+        // TODO: top3 투표일 경우 isGroupMember 검사 후 허용
+        throw new VoteException(VoteErrorCode.FORBIDDEN);
+    }
+
+    private boolean isVoteAuthor(User user, Vote vote) {
+        return vote.getUser().equals(user);
+    }
+
+    private boolean hasParticipated(User user, Vote vote) {
+        return true; // TODO: voteResponseRepository.existsByVoteAndUser(vote, user)
     }
 }

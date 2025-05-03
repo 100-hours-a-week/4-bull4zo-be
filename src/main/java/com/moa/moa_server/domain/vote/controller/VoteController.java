@@ -3,14 +3,12 @@ package com.moa.moa_server.domain.vote.controller;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
+import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,7 +18,7 @@ public class VoteController {
     private final VoteService voteService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse> vote(
+    public ResponseEntity<ApiResponse> createVote(
             @AuthenticationPrincipal Long userId,
             @RequestBody VoteCreateRequest request
     ) {
@@ -30,5 +28,14 @@ public class VoteController {
         return ResponseEntity
                 .status(201)
                 .body(new ApiResponse("SUCCESS", new VoteCreateResponse(voteId)));
+    }
+
+    @GetMapping("/{voteId}")
+    public ResponseEntity<ApiResponse> getVoteDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long voteId
+    ) {
+        VoteDetailResponse response = voteService.getVoteDetail(userId, voteId);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 }
