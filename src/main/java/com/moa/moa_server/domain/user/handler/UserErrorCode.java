@@ -1,10 +1,9 @@
 package com.moa.moa_server.domain.user.handler;
 
-import lombok.Getter;
+import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
-@Getter
-public enum UserErrorCode {
+public enum UserErrorCode implements BaseErrorCode {
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND),
     USER_WITHDRAWN(HttpStatus.UNAUTHORIZED);
@@ -14,4 +13,6 @@ public enum UserErrorCode {
     UserErrorCode(HttpStatus status) {
         this.status = status;
     }
+
+    public HttpStatus getStatus() { return status; }
 }

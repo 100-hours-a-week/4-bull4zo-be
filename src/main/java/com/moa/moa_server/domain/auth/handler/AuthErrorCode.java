@@ -1,10 +1,9 @@
 package com.moa.moa_server.domain.auth.handler;
 
-import lombok.Getter;
+import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
-@Getter
-public enum AuthErrorCode {
+public enum AuthErrorCode implements BaseErrorCode {
 
     NO_TOKEN(HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED),
@@ -20,4 +19,6 @@ public enum AuthErrorCode {
     AuthErrorCode(HttpStatus status) {
         this.status = status;
     }
+
+    public HttpStatus getStatus() { return status; }
 }

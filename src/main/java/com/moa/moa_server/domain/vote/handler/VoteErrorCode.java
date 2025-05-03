@@ -1,10 +1,9 @@
 package com.moa.moa_server.domain.vote.handler;
 
-import lombok.Getter;
+import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
-@Getter
-public enum VoteErrorCode {
+public enum VoteErrorCode implements BaseErrorCode {
 
     INVALID_CONTENT(HttpStatus.BAD_REQUEST),
     INVALID_URL(HttpStatus.BAD_REQUEST),
@@ -17,4 +16,6 @@ public enum VoteErrorCode {
     VoteErrorCode(HttpStatus status) {
         this.status = status;
     }
+
+    public HttpStatus getStatus() { return status; }
 }
