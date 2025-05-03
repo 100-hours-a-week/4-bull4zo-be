@@ -5,10 +5,14 @@ import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.user.entity.User;
+import com.moa.moa_server.domain.user.handler.UserErrorCode;
+import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.entity.Vote;
+import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
+import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.transaction.Transactional;
@@ -28,12 +32,12 @@ public class VoteService {
     public Long createVote(Long userId, VoteCreateRequest request) {
         // 유저 조회 및 유효성 검사
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
         AuthUserValidator.validateActive(user);
 
         // 그룹 조회
         Group group = groupRepository.findById(request.groupId())
-                .orElseThrow(() -> new RuntimeException("GROUP_NOT_FOUND"));
+                .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
 
         // 멤버십 확인
         GroupMember groupMember = validateGroupMembership(user, group);
@@ -69,6 +73,6 @@ public class VoteService {
         return groupMemberRepository
                 .findByGroupAndUserIncludingDeleted(group, user)
                 .filter(GroupMember::isActive)
-                .orElseThrow(() -> new RuntimeException("NOT_GROUP_MEMBER"));
+                .orElseThrow(() -> new VoteException(VoteErrorCode.NOT_GROUP_MEMBER));
     }
 }
