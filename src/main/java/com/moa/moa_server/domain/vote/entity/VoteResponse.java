@@ -37,4 +37,12 @@ public class VoteResponse {
     @CreatedDate
     @Column(name = "voted_at", nullable = false)
     private LocalDateTime votedAt;
+
+    public static VoteResponse create(Vote vote, User user, int optionNumber) {
+        return VoteResponse.builder()
+                .vote(vote)
+                .user(user)
+                .optionNumber(optionNumber)
+                .build();
+    }
 }
