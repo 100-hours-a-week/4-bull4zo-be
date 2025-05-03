@@ -19,6 +19,8 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class Group extends BaseTimeEntity {
 
+    public static final Long PUBLIC_GROUP_ID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -49,5 +51,9 @@ public class Group extends BaseTimeEntity {
                 .description(description)
                 .inviteCode(inviteCode)
                 .build();
+    }
+
+    public boolean isPublicGroup() {
+        return this.id != null && this.id.equals(PUBLIC_GROUP_ID);
     }
 }

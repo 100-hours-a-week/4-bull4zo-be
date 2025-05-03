@@ -15,8 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class VoteService {
@@ -33,17 +31,14 @@ public class VoteService {
                 .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
         AuthUserValidator.validateActive(user);
 
-        // 그룹 조회 및 멤버십 확인
+        // 그룹 조회
         Group group = groupRepository.findById(request.groupId())
                 .orElseThrow(() -> new RuntimeException("GROUP_NOT_FOUND"));
 
-        GroupMember groupMember = groupMemberRepository
-                .findByGroupAndUserIncludingDeleted(group, user)
-                .filter(GroupMember::isActive)
-                .orElseThrow(() -> new RuntimeException("NOT_GROUP_MEMBER"));
+        // 멤버십 확인
+        GroupMember groupMember = validateGroupMembership(user, group);
 
-        // adminVote 여부 결정
-        boolean adminVote = switch (groupMember.getRole()) {
+        boolean adminVote = groupMember != null && switch (groupMember.getRole()) {
             case OWNER, MANAGER -> true;
             default -> false;
         };
@@ -66,5 +61,14 @@ public class VoteService {
         voteRepository.save(vote);
 
         return vote.getId();
+    }
+
+    private GroupMember validateGroupMembership(User user, Group group) {
+        if (group.isPublicGroup()) return null;
+
+        return groupMemberRepository
+                .findByGroupAndUserIncludingDeleted(group, user)
+                .filter(GroupMember::isActive)
+                .orElseThrow(() -> new RuntimeException("NOT_GROUP_MEMBER"));
     }
 }
