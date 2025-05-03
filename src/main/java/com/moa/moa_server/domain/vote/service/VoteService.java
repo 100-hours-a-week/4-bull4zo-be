@@ -1,6 +1,8 @@
 package com.moa.moa_server.domain.vote.service;
 
 import com.moa.moa_server.domain.group.entity.Group;
+import com.moa.moa_server.domain.group.entity.GroupMember;
+import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
@@ -13,6 +15,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class VoteService {
@@ -20,6 +24,7 @@ public class VoteService {
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final GroupMemberRepository groupMemberRepository;
 
     @Transactional
     public Long createVote(Long userId, VoteCreateRequest request) {
@@ -32,16 +37,21 @@ public class VoteService {
         Group group = groupRepository.findById(request.groupId())
                 .orElseThrow(() -> new RuntimeException("GROUP_NOT_FOUND"));
 
-//        if (!groupMemberRepository.existsByGroupAndUser(group, user)) {
-//            throw new RuntimeException("NOT_GROUP_MEMBER");
-//        }
+        GroupMember groupMember = groupMemberRepository
+                .findByGroupAndUserIncludingDeleted(group, user)
+                .filter(GroupMember::isActive)
+                .orElseThrow(() -> new RuntimeException("NOT_GROUP_MEMBER"));
+
+        // adminVote 여부 결정
+        boolean adminVote = switch (groupMember.getRole()) {
+            case OWNER, MANAGER -> true;
+            default -> false;
+        };
 
         // 요청 값 유효성 검사
         VoteValidator.validateContent(request.content());
         VoteValidator.validateUrl(request.imageUrl());
         VoteValidator.validateClosedAt(request.closedAt());
-
-        boolean adminVote = false;
 
         // Vote 생성 및 저장
         Vote vote = Vote.createUserVote(
