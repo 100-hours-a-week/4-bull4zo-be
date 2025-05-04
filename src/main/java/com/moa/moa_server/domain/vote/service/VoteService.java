@@ -167,37 +167,36 @@ public class VoteService {
         validateVoteAccess(user, vote);
 
         // 사용자 응답 조회 (없으면 null)
-//        Optional<VoteResponse> userVoteResponse = voteResponseRepository.findByVoteAndUser(vote, user);
-//        Integer userResponse = userVoteResponse.map(VoteResponse::getOptionNumber).orElse(null);
-//
-//        // 전체 응답 조회
-//        List<VoteResponse> responses = voteResponseRepository.findAllByVote(vote);
-//        int totalCount = responses.size();
-//
-//        // 항목별 집계 (0: 기권 제외)
-//        Map<Integer, Long> grouped = responses.stream()
-//                .filter(vr -> vr.getOptionNumber() > 0)
-//                .collect(Collectors.groupingBy(
-//                        VoteResponse::getOptionNumber,
-//                        Collectors.counting()
-//                ));
-//
-//        List<VoteOptionResult> results = grouped.entrySet().stream()
-//                .sorted(Map.Entry.comparingByKey())
-//                .map(e -> new VoteOptionResult(
-//                        e.getKey(),
-//                        e.getValue().intValue(),
-//                        totalCount == 0 ? 0 : (int) ((e.getValue() * 100.0) / totalCount)
-//                ))
-//                .collect(Collectors.toList());
-//
-//        return new VoteResultResponse(
-//                voteId,
-//                userResponse,
-//                totalCount,
-//                results
-//        );
-        return null;
+        Optional<VoteResponse> userVoteResponse = voteResponseRepository.findByVoteAndUser(vote, user);
+        Integer userResponse = userVoteResponse.map(VoteResponse::getOptionNumber).orElse(null);
+
+        // 전체 응답 조회
+        List<VoteResponse> responses = voteResponseRepository.findAllByVote(vote);
+        int totalCount = responses.size();
+
+        // 항목별 집계 (0: 기권 제외)
+        Map<Integer, Long> grouped = responses.stream()
+                .filter(vr -> vr.getOptionNumber() > 0)
+                .collect(Collectors.groupingBy(
+                        VoteResponse::getOptionNumber,
+                        Collectors.counting()
+                ));
+
+        List<VoteOptionResult> results = grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> new VoteOptionResult(
+                        e.getKey(),
+                        e.getValue().intValue(),
+                        totalCount == 0 ? 0 : (int) ((e.getValue() * 100.0) / totalCount)
+                ))
+                .collect(Collectors.toList());
+
+        return new VoteResultResponse(
+                voteId,
+                userResponse,
+                totalCount,
+                results
+        );
     }
 
     /**
