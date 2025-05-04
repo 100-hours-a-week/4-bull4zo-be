@@ -5,7 +5,7 @@ import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteResultResponse;
+import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
