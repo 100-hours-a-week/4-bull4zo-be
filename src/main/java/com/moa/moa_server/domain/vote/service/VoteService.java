@@ -139,7 +139,8 @@ public class VoteService {
         // 투표 조회
         Vote vote = findVoteOrThrow(voteId);
 
-        // 접근 권한 확인
+        // 상태/권한 검사
+        validateVoteReadable(vote);
         validateVoteAccess(user, vote);
 
         return new VoteDetailResponse(
@@ -163,7 +164,8 @@ public class VoteService {
         // 투표 조회
         Vote vote = findVoteOrThrow(voteId);
 
-        // 접근 권한 확인
+        // 상태/권한 검사
+        validateVoteReadable(vote);
         validateVoteAccess(user, vote);
 
         // 사용자 응답 조회 (없으면 null)
@@ -220,7 +222,20 @@ public class VoteService {
     }
 
     /**
-     * 투표 상세 조회 권한 검사 (투표 상세 페이지 읽기 접근에 사용)
+     * 투표 조회 가능한 상태인지 검사 (내용, 결과, 댓글 읽기)
+     * 허용 상태: OPEN, CLOSED
+     */
+    private void validateVoteReadable(Vote vote) {
+        if (vote.getVoteStatus() != Vote.VoteStatus.OPEN &&
+                vote.getVoteStatus() != Vote.VoteStatus.CLOSED) {
+            throw new VoteException(VoteErrorCode.FORBIDDEN);
+        }
+    }
+
+    /**
+     * 투표 조회 권한 검사 (내용, 결과, 댓글 읽기)
+     * 조건: 등록자이거나 참여자여야 함
+     * * top3 투표는 추후 그룹 멤버 여부로도 허용 예정
      */
     private void validateVoteAccess(User user, Vote vote) {
         if (isVoteAuthor(user, vote)) return;
