@@ -32,15 +32,6 @@ public class VoteController {
                 .body(new ApiResponse("SUCCESS", new VoteCreateResponse(voteId)));
     }
 
-    @GetMapping("/{voteId}")
-    public ResponseEntity<ApiResponse> getVoteDetail(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long voteId
-    ) {
-        VoteDetailResponse response = voteService.getVoteDetail(userId, voteId);
-        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
-    }
-
     @PostMapping("/{voteId}/submit")
     public ResponseEntity<ApiResponse> submitVote(
             @AuthenticationPrincipal Long userId,
@@ -49,6 +40,15 @@ public class VoteController {
     ) {
         voteService.submitVote(userId, voteId, request);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", null));
+    }
+
+    @GetMapping("/{voteId}")
+    public ResponseEntity<ApiResponse> getVoteDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long voteId
+    ) {
+        VoteDetailResponse response = voteService.getVoteDetail(userId, voteId);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 
     @GetMapping("/{voteId}/result")

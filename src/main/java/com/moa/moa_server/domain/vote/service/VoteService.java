@@ -12,6 +12,7 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
+import com.moa.moa_server.domain.vote.dto.response.VoteOptionResult;
 import com.moa.moa_server.domain.vote.dto.response.VoteResultResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
@@ -24,6 +25,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -76,30 +82,6 @@ public class VoteService {
     }
 
     @Transactional
-    public VoteDetailResponse getVoteDetail(Long userId, Long voteId) {
-        // 유저 조회 및 유효성 검사
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-        AuthUserValidator.validateActive(user);
-
-        // 투표 조회
-        Vote vote = findVoteOrThrow(voteId);
-
-        // 접근 권한 확인
-        validateGroupAccess(user, vote);
-
-        return new VoteDetailResponse(
-                vote.getId(),
-                vote.getGroup().getId(),
-                vote.getUser().getNickname(),
-                vote.getContent(),
-                vote.getImageUrl(),
-                vote.getCreatedAt(),
-                vote.getClosedAt()
-        );
-    }
-
-    @Transactional
     public void submitVote(Long userId, Long voteId, VoteSubmitRequest request) {
         // 유저 조회 및 유효성 검사
         User user = userRepository.findById(userId)
@@ -148,8 +130,73 @@ public class VoteService {
     }
 
     @Transactional
-    public VoteResultResponse getVoteResult(Long userId, Long voteId) {
+    public VoteDetailResponse getVoteDetail(Long userId, Long voteId) {
+        // 유저 조회 및 유효성 검사
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
 
+        // 투표 조회
+        Vote vote = findVoteOrThrow(voteId);
+
+        // 접근 권한 확인
+        validateVoteAccess(user, vote);
+
+        return new VoteDetailResponse(
+                vote.getId(),
+                vote.getGroup().getId(),
+                vote.getUser().getNickname(),
+                vote.getContent(),
+                vote.getImageUrl(),
+                vote.getCreatedAt(),
+                vote.getClosedAt()
+        );
+    }
+
+    @Transactional
+    public VoteResultResponse getVoteResult(Long userId, Long voteId) {
+        // 유저 조회 및 유효성 검사
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 투표 조회
+        Vote vote = findVoteOrThrow(voteId);
+
+        // 접근 권한 확인
+        validateVoteAccess(user, vote);
+
+        // 사용자 응답 조회 (없으면 null)
+//        Optional<VoteResponse> userVoteResponse = voteResponseRepository.findByVoteAndUser(vote, user);
+//        Integer userResponse = userVoteResponse.map(VoteResponse::getOptionNumber).orElse(null);
+//
+//        // 전체 응답 조회
+//        List<VoteResponse> responses = voteResponseRepository.findAllByVote(vote);
+//        int totalCount = responses.size();
+//
+//        // 항목별 집계 (0: 기권 제외)
+//        Map<Integer, Long> grouped = responses.stream()
+//                .filter(vr -> vr.getOptionNumber() > 0)
+//                .collect(Collectors.groupingBy(
+//                        VoteResponse::getOptionNumber,
+//                        Collectors.counting()
+//                ));
+//
+//        List<VoteOptionResult> results = grouped.entrySet().stream()
+//                .sorted(Map.Entry.comparingByKey())
+//                .map(e -> new VoteOptionResult(
+//                        e.getKey(),
+//                        e.getValue().intValue(),
+//                        totalCount == 0 ? 0 : (int) ((e.getValue() * 100.0) / totalCount)
+//                ))
+//                .collect(Collectors.toList());
+//
+//        return new VoteResultResponse(
+//                voteId,
+//                userResponse,
+//                totalCount,
+//                results
+//        );
         return null;
     }
 
@@ -174,11 +221,9 @@ public class VoteService {
     }
 
     /**
-     * 그룹 조회 권한 검사 (읽기 접근에 사용)
+     * 투표 상세 조회 권한 검사 (투표 상세 페이지 읽기 접근에 사용)
      */
-    private void validateGroupAccess(User user, Vote vote) {
-        if (vote.getGroup().isPublicGroup()) return;
-
+    private void validateVoteAccess(User user, Vote vote) {
         if (isVoteAuthor(user, vote)) return;
         if (hasParticipated(user, vote)) return;
 
