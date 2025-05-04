@@ -1,16 +1,20 @@
 package com.moa.moa_server.config;
 
+import com.moa.moa_server.config.security.CustomAuthenticationEntryPoint;
+import com.moa.moa_server.config.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -19,6 +23,7 @@ import java.util.List;
 
 import static com.moa.moa_server.config.SecurityConstants.ALLOWED_URLS;
 
+@RequiredArgsConstructor
 @EnableWebSecurity
 @Configuration
 @Profile("dev")
@@ -27,6 +32,9 @@ public class DevSecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrl;
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
@@ -34,10 +42,13 @@ public class DevSecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ALLOWED_URLS).permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
