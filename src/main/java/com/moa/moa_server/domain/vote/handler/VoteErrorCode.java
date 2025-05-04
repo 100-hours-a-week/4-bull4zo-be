@@ -14,7 +14,9 @@ public enum VoteErrorCode implements BaseErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN),
     INVALID_OPTION(HttpStatus.BAD_REQUEST),
     ALREADY_VOTED(HttpStatus.CONFLICT),
-    VOTE_NOT_OPENED(HttpStatus.FORBIDDEN),;
+    VOTE_NOT_OPENED(HttpStatus.FORBIDDEN),
+    INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),
+    INVALID_CURSOR(HttpStatus.NOT_FOUND),;
 
     private final HttpStatus status;
 
