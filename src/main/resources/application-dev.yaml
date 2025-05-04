@@ -23,3 +23,7 @@ ai:
 mock:
   ai:
     enabled: false
+
+logging:
+  level:
+    org.springframework.security: DEBUG
