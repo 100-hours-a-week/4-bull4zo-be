@@ -235,12 +235,12 @@ public class VoteService {
 
     /**
      * 투표 조회 권한 검사 (내용, 결과, 댓글 읽기)
-     * 조건: 등록자이거나 참여자여야 함
+     * 조건: 등록자이거나 참여자(기권 불가)여야 함
      * * top3 투표는 추후 그룹 멤버 여부로도 허용 예정
      */
     private void validateVoteAccess(User user, Vote vote) {
         if (isVoteAuthor(user, vote)) return;
-        if (hasParticipated(user, vote)) return;
+        if (hasParticipatedWithValidOption(user, vote)) return;
 
         // TODO: top3 투표일 경우 isGroupMember 검사 후 허용
         throw new VoteException(VoteErrorCode.FORBIDDEN);
@@ -250,7 +250,9 @@ public class VoteService {
         return vote.getUser().equals(user);
     }
 
-    private boolean hasParticipated(User user, Vote vote) {
-        return voteResponseRepository.existsByVoteAndUser(vote, user);
+    private boolean hasParticipatedWithValidOption(User user, Vote vote) {
+        return voteResponseRepository.findByVoteAndUser(vote, user)
+                .map(vr -> vr.getOptionNumber() > 0)
+                .orElse(false);
     }
 }
