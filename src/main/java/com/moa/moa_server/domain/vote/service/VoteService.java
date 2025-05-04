@@ -12,6 +12,7 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
+import com.moa.moa_server.domain.vote.dto.response.VoteResultResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
@@ -144,6 +145,12 @@ public class VoteService {
         } catch (DataIntegrityViolationException e) {
             throw new VoteException(VoteErrorCode.ALREADY_VOTED);
         }
+    }
+
+    @Transactional
+    public VoteResultResponse getVoteResult(Long userId, Long voteId) {
+
+        return null;
     }
 
     /**
