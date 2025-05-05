@@ -1,4 +1,4 @@
-package com.moa.moa_server.config;
+package com.moa.moa_server.config.querydsl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

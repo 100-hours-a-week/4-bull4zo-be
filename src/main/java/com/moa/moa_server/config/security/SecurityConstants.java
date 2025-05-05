@@ -1,4 +1,4 @@
-package com.moa.moa_server.config;
+package com.moa.moa_server.config.security;
 
 public class SecurityConstants {
     public static final String[] ALLOWED_URLS = {

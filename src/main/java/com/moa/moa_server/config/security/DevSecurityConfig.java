@@ -1,7 +1,5 @@
-package com.moa.moa_server.config;
+package com.moa.moa_server.config.security;
 
-import com.moa.moa_server.config.security.CustomAuthenticationEntryPoint;
-import com.moa.moa_server.config.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-import static com.moa.moa_server.config.SecurityConstants.ALLOWED_URLS;
+import static com.moa.moa_server.config.security.SecurityConstants.ALLOWED_URLS;
 
 @RequiredArgsConstructor
 @EnableWebSecurity
