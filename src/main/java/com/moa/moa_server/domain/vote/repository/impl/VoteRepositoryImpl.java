@@ -28,7 +28,7 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
         QVote vote = QVote.vote;
         QVoteResponse voteResponse = QVoteResponse.voteResponse;
 
-        // 기본 조건: 그룹 접근 권한이 있고 종료되지 않은 투표
+        // 조회하려는 그룹 조건
         BooleanBuilder builder = new BooleanBuilder()
                 .and(vote.group.in(accessibleGroups)) // 사용자가 접근 가능한 그룹의 투표만 조회
                 .and(vote.closedAt.gt(LocalDateTime.now())); // 진행 중인 투표만 조회
