@@ -28,3 +28,4 @@ mock:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.hibernate.type.descriptor.sql: trace
