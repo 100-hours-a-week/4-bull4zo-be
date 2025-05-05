@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
+import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
@@ -12,6 +13,8 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
+import com.moa.moa_server.domain.vote.dto.response.list.VoteListItem;
+import com.moa.moa_server.domain.vote.dto.response.list.VoteListResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteOptionResult;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
@@ -19,21 +22,27 @@ import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
+import com.moa.moa_server.domain.vote.repository.VoteRepositoryCustom;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
-import jakarta.transaction.Transactional;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class VoteService {
+
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int DEFAULT_UNAUTHENTICATED_PAGE_SIZE = 3;
 
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
@@ -202,6 +211,51 @@ public class VoteService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public VoteListResponse getActiveVotes(@Nullable Long userId, @Nullable Integer groupId, @Nullable String cursor, @Nullable Integer size) {
+        int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
+        VoteClosedCursor parsedCursor = cursor != null ? VoteClosedCursor.parse(cursor) : null;
+
+        // 비로그인 요청
+        if (userId == null) {
+            // 공개 그룹만 허용 (groupId가 1이 아닌 경우 거절)
+            Long targetGroupId = (groupId != null) ? groupId.longValue() : 1L;
+            Group group = groupRepository.findById(targetGroupId)
+                    .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
+            if (!group.isPublicGroup()) {
+                throw new VoteException(VoteErrorCode.FORBIDDEN);
+            }
+
+            List<Vote> votes = voteRepository.findActiveVotes(
+                    List.of(group), parsedCursor, null, DEFAULT_UNAUTHENTICATED_PAGE_SIZE);
+            List<VoteListItem> items = votes.stream().map(VoteListItem::from).toList();
+            return new VoteListResponse(items, null, false, items.size());
+        }
+        // 로그인 사용자 요청
+        else {
+            // 사용자 조회
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+            AuthUserValidator.validateActive(user);
+
+            // 그룹 목록 수집 및 권한 검사
+            List<Group> accessibleGroups = getAccessibleGroups(user, groupId);
+
+            // 투표 목록 조회
+            List<Vote> votes = voteRepository.findActiveVotes(accessibleGroups, parsedCursor, user, pageSize + 1);
+
+            // 응답 구성
+            boolean hasNext = votes.size() > pageSize;
+            if (hasNext) votes = votes.subList(0, pageSize);
+
+            String nextCursor = votes.isEmpty() ? null :
+                    new VoteClosedCursor(votes.getLast().getClosedAt(), votes.getLast().getCreatedAt()).encode();
+
+            List<VoteListItem> items = votes.stream().map(VoteListItem::from).toList();
+            return new VoteListResponse(items, nextCursor, hasNext, items.size());
+        }
+    }
+
     /**
      * 투표 조회
      */
@@ -254,5 +308,33 @@ public class VoteService {
         return voteResponseRepository.findByVoteAndUser(vote, user)
                 .map(vr -> vr.getOptionNumber() > 0)
                 .orElse(false);
+    }
+
+    /**
+     * 접근 가능한 그룹 목록 조회 (투표 리스트 조회에 사용)
+     * - groupId가 지정된 경우: 해당 그룹만 조회 (권한 확인 포함)
+     * - groupId가 없는 경우: 공개 그룹 + 사용자가 속한 모든 그룹 반환
+     */
+    public List<Group> getAccessibleGroups(User user, @Nullable Integer groupId) {
+        if (groupId != null) {
+            // 단일 그룹만 조회 (권한 확인 포함)
+            Group group = groupRepository.findById(groupId.longValue())
+                    .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
+
+            if (!group.isPublicGroup()) {
+                groupMemberRepository.findByGroupAndUserIncludingDeleted(group, user)
+                        .filter(GroupMember::isActive)
+                        .orElseThrow(() -> new VoteException(VoteErrorCode.FORBIDDEN));
+            }
+
+            return List.of(group);
+        }
+
+        // 전체 그룹 조회: 공개 그룹 + 사용자의 그룹
+        Group publicGroup = groupRepository.findById(1L)
+                .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
+        List<Group> userGroups = groupMemberRepository.findAllActiveGroupsByUser(user);
+
+        return Stream.concat(Stream.of(publicGroup), userGroups.stream()).distinct().toList();
     }
 }

@@ -12,11 +12,13 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Repository
 public class VoteRepositoryImpl implements VoteRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
