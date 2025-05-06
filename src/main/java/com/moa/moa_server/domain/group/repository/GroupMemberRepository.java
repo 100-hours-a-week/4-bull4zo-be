@@ -16,4 +16,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long>,
 
     @Query("SELECT gm.group FROM GroupMember gm WHERE gm.user = :user AND gm.deletedAt IS NULL")
     List<Group> findAllActiveGroupsByUser(@Param("user") User user);
+
+    boolean existsByUserAndGroupAndDeletedAtIsNull(User user, Group group);
 }
