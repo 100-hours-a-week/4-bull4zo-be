@@ -48,4 +48,8 @@ public class User extends BaseTimeEntity {
         WITHDRAWN,
         DORMANT,
     }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }

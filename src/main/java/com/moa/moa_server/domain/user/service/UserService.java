@@ -5,15 +5,18 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.user.dto.request.UserUpdateRequest;
 import com.moa.moa_server.domain.user.dto.response.*;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
+import com.moa.moa_server.domain.user.util.UserValidator;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedList;
@@ -100,5 +103,27 @@ public class UserService {
         AuthUserValidator.validateActive(user);
 
         return UserInfoResponse.from(user.getNickname());
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public UserUpdateResponse updateUserInfo(Long userId, UserUpdateRequest request) {
+        String newNickname = request.nickname();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 닉네임 유효성 검사
+        UserValidator.validateNickname(newNickname);
+
+        // 닉네임 중복 검사 (자기 자신 제외)
+        if (userRepository.existsByNicknameAndIdNot(newNickname, userId)) {
+            throw new UserException(UserErrorCode.DUPLICATED_NICKNAME);
+        }
+
+        // 닉네임 변경
+        user.updateNickname(newNickname);
+
+        return new UserUpdateResponse(newNickname);
     }
 }
