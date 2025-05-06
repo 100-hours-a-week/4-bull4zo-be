@@ -6,7 +6,8 @@ import org.springframework.http.HttpStatus;
 public enum UserErrorCode implements BaseErrorCode {
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND),
-    USER_WITHDRAWN(HttpStatus.UNAUTHORIZED);
+    USER_WITHDRAWN(HttpStatus.UNAUTHORIZED),
+    INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),;
 
     private final HttpStatus status;
 
