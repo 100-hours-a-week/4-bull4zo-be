@@ -1,7 +1,6 @@
 package com.moa.moa_server.domain.vote.dto.response.submitted;
 
 import com.moa.moa_server.domain.vote.dto.response.VoteOptionResultWithId;
-import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
 import com.moa.moa_server.domain.vote.entity.Vote;
 
 import java.time.LocalDateTime;
