@@ -116,14 +116,18 @@ public class UserService {
         // 닉네임 유효성 검사
         UserValidator.validateNickname(newNickname);
 
-        // 닉네임 중복 검사 (자기 자신 제외)
-        if (userRepository.existsByNicknameAndIdNot(newNickname, userId)) {
+        // 동일 닉네임이면 중복 처리 없이 바로 반환
+        if (user.getNickname().equals(newNickname)) {
+            return new UserUpdateResponse(user.getNickname());
+        }
+
+        // 닉네임 중복 검사
+        if (userRepository.existsByNickname(newNickname)) {
             throw new UserException(UserErrorCode.DUPLICATED_NICKNAME);
         }
 
         // 닉네임 변경
         user.updateNickname(newNickname);
-
         return new UserUpdateResponse(newNickname);
     }
 }
