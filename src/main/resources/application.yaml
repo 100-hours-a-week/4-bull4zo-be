@@ -8,6 +8,3 @@ jwt:
 kakao:
   token-uri: https://kauth.kakao.com/oauth/token
   user-info-uri: https://kapi.kakao.com/v2/user/me
-
-file:
-  upload-url-prefix: https://upload-domain

@@ -2,18 +2,13 @@ package com.moa.moa_server.domain.vote.util;
 
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 
 public class VoteValidator {
 
-    private static String uploadUrlPrefix;
+    private static final String UPLOAD_URL_PREFIX = "https://upload-domain/vote";
 
-    @Value("${file.upload-url-prefix}")
-    public void setUploadUrlPrefix(String prefix) {
-        VoteValidator.uploadUrlPrefix = prefix + "/vote";
-    }
 
     public static void validateContent(String content) {
         if (content == null || content.isBlank() || content.length() > 255 || content.length() < 2) {
@@ -22,7 +17,7 @@ public class VoteValidator {
     }
 
     public static void validateImageUrl(String imageUrl) {
-        if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(uploadUrlPrefix)) {
+        if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(UPLOAD_URL_PREFIX)) {
             throw new VoteException(VoteErrorCode.INVALID_URL);
         }
     }

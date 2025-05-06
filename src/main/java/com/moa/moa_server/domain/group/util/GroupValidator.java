@@ -2,7 +2,6 @@ package com.moa.moa_server.domain.group.util;
 
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
 import com.moa.moa_server.domain.group.handler.GroupException;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.regex.Pattern;
 
@@ -10,12 +9,7 @@ public class GroupValidator {
 
     private static final Pattern INVITE_CODE_PATTERN = Pattern.compile("^[A-Z0-9]{6,8}$");
     private static final Pattern NAME_PATTERN = Pattern.compile("^(?![\\d\\s])[가-힣a-zA-Z0-9 ]{2,12}$");
-    private static String uploadUrlPrefix;
-
-    @Value("${file.upload-url-prefix}")
-    public void setUploadUrlPrefix(String prefix) {
-        GroupValidator.uploadUrlPrefix = prefix + "/group";
-    }
+    private static final String UPLOAD_URL_PREFIX = "https://upload-domain/group";
 
     private GroupValidator() {
         throw new AssertionError("유틸 클래스는 인스턴스화할 수 없습니다.");
@@ -41,7 +35,7 @@ public class GroupValidator {
     }
 
     public static void validateImageUrl(String imageUrl) {
-        if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(uploadUrlPrefix)) {
+        if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(UPLOAD_URL_PREFIX)) {
             throw new GroupException(GroupErrorCode.INVALID_INPUT);
         }
     }
