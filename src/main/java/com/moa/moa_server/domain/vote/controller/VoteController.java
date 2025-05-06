@@ -8,6 +8,7 @@ import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
+import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -81,6 +82,17 @@ public class VoteController {
             @RequestParam(required = false) Integer size
     ) {
         MyVoteResponse response = voteService.getMyVotes(userId, groupId, cursor, size);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
+    }
+
+    @GetMapping("/submit")
+    public ResponseEntity<ApiResponse> getSubmittedVotes(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Integer size
+    ) {
+        SubmittedVoteResponse response = voteService.getSubmittedVotes(userId, groupId, cursor, size);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 }
