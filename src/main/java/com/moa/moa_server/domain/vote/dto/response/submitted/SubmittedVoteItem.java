@@ -1,27 +1,25 @@
-package com.moa.moa_server.domain.vote.dto.response.mine;
+package com.moa.moa_server.domain.vote.dto.response.submitted;
 
 import com.moa.moa_server.domain.vote.dto.response.VoteOptionResultWithId;
+import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
 import com.moa.moa_server.domain.vote.entity.Vote;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record MyVoteItem(
+public record SubmittedVoteItem(
         Long voteId,
         Long groupId,
         String content,
-        String voteStatus,
         LocalDateTime createdAt,
         LocalDateTime closedAt,
         List<VoteOptionResultWithId> results
 ) {
-
-    public static MyVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
-        return new MyVoteItem(
+    public static SubmittedVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
+        return new SubmittedVoteItem(
                 vote.getId(),
                 vote.getGroup().getId(),
                 vote.getContent(),
-                vote.getVoteStatus().name(),
                 vote.getCreatedAt(),
                 vote.getClosedAt(),
                 results

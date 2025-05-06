@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.vote.dto.response.mine.VoteOptionResultWithId;
+import com.moa.moa_server.domain.vote.dto.response.VoteOptionResultWithId;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteOptionResult;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
