@@ -122,8 +122,7 @@ public class VoteService {
         Group group = vote.getGroup();
         if (!group.isPublicGroup()) {
             boolean isGroupMember = groupMemberRepository
-                    .findByGroupAndUserIncludingDeleted(group, user)
-                    .filter(m -> m.getDeletedAt() == null)
+                    .findByGroupAndUser(group, user)
                     .isPresent();
 
             if (!isGroupMember) {
@@ -364,8 +363,7 @@ public class VoteService {
         if (group.isPublicGroup()) return null;
 
         return groupMemberRepository
-                .findByGroupAndUserIncludingDeleted(group, user)
-                .filter(GroupMember::isActive)
+                .findByGroupAndUser(group, user)
                 .orElseThrow(() -> new VoteException(VoteErrorCode.NOT_GROUP_MEMBER));
     }
 
@@ -415,8 +413,7 @@ public class VoteService {
                     .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
 
             if (!group.isPublicGroup()) {
-                groupMemberRepository.findByGroupAndUserIncludingDeleted(group, user)
-                        .filter(GroupMember::isActive)
+                groupMemberRepository.findByGroupAndUser(group, user)
                         .orElseThrow(() -> new VoteException(VoteErrorCode.FORBIDDEN));
             }
 
