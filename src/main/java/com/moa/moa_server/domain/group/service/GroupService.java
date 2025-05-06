@@ -48,7 +48,7 @@ public class GroupService {
         AuthUserValidator.validateActive(user);
 
         // 초대 코드로 그룹 조회
-        // deletedAt IS NULL 조건을 명시적으로 추가
+        // deletedAt IS NULL 조건은 Group 엔티티의 @Where에서 자동으로 적용됨
         Group group = groupRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new GroupException(GroupErrorCode.INVITE_CODE_NOT_FOUND));
 
