@@ -187,27 +187,14 @@ public class VoteService {
         Optional<VoteResponse> userVoteResponse = voteResponseRepository.findByVoteAndUser(vote, user);
         Integer userResponse = userVoteResponse.map(VoteResponse::getOptionNumber).orElse(null);
 
-        // 전체 응답 조회
+        // 전체 참여자 수 계산
         List<VoteResponse> responses = voteResponseRepository.findAllByVote(vote);
         int totalCount = (int) responses.stream()
                 .filter(vr -> vr.getOptionNumber() > 0)
                 .count();
 
-        // 항목별 집계 (0: 기권 제외)
-        Map<Integer, Long> countMap = responses.stream()
-                .filter(vr -> vr.getOptionNumber() > 0)
-                .collect(Collectors.groupingBy(
-                        VoteResponse::getOptionNumber,
-                        Collectors.counting()
-                ));
-
-        List<VoteOptionResult> results = List.of(1, 2).stream()
-                .map(option -> {
-                    int count = countMap.getOrDefault(option, 0L).intValue();
-                    int ratio = totalCount == 0 ? 0 : (int) ((count * 100.0) / totalCount);
-                    return new VoteOptionResult(option, count, ratio);
-                })
-                .collect(Collectors.toList());
+        // 결과 조회
+        List<VoteOptionResult> results = voteResultService.getResults(vote);
 
         return new VoteResultResponse(
                 voteId,
