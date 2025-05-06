@@ -14,6 +14,7 @@ spring:
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${FRONTEND_URL}/auth/callback
+  admin-key: ${KAKAO_ADMIN_KEY}
 
 frontend:
   url: ${FRONTEND_URL}

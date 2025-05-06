@@ -55,4 +55,11 @@ public class AuthService {
     public boolean logout(Long userId) {
         return refreshTokenService.deleteRefreshTokenByUserId(userId); // true면 SUCCESS, false면 ALREADY_LOGGED_OUT
     }
+
+    public void unlinkKakaoAccount(Long kakaoUserId) {
+        OAuthLoginStrategy strategy = strategies.get("kakao");
+        if (strategy != null) {
+            strategy.unlink(kakaoUserId);
+        }
+    }
 }

@@ -4,4 +4,5 @@ import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 
 public interface OAuthLoginStrategy {
     LoginResult login(String code);
+    void unlink(Long oauthId);
 }

@@ -37,8 +37,13 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     private final JwtTokenService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
 
+    private final RestTemplate restTemplate;
+
     @Value("${kakao.client-id}")
     private String kakaoClientId;
+
+    @Value("${kakao.admin-key}")
+    private String kakaoAdminKey;
 
     @Value("${kakao.redirect-uri}")
     private String kakaoRedirectUri;
@@ -48,6 +53,9 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
 
     @Value("${kakao.user-info-uri}")
     private String kakaoUserInfoUri;
+
+    @Value("${kakao.unlink-uri}")
+    private String kakaoUnlinkUri;
 
     @Transactional
     @Override
@@ -97,7 +105,6 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         body.add("code", code);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-        RestTemplate restTemplate = new RestTemplate(); // 나중에 WebClient로 변경
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(kakaoTokenUri, request, Map.class);
@@ -114,13 +121,35 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
-        RestTemplate restTemplate = new RestTemplate();
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(kakaoUserInfoUri, request, Map.class);
             return (Long) response.getBody().get("id");
         } catch (Exception e) {
             throw new AuthException(AuthErrorCode.KAKAO_USERINFO_FAILED);
+        }
+    }
+
+    @Override
+    public void unlink(Long kakaoUserId) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "KakaoAK " + kakaoAdminKey);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("target_id_type", "user_id");
+        params.add("target_id", String.valueOf(kakaoUserId));
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(kakaoUnlinkUri, request, Map.class);
+            Long returnedId = ((Number) response.getBody().get("id")).longValue();
+            log.info("[KakaoOAuthLoginStrategy#unlink] 카카오 unlink 성공: 요청 userId={}, 응답 userId={}", kakaoUserId, returnedId);
+        } catch (Exception e) {
+            log.warn("[KakaoOAuthLoginStrategy#unlink] 카카오 unlink 실패: 요청 userId={}, error={}", kakaoUserId, e.getMessage());
+            // 필요 시 큐 적재 등 처리
         }
     }
 }

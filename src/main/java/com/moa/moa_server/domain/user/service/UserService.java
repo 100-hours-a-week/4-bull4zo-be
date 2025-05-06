@@ -1,7 +1,11 @@
 package com.moa.moa_server.domain.user.service;
 
+import com.moa.moa_server.domain.auth.entity.OAuth;
+import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
+import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.repository.OAuthRepository;
 import com.moa.moa_server.domain.auth.repository.TokenRepository;
+import com.moa.moa_server.domain.auth.service.AuthService;
 import com.moa.moa_server.domain.global.cursor.GroupNameGroupIdCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
@@ -38,6 +42,7 @@ public class UserService {
     private final VoteRepository voteRepository;
 
     private final GroupService groupService;
+    private final AuthService authService;
 
     @Transactional(readOnly = true)
     public GroupLabelResponse getJoinedGroupLabels(Long userId, @Nullable String cursor, @Nullable Integer size) {
@@ -147,7 +152,11 @@ public class UserService {
         user.withdraw();
 
         // 카카오 연동 해제
-        //oauthService.unlinkKakao(user.getOauthId());
+        Long kakaoUserId = oauthRepository.findByUser(user)
+                .filter(oauth -> oauth.getProviderCode() == OAuth.ProviderCode.KAKAO)
+                .map(OAuth::getId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.OAUTH_NOT_FOUND));
+        authService.unlinkKakaoAccount(kakaoUserId);
 
         // 토큰, OAuth 삭제 (hard delete)
         tokenRepository.deleteByUserId(userId);

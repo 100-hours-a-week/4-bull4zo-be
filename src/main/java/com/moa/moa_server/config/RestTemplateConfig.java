@@ -1,11 +1,11 @@
-package com.moa.moa_server.domain.ai.config;
+package com.moa.moa_server.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-public class AiConfig {
+public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate() {
