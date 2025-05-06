@@ -3,7 +3,6 @@ package com.moa.moa_server.domain.user.service;
 import com.moa.moa_server.domain.global.cursor.GroupNameGroupIdCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
-import com.moa.moa_server.domain.group.repository.GroupMemberRepositoryCustom;
 import com.moa.moa_server.domain.group.service.GroupService;
 import com.moa.moa_server.domain.user.dto.response.GroupLabel;
 import com.moa.moa_server.domain.user.dto.response.GroupLabelResponse;
