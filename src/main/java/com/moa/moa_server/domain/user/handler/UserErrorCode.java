@@ -7,7 +7,8 @@ public enum UserErrorCode implements BaseErrorCode {
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND),
     USER_WITHDRAWN(HttpStatus.UNAUTHORIZED),
-    INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),;
+    INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),
+    INVALID_NICKNAME(HttpStatus.BAD_REQUEST),;
 
     private final HttpStatus status;
 
