@@ -55,4 +55,12 @@ public class UserController {
         UserUpdateResponse response = userService.updateUserInfo(userId, request);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
+
+    @DeleteMapping
+    public ResponseEntity<ApiResponse> deleteUser(
+            @AuthenticationPrincipal Long userId
+    ) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", null));
+    }
 }

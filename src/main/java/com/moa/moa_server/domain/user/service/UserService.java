@@ -137,7 +137,8 @@ public class UserService {
         return new UserUpdateResponse(newNickname);
     }
 
-    @Transactional void deleteUser(Long userId) {
+    @Transactional
+    public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
         AuthUserValidator.validateActive(user);
