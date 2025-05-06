@@ -1,6 +1,8 @@
 package com.moa.moa_server.domain.group.service;
 
+import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
 import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
+import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupJoinResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
@@ -77,5 +79,41 @@ public class GroupService {
         }
 
         return new GroupJoinResponse(group.getId(), group.getName(), member.getRole().name());
+    }
+
+    @Transactional
+    public GroupCreateResponse createGroup(Long userId, GroupCreateRequest request) {
+        // 유저 조회 및 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 입력 검증
+        GroupValidator.validateGroupName(request.name());
+        GroupValidator.validateDescription(request.description());
+        if (!request.imageUrl().isBlank()) {
+            GroupValidator.validateImageUrl(request.imageUrl()); // 업로드 도메인 검증
+        }
+
+        // 초대 코드 생성
+        String inviteCode = "";
+        String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl();
+
+        // 그룹 생성
+        Group group = Group.create(user, request.name(), request.description(), imageUrl, inviteCode);
+        groupRepository.save(group);
+
+        // 그룹 멤버 등록
+        GroupMember member = GroupMember.createAsOwner(user, group);
+        groupMemberRepository.save(member);
+
+        return new GroupCreateResponse(
+                group.getId(),
+                group.getName(),
+                group.getDescription(),
+                group.getImageUrl(),
+                group.getInviteCode(),
+                group.getCreatedAt()
+        );
     }
 }

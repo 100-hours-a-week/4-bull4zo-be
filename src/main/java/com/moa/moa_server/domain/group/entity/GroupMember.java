@@ -65,4 +65,13 @@ public class GroupMember {
         this.joinedAt = LocalDateTime.now();
         this.role = Role.MEMBER;
     }
+
+    public static GroupMember createAsOwner(User user, Group group) {
+        return GroupMember.builder()
+                .user(user)
+                .group(group)
+                .role(Role.OWNER)
+                .joinedAt(LocalDateTime.now())
+                .build();
+    }
 }
