@@ -2,10 +2,13 @@ package com.moa.moa_server.domain.user.service;
 
 import com.moa.moa_server.domain.global.cursor.GroupNameGroupIdCursor;
 import com.moa.moa_server.domain.group.entity.Group;
+import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.user.dto.response.GroupDetail;
 import com.moa.moa_server.domain.user.dto.response.GroupLabel;
 import com.moa.moa_server.domain.user.dto.response.GroupLabelResponse;
+import com.moa.moa_server.domain.user.dto.response.JoinedGroupResponse;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -61,5 +64,35 @@ public class UserService {
                 .toList();
 
         return new GroupLabelResponse(labels, nextCursor, hasNext, labels.size());
+    }
+
+    @Transactional(readOnly = true)
+    public JoinedGroupResponse getJoinedGroups(Long userId, @Nullable String cursor, @Nullable Integer size) {
+        int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
+        GroupNameGroupIdCursor parsedCursor = cursor != null ? GroupNameGroupIdCursor.parse(cursor) : null;
+
+        // 유저 조회 및 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 그룹 멤버 목록 조회
+        List<GroupMember> members = groupMemberRepository.findJoinedGroups(user, parsedCursor, pageSize + 1);
+
+        // 응답 구성
+        boolean hasNext = members.size() > pageSize;
+        if (hasNext) members = members.subList(0, pageSize);
+
+        String nextCursor = members.isEmpty() ? null :
+                new GroupNameGroupIdCursor(
+                        members.getLast().getGroup().getName(),
+                        members.getLast().getGroup().getId()
+                ).encode();
+
+        List<GroupDetail> groups = members.stream()
+                .map(GroupDetail::from)
+                .toList();
+
+        return new JoinedGroupResponse(groups, nextCursor, hasNext, groups.size());
     }
 }
