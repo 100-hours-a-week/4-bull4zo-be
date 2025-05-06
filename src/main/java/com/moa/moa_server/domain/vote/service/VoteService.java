@@ -13,8 +13,8 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.list.VoteListItem;
-import com.moa.moa_server.domain.vote.dto.response.list.VoteListResponse;
+import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteItem;
+import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteOptionResult;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
@@ -22,7 +22,6 @@ import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
-import com.moa.moa_server.domain.vote.repository.VoteRepositoryCustom;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
@@ -212,7 +211,7 @@ public class VoteService {
     }
 
     @Transactional(readOnly = true)
-    public VoteListResponse getActiveVotes(@Nullable Long userId, @Nullable Integer groupId, @Nullable String cursor, @Nullable Integer size) {
+    public ActiveVoteResponse getActiveVotes(@Nullable Long userId, @Nullable Integer groupId, @Nullable String cursor, @Nullable Integer size) {
         int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
         VoteClosedCursor parsedCursor = cursor != null ? VoteClosedCursor.parse(cursor) : null;
 
@@ -228,8 +227,8 @@ public class VoteService {
 
             List<Vote> votes = voteRepository.findActiveVotes(
                     List.of(group), parsedCursor, null, DEFAULT_UNAUTHENTICATED_PAGE_SIZE);
-            List<VoteListItem> items = votes.stream().map(VoteListItem::from).toList();
-            return new VoteListResponse(items, null, false, items.size());
+            List<ActiveVoteItem> items = votes.stream().map(ActiveVoteItem::from).toList();
+            return new ActiveVoteResponse(items, null, false, items.size());
         }
         // 로그인 사용자 요청
         else {
@@ -251,8 +250,8 @@ public class VoteService {
             String nextCursor = votes.isEmpty() ? null :
                     new VoteClosedCursor(votes.getLast().getClosedAt(), votes.getLast().getCreatedAt()).encode();
 
-            List<VoteListItem> items = votes.stream().map(VoteListItem::from).toList();
-            return new VoteListResponse(items, nextCursor, hasNext, items.size());
+            List<ActiveVoteItem> items = votes.stream().map(ActiveVoteItem::from).toList();
+            return new ActiveVoteResponse(items, nextCursor, hasNext, items.size());
         }
     }
 

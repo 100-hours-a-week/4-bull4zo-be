@@ -5,7 +5,7 @@ import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.list.VoteListResponse;
+import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +62,7 @@ public class VoteController {
     }
 
     @GetMapping
-    public VoteListResponse getActiveVotes(
+    public ActiveVoteResponse getActiveVotes(
             @AuthenticationPrincipal Long userId,
             @RequestParam(required = false) Integer groupId,
             @RequestParam(required = false) String cursor,

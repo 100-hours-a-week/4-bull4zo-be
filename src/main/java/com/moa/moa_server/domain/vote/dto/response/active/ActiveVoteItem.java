@@ -1,10 +1,10 @@
-package com.moa.moa_server.domain.vote.dto.response.list;
+package com.moa.moa_server.domain.vote.dto.response.active;
 
 import com.moa.moa_server.domain.vote.entity.Vote;
 
 import java.time.LocalDateTime;
 
-public record VoteListItem(
+public record ActiveVoteItem(
         Long voteId,
         Long groupId,
         String authorNickname,
@@ -16,8 +16,8 @@ public record VoteListItem(
         String voteType
 ) {
 
-    public static VoteListItem from(Vote vote) {
-        return new VoteListItem(
+    public static ActiveVoteItem from(Vote vote) {
+        return new ActiveVoteItem(
                 vote.getId(),
                 vote.getGroup().getId(),
                 vote.getUser().getNickname(),
