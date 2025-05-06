@@ -5,10 +5,7 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
-import com.moa.moa_server.domain.user.dto.response.GroupDetail;
-import com.moa.moa_server.domain.user.dto.response.GroupLabel;
-import com.moa.moa_server.domain.user.dto.response.GroupLabelResponse;
-import com.moa.moa_server.domain.user.dto.response.JoinedGroupResponse;
+import com.moa.moa_server.domain.user.dto.response.*;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -94,5 +91,14 @@ public class UserService {
                 .toList();
 
         return new JoinedGroupResponse(groups, nextCursor, hasNext, groups.size());
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponse getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        return UserInfoResponse.from(user.getNickname());
     }
 }
