@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.user.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.user.dto.response.GroupLabelResponse;
+import com.moa.moa_server.domain.user.dto.response.JoinedGroupResponse;
 import com.moa.moa_server.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,16 @@ public class UserController {
             @RequestParam(required = false) Integer size
     ) {
         GroupLabelResponse response = userService.getJoinedGroupLabels(userId, cursor, size);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
+    }
+
+    @GetMapping("/groups")
+    public ResponseEntity<ApiResponse> getJoinedGroups(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Integer size
+    ) {
+        JoinedGroupResponse response = userService.getJoinedGroups(userId, cursor, size);
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 }
