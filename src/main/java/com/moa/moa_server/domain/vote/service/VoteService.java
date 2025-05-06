@@ -218,14 +218,14 @@ public class VoteService {
     }
 
     @Transactional(readOnly = true)
-    public ActiveVoteResponse getActiveVotes(@Nullable Long userId, @Nullable Integer groupId, @Nullable String cursor, @Nullable Integer size) {
+    public ActiveVoteResponse getActiveVotes(@Nullable Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
         int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
         VoteClosedCursor parsedCursor = cursor != null ? VoteClosedCursor.parse(cursor) : null;
 
         // 비로그인 요청
         if (userId == null) {
             // 공개 그룹만 허용 (groupId가 1이 아닌 경우 거절)
-            Long targetGroupId = (groupId != null) ? groupId.longValue() : 1L;
+            Long targetGroupId = (groupId != null) ? groupId : 1L;
             Group group = groupRepository.findById(targetGroupId)
                     .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
             if (!group.isPublicGroup()) {
@@ -368,10 +368,10 @@ public class VoteService {
      * - groupId가 지정된 경우: 해당 그룹만 조회 (권한 확인 포함)
      * - groupId가 없는 경우: 공개 그룹 + 사용자가 속한 모든 그룹 반환
      */
-    public List<Group> getAccessibleGroups(User user, @Nullable Integer groupId) {
+    public List<Group> getAccessibleGroups(User user, @Nullable Long groupId) {
         if (groupId != null) {
             // 단일 그룹만 조회 (권한 확인 포함)
-            Group group = groupRepository.findById(groupId.longValue())
+            Group group = groupRepository.findById(groupId)
                     .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
 
             if (!group.isPublicGroup()) {

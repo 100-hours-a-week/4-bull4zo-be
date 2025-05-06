@@ -6,6 +6,7 @@ import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
+import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
@@ -62,12 +63,24 @@ public class VoteController {
     }
 
     @GetMapping
-    public ActiveVoteResponse getActiveVotes(
+    public ResponseEntity<ApiResponse> getActiveVotes(
             @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) Integer groupId,
+            @RequestParam(required = false) Long groupId,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer size
     ) {
-        return voteService.getActiveVotes(userId, groupId, cursor, size);
+        ActiveVoteResponse response = voteService.getActiveVotes(userId, groupId, cursor, size);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<ApiResponse> getMyVotes(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Integer size
+    ) {
+        MyVoteResponse response = voteService.getMyVotes(userId, groupId, cursor, size);
+        return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 }
