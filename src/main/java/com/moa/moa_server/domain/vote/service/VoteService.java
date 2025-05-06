@@ -337,7 +337,7 @@ public class VoteService {
         if (hasNext) votes = votes.subList(0, pageSize);
 
         String nextCursor = votes.isEmpty() ? null :
-                new ClosedAtVoteIdCursor(votes.getLast().getCreatedAt(), votes.getLast().getId()).encode();
+                new ClosedAtVoteIdCursor(votes.getLast().getClosedAt(), votes.getLast().getId()).encode();
 
         // 각 투표별 집계 결과를 포함한 응답 DTO 구성
         List<SubmittedVoteItem> items = votes.stream()
