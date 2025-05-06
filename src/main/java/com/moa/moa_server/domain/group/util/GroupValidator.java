@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.group.util;
 
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
 import com.moa.moa_server.domain.group.handler.GroupException;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.regex.Pattern;
 
@@ -9,8 +10,12 @@ public class GroupValidator {
 
     private static final Pattern INVITE_CODE_PATTERN = Pattern.compile("^[A-Z0-9]{6,8}$");
     private static final Pattern NAME_PATTERN = Pattern.compile("^(?![\\d\\s])[가-힣a-zA-Z0-9 ]{2,12}$");
-    private static final Pattern IMAGE_URL_PATTERN = Pattern.compile("^https://file-url/.*");
-    // TODO: IMAGE_URL_PATTERN의 file-url을 추후 실제 업로드 서버 주소 (예: S3 도메인)로 대체(applicaton 파일에 정의)
+    private static String uploadUrlPrefix;
+
+    @Value("${file.upload-url-prefix}")
+    public void setUploadUrlPrefix(String prefix) {
+        GroupValidator.uploadUrlPrefix = prefix + "/group";
+    }
 
     private GroupValidator() {
         throw new AssertionError("유틸 클래스는 인스턴스화할 수 없습니다.");
@@ -36,7 +41,7 @@ public class GroupValidator {
     }
 
     public static void validateImageUrl(String imageUrl) {
-        if (imageUrl != null && !imageUrl.isBlank() && !IMAGE_URL_PATTERN.matcher(imageUrl).matches()) {
+        if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(uploadUrlPrefix)) {
             throw new GroupException(GroupErrorCode.INVALID_INPUT);
         }
     }

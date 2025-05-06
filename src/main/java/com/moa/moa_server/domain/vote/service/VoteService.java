@@ -79,7 +79,8 @@ public class VoteService {
 
         // 요청 값 유효성 검사
         VoteValidator.validateContent(request.content());
-        VoteValidator.validateUrl(request.imageUrl());
+        VoteValidator.validateImageUrl(request.imageUrl());
+        String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl();
         VoteValidator.validateClosedAt(request.closedAt());
 
         // Vote 생성 및 저장
@@ -87,7 +88,7 @@ public class VoteService {
                 user,
                 group,
                 request.content(),
-                request.imageUrl(),
+                imageUrl,
                 request.closedAt(),
                 adminVote
         );
