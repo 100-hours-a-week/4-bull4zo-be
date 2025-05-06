@@ -52,4 +52,9 @@ public class User extends BaseTimeEntity {
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    public void withdraw() {
+        this.userStatus = UserStatus.WITHDRAWN;
+        this.withdrawn_at = LocalDateTime.now();
+    }
 }

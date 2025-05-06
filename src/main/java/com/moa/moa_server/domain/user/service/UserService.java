@@ -1,5 +1,7 @@
 package com.moa.moa_server.domain.user.service;
 
+import com.moa.moa_server.domain.auth.repository.OAuthRepository;
+import com.moa.moa_server.domain.auth.repository.TokenRepository;
 import com.moa.moa_server.domain.global.cursor.GroupNameGroupIdCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
@@ -13,6 +15,7 @@ import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.user.util.UserValidator;
+import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final OAuthRepository oauthRepository;
+    private final TokenRepository tokenRepository;
+    private final VoteRepository voteRepository;
 
     private final GroupService groupService;
 
@@ -129,5 +135,30 @@ public class UserService {
         // 닉네임 변경
         user.updateNickname(newNickname);
         return new UserUpdateResponse(newNickname);
+    }
+
+    @Transactional void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 회원 상태 변경 (soft delete)
+        user.withdraw();
+
+        // 카카오 연동 해제
+        //oauthService.unlinkKakao(user.getOauthId());
+
+        // 토큰, OAuth 삭제 (hard delete)
+        tokenRepository.deleteByUserId(userId);
+        oauthRepository.deleteByUserId(userId);
+
+        // 그룹 멤버 삭제 (hard-delete)
+        groupMemberRepository.deleteAllByUserId(userId);
+
+        // 그룹 소유자 승계
+        // groupService.reassignOrDeleteGroupsOwnedBy(user);
+
+        // 유저가 생성한 투표 삭제 (soft delete)
+        voteRepository.softDeleteAllByUser(user);
     }
 }

@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface OAuthRepository extends JpaRepository<OAuth, Long> {
 
     Optional<OAuth> findById(@NonNull Long id);
+    void deleteByUserId(Long userId);
 }
