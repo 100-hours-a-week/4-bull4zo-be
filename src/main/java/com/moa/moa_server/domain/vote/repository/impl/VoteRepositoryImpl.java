@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.vote.repository.impl;
 
+import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.user.entity.User;
@@ -58,6 +59,34 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
                 .selectFrom(vote)
                 .where(builder)
                 .orderBy(vote.closedAt.asc(), vote.createdAt.asc())
+                .limit(size)
+                .fetch();
+    }
+
+    @Override
+    public List<Vote> findMyVotes(User user, @Nullable Group group, @Nullable CreatedAtVoteIdCursor cursor, int size) {
+        QVote vote = QVote.vote;
+
+        BooleanBuilder builder = new BooleanBuilder()
+                .and(vote.user.eq(user))
+                .and(vote.deletedAt.isNull());
+
+        if (group != null) {
+            builder.and(vote.group.eq(group));
+        }
+
+        if (cursor != null) {
+            builder.and(
+                    vote.createdAt.lt(cursor.createdAt())
+                            .or(vote.createdAt.eq(cursor.createdAt())
+                                    .and(vote.id.lt(cursor.voteId())))
+            );
+        }
+
+        return queryFactory
+                .selectFrom(vote)
+                .where(builder)
+                .orderBy(vote.createdAt.desc(), vote.id.desc())
                 .limit(size)
                 .fetch();
     }

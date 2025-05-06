@@ -9,19 +9,19 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 @Slf4j
-public record VoteMineCursor(LocalDateTime createdAt, Long voteId) {
+public record CreatedAtVoteIdCursor(LocalDateTime createdAt, Long voteId) {
 
     /**
      * "createdAt_voteId" 형식의 커서를 파싱
      */
-    public static VoteMineCursor parse(String cursor) {
+    public static CreatedAtVoteIdCursor parse(String cursor) {
         try {
             String[] parts = cursor.split("_");
             if (parts.length != 2) {
                 log.warn("[VoteMineCursor#parse] Cursor must contain exactly two parts.");
                 throw new VoteException(VoteErrorCode.INVALID_CURSOR_FORMAT);
             }
-            return new VoteMineCursor(
+            return new CreatedAtVoteIdCursor(
                     LocalDateTime.parse(parts[0]),
                     Long.parseLong(parts[1])
             );
