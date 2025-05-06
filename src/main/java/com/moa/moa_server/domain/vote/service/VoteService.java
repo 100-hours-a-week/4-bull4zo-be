@@ -253,6 +253,9 @@ public class VoteService {
     public MyVoteResponse getMyVotes(Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
         int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
         CreatedAtVoteIdCursor parsedCursor = cursor != null ? CreatedAtVoteIdCursor.parse(cursor) : null;
+        if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {
+            throw new VoteException(VoteErrorCode.VOTE_NOT_FOUND);
+        }
 
         // 유저 조회 및 검증
         User user = userRepository.findById(userId)
