@@ -13,10 +13,10 @@ public record MyVoteItem(
         String voteStatus,
         LocalDateTime createdAt,
         LocalDateTime closedAt,
-        List<VoteOptionResult> results
+        List<VoteOptionResultWithId> results
 ) {
 
-    public static MyVoteItem from(Vote vote, List<VoteOptionResult> results) {
+    public static MyVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
         return new MyVoteItem(
                 vote.getId(),
                 vote.getGroup().getId(),
