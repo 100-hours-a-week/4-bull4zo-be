@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class GroupService {
@@ -50,22 +52,29 @@ public class GroupService {
         Group group = groupRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new GroupException(GroupErrorCode.INVITE_CODE_NOT_FOUND));
 
-        // 공개 그룹은 패스
+        // 공개 그룹은 가입 불가
         if (group.isPublicGroup()) {
             throw new GroupException(GroupErrorCode.CANNOT_JOIN_PUBLIC_GROUP);
         }
 
-        // 이미 가입 여부 확인 (deletedAt이 null 인지도 체크. null이면 패스. 아래에서 재가입)
-        boolean alreadyJoined = groupMemberRepository.existsByUserAndGroupAndDeletedAtIsNull(user, group);
-        if (alreadyJoined) {
-            throw new GroupException(GroupErrorCode.ALREADY_JOINED);
+        // 가입 이력 조회
+        Optional<GroupMember> memberOpt = groupMemberRepository.findByGroupAndUserIncludingDeleted(group.getId(), user.getId());
+
+        GroupMember member;
+        if (memberOpt.isPresent()) {
+            // 가입 이력이 있는 경우
+            member = memberOpt.get();
+
+            if (member.isActive()) { // 이미 가입 상태
+                throw new GroupException(GroupErrorCode.ALREADY_JOINED);
+            } else { // 탈퇴 상태 → 복구
+                member.rejoin();
+            }
+        } else {
+            // 가입 이력이 없는 경우
+            member = GroupMember.create(user, group);
+            groupMemberRepository.save(member);
         }
-
-        // 그룹 멤버 생성
-        GroupMember member = GroupMember.create(user, group);
-        // 탈퇴 상태였으면 rejoin
-
-        groupMemberRepository.save(member);
 
         return new GroupJoinResponse(group.getId(), group.getName(), member.getRole().name());
     }
