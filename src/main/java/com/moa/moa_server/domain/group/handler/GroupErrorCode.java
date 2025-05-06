@@ -7,7 +7,8 @@ public enum GroupErrorCode implements BaseErrorCode {
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
     INVALID_CODE_FORMAT(HttpStatus.BAD_REQUEST),
     INVITE_CODE_NOT_FOUND(HttpStatus.NOT_FOUND),
-    ALREADY_JOINED(HttpStatus.CONFLICT);
+    ALREADY_JOINED(HttpStatus.CONFLICT),
+    CANNOT_JOIN_PUBLIC_GROUP(HttpStatus.BAD_REQUEST),;
 
     private final HttpStatus status;
 

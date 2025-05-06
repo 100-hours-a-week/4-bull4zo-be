@@ -40,16 +40,20 @@ public class GroupService {
         // 초대 코드 형식 검증
         GroupValidator.validateInviteCode(inviteCode);
 
-        // 공개 그룹은 패스
-
         // 유저 조회 및 상태 확인
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
         AuthUserValidator.validateActive(user);
 
         // 초대 코드로 그룹 조회
+        // deletedAt IS NULL 조건을 명시적으로 추가
         Group group = groupRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new GroupException(GroupErrorCode.INVITE_CODE_NOT_FOUND));
+
+        // 공개 그룹은 패스
+        if (group.isPublicGroup()) {
+            throw new GroupException(GroupErrorCode.CANNOT_JOIN_PUBLIC_GROUP);
+        }
 
         // 이미 가입 여부 확인 (deletedAt이 null 인지도 체크. null이면 패스. 아래에서 재가입)
         boolean alreadyJoined = groupMemberRepository.existsByUserAndGroupAndDeletedAtIsNull(user, group);
