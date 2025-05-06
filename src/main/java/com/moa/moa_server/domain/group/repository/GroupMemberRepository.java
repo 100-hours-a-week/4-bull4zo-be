@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
+public interface GroupMemberRepository extends JpaRepository<GroupMember, Long>, GroupMemberRepositoryCustom {
     @Query("SELECT gm FROM GroupMember gm WHERE gm.group = :group AND gm.user = :user")
     Optional<GroupMember> findByGroupAndUserIncludingDeleted(Group group, User user);
 
