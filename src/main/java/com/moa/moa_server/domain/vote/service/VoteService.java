@@ -1,10 +1,12 @@
 package com.moa.moa_server.domain.vote.service;
 
+import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
+import com.moa.moa_server.domain.group.service.GroupService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -15,6 +17,8 @@ import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
+import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
+import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteOptionResult;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
@@ -48,6 +52,9 @@ public class VoteService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final VoteResponseRepository voteResponseRepository;
+
+    private final GroupService groupService;
+    private final VoteResultService voteResultService;
 
     @Transactional
     public Long createVote(Long userId, VoteCreateRequest request) {
@@ -255,6 +262,53 @@ public class VoteService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public MyVoteResponse getMyVotes(Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
+        int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
+        CreatedAtVoteIdCursor parsedCursor = cursor != null ? CreatedAtVoteIdCursor.parse(cursor) : null;
+
+        // 유저 조회 및 검증
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+        AuthUserValidator.validateActive(user);
+
+        // 조회 대상 그룹 목록 수집
+        List<Group> groups;
+        if (groupId != null) {
+            // 특정 그룹이 지정된 경우
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
+            groups = List.of(group);
+        } else {
+            // 전체 그룹 조회: 유저가 속한 그룹 + 공개 그룹
+            groups = groupMemberRepository.findAllActiveGroupsByUser(user);
+
+            Group publicGroup = groupService.getPublicGroup();
+            if (!groups.contains(publicGroup)) {
+                groups.add(publicGroup);
+            }
+        }
+
+        // 사용자가 생성한 투표 목록 조회
+        List<Vote> votes = voteRepository.findMyVotes(user, groups, parsedCursor, pageSize + 1);
+
+        // 응답 구성
+        boolean hasNext = votes.size() > pageSize;
+        if (hasNext) votes = votes.subList(0, pageSize);
+
+        String nextCursor = votes.isEmpty() ? null :
+                new CreatedAtVoteIdCursor(votes.getLast().getCreatedAt(), votes.getLast().getId()).encode();
+
+        // 각 투표별 집계 결과를 포함한 응답 DTO 구성
+        List<MyVoteItem> items = votes.stream()
+                .map(vote -> {
+                    var results = voteResultService.getResultsWithVoteId(vote);
+                    return MyVoteItem.from(vote, results);
+                })
+                .toList();
+        return new MyVoteResponse(items, nextCursor, hasNext, items.size());
+    }
+
     /**
      * 투표 조회
      */
@@ -330,8 +384,7 @@ public class VoteService {
         }
 
         // 전체 그룹 조회: 공개 그룹 + 사용자의 그룹
-        Group publicGroup = groupRepository.findById(1L)
-                .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
+        Group publicGroup = groupService.getPublicGroup();
         List<Group> userGroups = groupMemberRepository.findAllActiveGroupsByUser(user);
 
         return Stream.concat(Stream.of(publicGroup), userGroups.stream()).distinct().toList();

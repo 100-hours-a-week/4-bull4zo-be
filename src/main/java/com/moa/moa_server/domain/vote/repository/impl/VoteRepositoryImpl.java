@@ -64,16 +64,13 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
     }
 
     @Override
-    public List<Vote> findMyVotes(User user, @Nullable Group group, @Nullable CreatedAtVoteIdCursor cursor, int size) {
+    public List<Vote> findMyVotes(User user, List<Group> groups, @Nullable CreatedAtVoteIdCursor cursor, int size) {
         QVote vote = QVote.vote;
 
         BooleanBuilder builder = new BooleanBuilder()
                 .and(vote.user.eq(user))
-                .and(vote.deletedAt.isNull());
-
-        if (group != null) {
-            builder.and(vote.group.eq(group));
-        }
+                .and(vote.deletedAt.isNull())
+                .and(vote.group.in(groups));
 
         if (cursor != null) {
             builder.and(
