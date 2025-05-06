@@ -101,7 +101,7 @@ public class GroupService {
 
         // 그룹 이름 중복 검사
         if (groupRepository.existsByName(request.name())) {
-            throw new GroupException(GroupErrorCode.DUPLICATE_NAME);
+            throw new GroupException(GroupErrorCode.DUPLICATED_NAME);
         }
 
         // 초대 코드 생성

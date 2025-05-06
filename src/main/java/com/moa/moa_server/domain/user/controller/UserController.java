@@ -4,7 +4,6 @@ import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.user.dto.response.GroupLabelResponse;
 import com.moa.moa_server.domain.user.dto.response.JoinedGroupResponse;
 import com.moa.moa_server.domain.user.dto.response.UserInfoResponse;
-import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

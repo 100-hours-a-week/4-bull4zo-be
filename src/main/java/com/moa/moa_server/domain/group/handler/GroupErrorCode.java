@@ -11,7 +11,7 @@ public enum GroupErrorCode implements BaseErrorCode {
     CANNOT_JOIN_PUBLIC_GROUP(HttpStatus.BAD_REQUEST),
     INVALID_INPUT(HttpStatus.BAD_REQUEST),
     INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR),
-    DUPLICATE_NAME(HttpStatus.CONFLICT);
+    DUPLICATED_NAME(HttpStatus.CONFLICT);
 
     private final HttpStatus status;
 
