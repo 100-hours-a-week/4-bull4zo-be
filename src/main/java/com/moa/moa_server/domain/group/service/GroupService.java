@@ -99,6 +99,11 @@ public class GroupService {
         }
         String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
 
+        // 그룹 이름 중복 검사
+        if (groupRepository.existsByName(request.name())) {
+            throw new GroupException(GroupErrorCode.DUPLICATE_NAME);
+        }
+
         // 초대 코드 생성
         String inviteCode = generateUniqueInviteCode();
 
