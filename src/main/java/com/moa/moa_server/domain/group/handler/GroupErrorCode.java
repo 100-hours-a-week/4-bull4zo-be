@@ -4,7 +4,10 @@ import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum GroupErrorCode implements BaseErrorCode {
-    GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),;
+    GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
+    INVALID_CODE_FORMAT(HttpStatus.BAD_REQUEST),
+    INVITE_CODE_NOT_FOUND(HttpStatus.NOT_FOUND),
+    ALREADY_JOINED(HttpStatus.CONFLICT);
 
     private final HttpStatus status;
 
