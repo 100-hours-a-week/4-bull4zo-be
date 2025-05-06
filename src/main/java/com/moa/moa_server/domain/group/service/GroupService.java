@@ -19,6 +19,7 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class GroupService {
+
+    private static final int MAX_INVITE_CODE_RETRY = 10;
 
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
@@ -94,10 +97,10 @@ public class GroupService {
         if (!request.imageUrl().isBlank()) {
             GroupValidator.validateImageUrl(request.imageUrl()); // 업로드 도메인 검증
         }
+        String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
 
         // 초대 코드 생성
-        String inviteCode = "";
-        String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl();
+        String inviteCode = generateUniqueInviteCode();
 
         // 그룹 생성
         Group group = Group.create(user, request.name(), request.description(), imageUrl, inviteCode);
@@ -115,5 +118,15 @@ public class GroupService {
                 group.getInviteCode(),
                 group.getCreatedAt()
         );
+    }
+
+    private String generateUniqueInviteCode() {
+        for (int i = 0; i < MAX_INVITE_CODE_RETRY; i++) {
+            String code = RandomStringUtils.randomAlphanumeric(6, 8).toUpperCase();
+            if (!groupRepository.existsByInviteCode(code)) {
+                return code;
+            }
+        }
+        throw new GroupException(GroupErrorCode.INVITE_CODE_GENERATION_FAILED);
     }
 }
