@@ -75,14 +75,14 @@ public class Vote extends BaseTimeEntity {
     }
 
     public static Vote createUserVote(User user, Group group, String content, String imageUrl,
-                                      LocalDateTime closedAt, boolean adminVote) {
+                                      LocalDateTime closedAt, boolean anonymous, boolean adminVote) {
         return Vote.builder()
                 .user(user)
                 .group(group)
                 .content(content)
                 .imageUrl(imageUrl)
                 .closedAt(closedAt)
-                .anonymous(false) // TODO: 익명 기능 추가 시, 요청값으로 변경
+                .anonymous(anonymous)
                 .voteStatus(VoteStatus.OPEN) // TODO: 투표 검열 기능 추가 시, PENDING 으로 변경
                 .adminVote(adminVote)
                 .voteType(VoteType.USER)
