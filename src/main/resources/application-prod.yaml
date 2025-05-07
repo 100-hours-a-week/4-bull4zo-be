@@ -9,7 +9,10 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 20
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
@@ -21,3 +24,8 @@ frontend:
 
 ai:
   server-url: ${AI_SERVER_URL}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
