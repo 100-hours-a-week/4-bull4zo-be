@@ -158,11 +158,16 @@ public class UserService {
         voteRepository.softDeleteAllByUser(user);
 
         // 4. 카카오 연동 해제
-        Long kakaoUserId = oauthRepository.findByUser(user)
+        String kakaoUserId = oauthRepository.findByUser(user)
                 .filter(oauth -> oauth.getProviderCode() == OAuth.ProviderCode.KAKAO)
                 .map(OAuth::getId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.OAUTH_NOT_FOUND));
-        authService.unlinkKakaoAccount(kakaoUserId);
+        try {
+            Long kakaoUserIdLong = Long.parseLong(kakaoUserId);
+            authService.unlinkKakaoAccount(kakaoUserIdLong);
+        } catch (NumberFormatException e) {
+            throw new AuthException(AuthErrorCode.INVALID_KAKAO_ID);
+        }
 
         // 5. 토큰, OAuth 삭제 (hard delete)
         tokenRepository.deleteByUserId(userId);

@@ -18,7 +18,7 @@ public class OAuth {
 
     @Id
     @Column(length = 100, nullable = false)
-    private Long id; // 소셜 사용자 ID
+    private String id; // 소셜 사용자 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

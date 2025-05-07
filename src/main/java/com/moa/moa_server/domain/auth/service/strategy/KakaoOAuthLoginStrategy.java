@@ -65,7 +65,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         String kakaoAccessToken = getAccessToken(code, redirectUri);
 
         // 카카오 액세스 토큰으로 사용자 정보 요청
-        Long kakaoId = getUserInfo(kakaoAccessToken);
+        String kakaoId = getUserInfo(kakaoAccessToken);
 
         // 사용자 정보 DB 조회
         Optional<OAuth> oAuthOptional = oAuthRepository.findById(kakaoId);
@@ -116,7 +116,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         }
     }
 
-    private Long getUserInfo(String accessToken) {
+    private String getUserInfo(String accessToken) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
@@ -126,7 +126,8 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(kakaoUserInfoUri, request, Map.class);
-            return (Long) response.getBody().get("id");
+            Object kakaoId = response.getBody().get("id");
+            return String.valueOf(kakaoId);
         } catch (Exception e) {
             throw new AuthException(AuthErrorCode.KAKAO_USERINFO_FAILED);
         }
