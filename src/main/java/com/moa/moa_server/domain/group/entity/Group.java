@@ -7,6 +7,8 @@ import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -56,5 +58,13 @@ public class Group extends BaseTimeEntity {
 
     public boolean isPublicGroup() {
         return this.id != null && this.id.equals(PUBLIC_GROUP_ID);
+    }
+
+    public void changeOwner(User newOwner) {
+        this.user = newOwner;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

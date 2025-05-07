@@ -162,11 +162,11 @@ public class UserService {
         tokenRepository.deleteByUserId(userId);
         oauthRepository.deleteByUserId(userId);
 
-        // 그룹 멤버 삭제 (hard-delete)
-        groupMemberRepository.deleteAllByUserId(userId);
-
         // 그룹 소유자 승계
-        // groupService.reassignOrDeleteGroupsOwnedBy(user);
+        groupService.reassignOrDeleteGroupsOwnedBy(user);
+
+        // 그룹 멤버 삭제 (hard delete)
+        groupMemberRepository.deleteAllByUserId(userId);
 
         // 유저가 생성한 투표 삭제 (soft delete)
         voteRepository.softDeleteAllByUser(user);

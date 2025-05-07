@@ -74,4 +74,12 @@ public class GroupMember {
                 .joinedAt(LocalDateTime.now())
                 .build();
     }
+
+    public boolean isActiveUser() {
+        return user != null && user.getUserStatus() == User.UserStatus.ACTIVE;
+    }
+
+    public void changeToOwner() {
+        this.role = Role.OWNER;
+    }
 }

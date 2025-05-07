@@ -19,14 +19,17 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GroupService {
 
     private static final int MAX_INVITE_CODE_RETRY = 10;
@@ -133,5 +136,48 @@ public class GroupService {
             }
         }
         throw new GroupException(GroupErrorCode.INVITE_CODE_GENERATION_FAILED);
+    }
+
+    @Transactional
+    public void reassignOrDeleteGroupsOwnedBy(User user) {
+        // 사용자가 소유한 그룹 목록 조회
+        List<Group> ownedGroups = groupRepository.findAllByUser(user);
+
+        for (Group group : ownedGroups) {
+            // 해당 그룹의 멤버 전체를 가입 순으로 조회
+            List<GroupMember> members = groupMemberRepository.findAllByGroupOrderByJoinedAtAsc(group).stream()
+                    .filter(m -> !m.getUser().equals(user)) // 탈퇴한 사용자 제외
+                    .toList();
+
+            // 1순위: 남아있는 활성 관리자(MANAGER) 중 가장 오래된 사용자에게 소유권 승계
+            Optional<GroupMember> admin = members.stream()
+                    .filter(m -> m.getRole() == GroupMember.Role.MANAGER)
+                    .filter(GroupMember::isActiveUser)
+                    .findFirst();
+
+            if (admin.isPresent()) {
+                GroupMember newOwner = admin.get();
+                newOwner.changeToOwner();               // 그룹 멤버 role 변경
+                group.changeOwner(newOwner.getUser());  // 그룹의 소유자 변경
+                continue;
+            }
+
+            // 2순위: 활성 일반 멤버(MEMBER) 중 가장 오래된 사용자에게 소유권 승계
+            Optional<GroupMember> regularMember = members.stream()
+                    .filter(m -> m.getRole() == GroupMember.Role.MEMBER)
+                    .filter(GroupMember::isActiveUser)
+                    .findFirst();
+
+            if (regularMember.isPresent()) {
+                GroupMember newOwner = regularMember.get();
+                newOwner.changeToOwner();
+                group.changeOwner(newOwner.getUser());
+                continue;
+            }
+
+            // 3순위: 그룹에 남은 활성 멤버가 없을 경우 그룹 자체를 소프트 삭제
+            group.softDelete();
+            log.info("[GroupService#reassignOrDeleteGroupsOwnedBy] 활성 멤버가 없어 그룹 {}을(를) 삭제했습니다.", group.getId() != null ? group.getId() : "unknown");
+        }
     }
 }
