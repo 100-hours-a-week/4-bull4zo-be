@@ -56,6 +56,7 @@ public class VoteService {
 
     private final GroupService groupService;
     private final VoteResultService voteResultService;
+    private final VoteModerationService voteModerationService;
 
     @Transactional
     public Long createVote(Long userId, VoteCreateRequest request) {
@@ -92,8 +93,10 @@ public class VoteService {
                 request.closedAt(),
                 adminVote
         );
-
         voteRepository.save(vote);
+
+        // AI 서버로 검열 요청
+        voteModerationService.requestModeration(vote.getId(), vote.getContent());
 
         return vote.getId();
     }

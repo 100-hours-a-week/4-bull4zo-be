@@ -21,7 +21,7 @@ kakao:
   admin-key: ${KAKAO_ADMIN_KEY}
 
 ai:
-  server-url: http://localhost:8080/mock-ai
+  server-url: ${AI_SERVER_URL}
 mock:
   ai:
     enabled: true

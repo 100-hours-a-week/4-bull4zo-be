@@ -83,7 +83,7 @@ public class Vote extends BaseTimeEntity {
                 .imageUrl(imageUrl)
                 .closedAt(closedAt)
                 .anonymous(false) // TODO: 익명 기능 추가 시, 요청값으로 변경
-                .voteStatus(VoteStatus.OPEN) // TODO: 투표 검열 기능 추가 시, PENDING 으로 변경
+                .voteStatus(VoteStatus.PENDING) // TODO: 투표 검열 기능 추가 시, PENDING 으로 변경
                 .adminVote(adminVote)
                 .voteType(VoteType.USER)
                 .lastAnonymousNumber(0)
