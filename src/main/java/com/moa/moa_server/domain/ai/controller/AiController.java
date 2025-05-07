@@ -11,8 +11,8 @@ public class AiController {
 
     // AI 검열 결과 수신용
     // `/api/v1/ai/votes/moderation/callback`
-    @PostMapping("/votes/moderation/callback")
-    public ResponseEntity<String> aiVotesTest() {
-        return ResponseEntity.ok("AI vote received (mock)");
-    }
+//    @PostMapping("/votes/moderation/callback")
+//    public ResponseEntity<String> aiVotesTest() {
+//        return ResponseEntity.ok("AI vote received (mock)");
+//    }
 }

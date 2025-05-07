@@ -93,4 +93,8 @@ public class Vote extends BaseTimeEntity {
     public boolean isOpen() {
         return this.voteStatus == VoteStatus.OPEN;
     }
+
+    public void updateModerationResult(VoteStatus voteStatus) {
+        this.voteStatus = voteStatus;
+    }
 }

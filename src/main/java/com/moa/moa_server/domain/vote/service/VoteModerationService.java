@@ -55,27 +55,36 @@ public class VoteModerationService {
 
     @Transactional
     public VoteModerationCallbackResponse handleCallback(VoteModerationCallbackRequest request) {
-//        Vote vote = voteRepository.findById(request.voteId())
-//                .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
-//
-//        // result enum 매핑
-//        Vote.VoteStatus status = Vote.VoteStatus.valueOf(request.result().toUpperCase());
-//        ModerationRejectReason reason = ModerationRejectReason.valueOf(request.reason().toUpperCase());
-//
-//        // 상태 반영
-//        vote.updateModerationResult(status);
-//
-//        // 로그 저장
-//        VoteModerationLog log = VoteModerationLog.of(
-//                vote,
-//                status,
-//                reason,
-//                request.reasonDetail(),
-//                request.version()
-//        );
-//        moderationLogRepository.save(log);
-//
-//        return new VoteModerationResult(vote.getId(), true);
-        return null;
+        Vote vote = voteRepository.findById(request.voteId())
+                .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+
+        // result enum 매핑
+        VoteModerationLog.ReviewResult reviewResult;
+        VoteModerationLog.ReviewReason reviewReason;
+        try {
+            reviewResult = VoteModerationLog.ReviewResult.valueOf(request.result().toUpperCase());
+            reviewReason = VoteModerationLog.ReviewReason.valueOf(request.reason().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new VoteException(VoteErrorCode.INVALID_MODERATION_RESULT);
+        }
+
+        // 상태 반영
+        if (reviewResult == VoteModerationLog.ReviewResult.REJECTED) {
+            vote.updateModerationResult(Vote.VoteStatus.REJECTED);
+        } else if (reviewResult == VoteModerationLog.ReviewResult.APPROVED) {
+            vote.updateModerationResult(Vote.VoteStatus.OPEN);
+        }
+
+        // 로그 저장
+        VoteModerationLog log = VoteModerationLog.create(
+                vote,
+                reviewResult,
+                reviewReason,
+                request.reasonDetail(),
+                request.version()
+        );
+        moderationLogRepository.save(log);
+
+        return new VoteModerationCallbackResponse(vote.getId(), true);
     }
 }
