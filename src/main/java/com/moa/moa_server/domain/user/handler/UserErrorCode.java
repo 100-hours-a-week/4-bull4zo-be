@@ -9,7 +9,8 @@ public enum UserErrorCode implements BaseErrorCode {
     USER_WITHDRAWN(HttpStatus.UNAUTHORIZED),
     INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),
     INVALID_NICKNAME(HttpStatus.BAD_REQUEST),
-    DUPLICATED_NICKNAME(HttpStatus.CONFLICT);
+    DUPLICATED_NICKNAME(HttpStatus.CONFLICT),
+    NICKNAME_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final HttpStatus status;
 

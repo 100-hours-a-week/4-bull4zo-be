@@ -10,6 +10,7 @@ import com.moa.moa_server.domain.auth.service.JwtTokenService;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
+import com.moa.moa_server.domain.user.util.NicknameGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,8 +73,9 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
                 .map(OAuth::getUser)
                 .orElseGet(() -> {
                     // 신규 회원가입
+                    String nickname = NicknameGenerator.generate(userRepository);
                     User newUser = User.builder()
-                            .nickname("kakao_" + kakaoId)
+                            .nickname(nickname)
                             .role(User.Role.USER)
                             .userStatus(User.UserStatus.ACTIVE)
                             .lastActiveAt(LocalDateTime.now())
