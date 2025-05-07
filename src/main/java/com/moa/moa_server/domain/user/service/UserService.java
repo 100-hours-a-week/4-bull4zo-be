@@ -148,27 +148,27 @@ public class UserService {
                 .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
         AuthUserValidator.validateActive(user);
 
-        // 회원 상태 변경 (soft delete)
-        user.withdraw();
+        // 1. 그룹 소유자 승계
+        groupService.reassignOrDeleteGroupsOwnedBy(user);
 
-        // 카카오 연동 해제
+        // 2. 그룹 멤버 삭제 (hard delete)
+        groupMemberRepository.deleteAllByUserId(userId);
+
+        // 3. 유저가 생성한 투표 삭제 (soft delete)
+        voteRepository.softDeleteAllByUser(user);
+
+        // 4. 카카오 연동 해제
         Long kakaoUserId = oauthRepository.findByUser(user)
                 .filter(oauth -> oauth.getProviderCode() == OAuth.ProviderCode.KAKAO)
                 .map(OAuth::getId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.OAUTH_NOT_FOUND));
         authService.unlinkKakaoAccount(kakaoUserId);
 
-        // 토큰, OAuth 삭제 (hard delete)
+        // 5. 토큰, OAuth 삭제 (hard delete)
         tokenRepository.deleteByUserId(userId);
         oauthRepository.deleteByUserId(userId);
 
-        // 그룹 소유자 승계
-        groupService.reassignOrDeleteGroupsOwnedBy(user);
-
-        // 그룹 멤버 삭제 (hard delete)
-        groupMemberRepository.deleteAllByUserId(userId);
-
-        // 유저가 생성한 투표 삭제 (soft delete)
-        voteRepository.softDeleteAllByUser(user);
+        // 6. 회원 상태 변경 (soft delete)
+        user.withdraw();
     }
 }
