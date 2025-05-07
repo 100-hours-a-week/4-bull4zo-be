@@ -152,7 +152,7 @@ public class UserService {
         groupService.reassignOrDeleteGroupsOwnedBy(user);
 
         // 2. 그룹 멤버 삭제 (hard delete)
-        groupMemberRepository.deleteAllByUserId(userId);
+        groupMemberRepository.hardDeleteAllByUserId(userId);
 
         // 3. 유저가 생성한 투표 삭제 (soft delete)
         voteRepository.softDeleteAllByUser(user);
