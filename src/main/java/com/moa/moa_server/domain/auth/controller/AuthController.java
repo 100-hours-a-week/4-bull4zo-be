@@ -33,10 +33,11 @@ public class AuthController {
     @PostMapping("/login/oauth")
     public ResponseEntity<ApiResponse> oAuthLogin(
             @RequestBody LoginRequest request,
+            @RequestHeader("X-Redirect-Uri") String redirectUri,
             HttpServletResponse response
     ) {
         // OAuth 로그인 서비스 로직 수행
-        LoginResult dto = authService.login(request.provider(), request.code());
+        LoginResult dto = authService.login(request.provider(), request.code(), redirectUri);
         LoginResponse loginResponseDto = dto.loginResponseDto();
         String refreshToken = dto.refreshToken();
 

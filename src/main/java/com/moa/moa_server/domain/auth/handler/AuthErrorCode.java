@@ -13,7 +13,8 @@ public enum AuthErrorCode implements BaseErrorCode {
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST),
     KAKAO_TOKEN_FAILED(HttpStatus.UNAUTHORIZED),
     KAKAO_USERINFO_FAILED(HttpStatus.UNAUTHORIZED),
-    OAUTH_NOT_FOUND(HttpStatus.NOT_FOUND),;
+    OAUTH_NOT_FOUND(HttpStatus.NOT_FOUND),
+    INVALID_REDIRECT_URI(HttpStatus.BAD_REQUEST),;
 
     private final HttpStatus status;
 

@@ -60,9 +60,9 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
 
     @Transactional
     @Override
-    public LoginResult login(String code) {
+    public LoginResult login(String code, String redirectUri) {
         // 인가코드로 카카오 액세스 토큰 요청
-        String kakaoAccessToken = getAccessToken(code);
+        String kakaoAccessToken = getAccessToken(code, redirectUri);
 
         // 카카오 액세스 토큰으로 사용자 정보 요청
         Long kakaoId = getUserInfo(kakaoAccessToken);
@@ -95,7 +95,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         return new LoginResult(loginResponseDto, refreshToken);
     }
 
-    private String getAccessToken(String code) {
+    private String getAccessToken(String code, String redirectUri) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -103,7 +103,7 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", kakaoClientId);
-        body.add("redirect_uri", kakaoRedirectUri);
+        body.add("redirect_uri", redirectUri);
         body.add("code", code);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);

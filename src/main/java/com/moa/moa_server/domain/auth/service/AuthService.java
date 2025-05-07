@@ -14,23 +14,35 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final Set<String> ALLOWED_REDIRECT_URIS = Set.of(
+            "http://localhost:5173/auth/callback",
+            "https://b4z.moagenda.com/auth/callback",
+            "http://localhost:8080/api/v1/auth/login/oauth"
+    );
+
     private final Map<String, OAuthLoginStrategy> strategies;
     private final JwtTokenService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
 
-    public LoginResult login(String provider, String code) {
+    public LoginResult login(String provider, String code, String redirectUri) {
         if (!OAuth.ProviderCode.isSupported(provider)) {
             throw new AuthException(AuthErrorCode.INVALID_PROVIDER);
         }
 
+        if (!ALLOWED_REDIRECT_URIS.contains(redirectUri)) {
+            log.error("redirectUri: {} is not allowed. ALLOWED_REDIRECT_URIS: {}", redirectUri, ALLOWED_REDIRECT_URIS);
+            throw new AuthException(AuthErrorCode.INVALID_REDIRECT_URI);
+        }
+
         OAuthLoginStrategy strategy = strategies.get(provider.toLowerCase());
-        return strategy.login(code);
+        return strategy.login(code, redirectUri);
     }
 
     @Transactional(readOnly = true)

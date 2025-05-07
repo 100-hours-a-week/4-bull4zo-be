@@ -27,4 +27,5 @@ mock:
 
 logging:
   level:
+    root: INFO
     org.springframework.security: DEBUG
