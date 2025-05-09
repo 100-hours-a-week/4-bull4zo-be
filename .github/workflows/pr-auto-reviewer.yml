@@ -1,0 +1,22 @@
+name: Auto assign reviewer
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+
+permissions:
+  pull-requests: write
+
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign reviewer
+        uses: kentaro-m/auto-assign-action@v1.2.1
+        with:
+          configuration-path: ".github/auto_assign.yml"
