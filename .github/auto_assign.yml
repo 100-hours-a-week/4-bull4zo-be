@@ -1,4 +1,5 @@
 addReviewers: true
+numberOfReviewers: 2
 reviewers:
   - soonge2
   - yunabyte
