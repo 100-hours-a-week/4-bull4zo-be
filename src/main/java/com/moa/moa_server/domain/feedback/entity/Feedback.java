@@ -23,4 +23,11 @@ public class Feedback extends BaseTimeEntity {
 
     @Column(length = 500, nullable = false)
     private String content;
+
+    public static Feedback create(User user, String content) {
+        return Feedback.builder()
+                .user(user)
+                .content(content)
+                .build();
+    }
 }
