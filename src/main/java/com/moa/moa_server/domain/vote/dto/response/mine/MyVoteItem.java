@@ -17,11 +17,12 @@ public record MyVoteItem(
 ) {
 
     public static MyVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
+        String status = vote.getClosedAt().isAfter(LocalDateTime.now()) ? "OPEN" : "CLOSED";
         return new MyVoteItem(
                 vote.getId(),
                 vote.getGroup().getId(),
                 vote.getContent(),
-                vote.getVoteStatus().name(),
+                status,
                 vote.getCreatedAt(),
                 vote.getClosedAt(),
                 results
