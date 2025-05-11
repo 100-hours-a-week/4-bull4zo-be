@@ -90,7 +90,7 @@ public class VoteService {
                 group,
                 request.content(),
                 imageUrl,
-                request.closedAt(),
+                request.closedAt().minusHours(9),
                 request.anonymous(),
                 adminVote
         );
