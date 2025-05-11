@@ -91,9 +91,13 @@ public class VoteService {
         VoteValidator.validateImageUrl(request.imageUrl());
         String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
 
+        // 투표 종료 시간 변환
         ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
         LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
         VoteValidator.validateClosedAt(utcTime);
+
+        // VoteStatus 결정
+        Vote.VoteStatus status = "local".equals(activeProfile) ? Vote.VoteStatus.OPEN : Vote.VoteStatus.PENDING;
 
         // Vote 생성 및 저장
         Vote vote = Vote.createUserVote(
@@ -103,6 +107,7 @@ public class VoteService {
                 imageUrl,
                 request.closedAt(),
                 request.anonymous(),
+                status,
                 adminVote
         );
         voteRepository.save(vote);

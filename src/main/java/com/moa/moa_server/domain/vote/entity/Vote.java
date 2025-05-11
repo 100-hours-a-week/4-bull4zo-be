@@ -75,7 +75,7 @@ public class Vote extends BaseTimeEntity {
     }
 
     public static Vote createUserVote(User user, Group group, String content, String imageUrl,
-                                      LocalDateTime closedAt, boolean anonymous, boolean adminVote) {
+                                      LocalDateTime closedAt, boolean anonymous, VoteStatus status, boolean adminVote) {
         return Vote.builder()
                 .user(user)
                 .group(group)
@@ -83,7 +83,7 @@ public class Vote extends BaseTimeEntity {
                 .imageUrl(imageUrl)
                 .closedAt(closedAt)
                 .anonymous(anonymous)
-                .voteStatus(VoteStatus.PENDING)
+                .voteStatus(status)
                 .adminVote(adminVote)
                 .voteType(VoteType.USER)
                 .lastAnonymousNumber(0)
