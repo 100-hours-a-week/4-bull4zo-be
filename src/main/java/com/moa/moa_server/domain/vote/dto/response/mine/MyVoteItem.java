@@ -17,7 +17,13 @@ public record MyVoteItem(
 ) {
 
     public static MyVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
-        String status = vote.getClosedAt().isAfter(LocalDateTime.now()) ? "OPEN" : "CLOSED";
+        String status;
+        if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED || vote.getVoteStatus() == Vote.VoteStatus.PENDING) {
+            status = vote.getVoteStatus().name();
+        } else {
+            status = vote.getClosedAt().isAfter(LocalDateTime.now()) ? "OPEN" : "CLOSED";
+        }
+
         return new MyVoteItem(
                 vote.getId(),
                 vote.getGroup().getId(),
