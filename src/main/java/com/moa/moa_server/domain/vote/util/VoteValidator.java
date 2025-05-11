@@ -4,6 +4,7 @@ import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 public class VoteValidator {
 
@@ -23,7 +24,7 @@ public class VoteValidator {
     }
 
     public static void validateClosedAt(LocalDateTime closedAt) {
-        if (closedAt == null || !closedAt.isAfter(LocalDateTime.now())) {
+        if (closedAt == null || !closedAt.isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
             throw new VoteException(VoteErrorCode.INVALID_TIME);        }
     }
 }

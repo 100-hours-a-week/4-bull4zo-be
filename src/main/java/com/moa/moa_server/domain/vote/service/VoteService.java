@@ -33,10 +33,15 @@ import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -44,6 +49,9 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class VoteService {
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfile;
 
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int DEFAULT_UNAUTHENTICATED_PAGE_SIZE = 3;
@@ -82,7 +90,10 @@ public class VoteService {
         VoteValidator.validateContent(request.content());
         VoteValidator.validateImageUrl(request.imageUrl());
         String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
-        VoteValidator.validateClosedAt(request.closedAt());
+
+        ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
+        LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        VoteValidator.validateClosedAt(utcTime);
 
         // Vote 생성 및 저장
         Vote vote = Vote.createUserVote(
@@ -90,14 +101,16 @@ public class VoteService {
                 group,
                 request.content(),
                 imageUrl,
-                request.closedAt().minusHours(9),
+                request.closedAt(),
                 request.anonymous(),
                 adminVote
         );
         voteRepository.save(vote);
 
-        // AI 서버로 검열 요청
-        voteModerationService.requestModeration(vote.getId(), vote.getContent());
+        // AI 서버로 검열 요청 (로컬 환경 제외)
+        if (!"local".equals(activeProfile)) {
+            voteModerationService.requestModeration(vote.getId(), vote.getContent());
+        }
 
         return vote.getId();
     }
