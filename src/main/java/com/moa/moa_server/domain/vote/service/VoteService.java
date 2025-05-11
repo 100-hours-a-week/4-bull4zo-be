@@ -105,7 +105,7 @@ public class VoteService {
                 group,
                 request.content(),
                 imageUrl,
-                request.closedAt(),
+                utcTime,
                 request.anonymous(),
                 status,
                 adminVote
