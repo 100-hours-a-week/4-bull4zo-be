@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.ai.mock;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.moa.moa_server.domain.ai.dto.ModerationRequest;
 import com.moa.moa_server.domain.ai.dto.ModerationResponse;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @ConditionalOnProperty(name = "mock.ai.enabled", havingValue = "true")
 @RestController
 @RequestMapping("/mock-ai/api/v1")

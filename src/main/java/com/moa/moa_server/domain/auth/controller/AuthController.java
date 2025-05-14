@@ -12,6 +12,8 @@ import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Auth", description = "인증 도메인 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -30,6 +33,7 @@ public class AuthController {
 
     private final UserRepository userRepository;
 
+    @Operation(summary = "소셜 로그인")
     @PostMapping("/login/oauth")
     public ResponseEntity<ApiResponse> oAuthLogin(
             @RequestBody LoginRequest request,
@@ -54,6 +58,7 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse("SUCCESS", loginResponseDto));
     }
 
+    @Operation(summary = "토큰 재발급")
     @PostMapping("/token/refresh")
     public ResponseEntity<ApiResponse> refreshAccessToken(HttpServletRequest request) {
         // 쿠키에서 리프레시 토큰 추출
@@ -65,6 +70,7 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse("SUCCESS", tokenRefreshResponseDto));
     }
 
+    @Operation(summary = "로그아웃")
     @DeleteMapping("/logout")
     public ResponseEntity<ApiResponse> logout(
             @AuthenticationPrincipal Long userId,

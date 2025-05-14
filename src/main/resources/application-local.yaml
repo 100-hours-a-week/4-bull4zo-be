@@ -30,4 +30,3 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.hibernate.type.descriptor.sql: trace
-    org.springframework.security.web.FilterChainProxy: INFO

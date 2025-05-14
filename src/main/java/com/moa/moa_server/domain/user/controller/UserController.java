@@ -7,11 +7,14 @@ import com.moa.moa_server.domain.user.dto.response.JoinedGroupResponse;
 import com.moa.moa_server.domain.user.dto.response.UserInfoResponse;
 import com.moa.moa_server.domain.user.dto.response.UserUpdateResponse;
 import com.moa.moa_server.domain.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "User", description = "유저 도메인 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/user")
@@ -19,6 +22,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @Operation(summary = "가입한 그룹 라벨 조회", description = "사용자가 가입한 그룹들의 Id와 이름을 조회합니다.")
     @GetMapping("/groups/labels")
     public ResponseEntity<ApiResponse> getJoinedGroupLabels(
             @AuthenticationPrincipal Long userId,
@@ -29,6 +33,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 
+    @Operation(summary = "가입한 그룹 목록 조회", description = "사용자가 가입한 그룹들의 상세 정보를 조회합니다.")
     @GetMapping("/groups")
     public ResponseEntity<ApiResponse> getJoinedGroups(
             @AuthenticationPrincipal Long userId,
@@ -39,6 +44,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 
+    @Operation(summary = "회원 정보 조회")
     @GetMapping
     public ResponseEntity<ApiResponse> getUserInfo(
             @AuthenticationPrincipal Long userId
@@ -47,6 +53,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 
+    @Operation(summary = "회원 정보 수정")
     @PatchMapping
     public ResponseEntity<ApiResponse> updateUserInfo(
             @AuthenticationPrincipal Long userId,
@@ -56,6 +63,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse("SUCCESS", response));
     }
 
+    @Operation(summary = "회원 탈퇴")
     @DeleteMapping
     public ResponseEntity<ApiResponse> deleteUser(
             @AuthenticationPrincipal Long userId
