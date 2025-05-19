@@ -25,10 +25,6 @@ mock:
   ai:
     enabled: false
 
-springdoc:
-  swagger-ui:
-    path: /_docs-d3v-p0rt4l
-
 logging:
   level:
     root: INFO
