@@ -8,10 +8,12 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
+@Profile({"local", "dev"})
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "MOA API", version = "v1"),
+        info = @Info(title = "MOA API", version = "v1", description = "모아 서비스 API 문서입니다."),
         security = @SecurityRequirement(name = "bearer-key")
 )
 public class SwaggerConfig {

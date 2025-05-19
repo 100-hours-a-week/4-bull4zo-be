@@ -26,6 +26,10 @@ mock:
   ai:
     enabled: true
 
+springdoc:
+  swagger-ui:
+    path: /_docs-l0c4l-d3v-ui
+
 logging:
   level:
     org.springframework.security: DEBUG

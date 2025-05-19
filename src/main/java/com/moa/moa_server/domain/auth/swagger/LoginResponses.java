@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
                 examples = {
                         @ExampleObject(
                                 name = "KAKAO_TOKEN_FAILED",
-                                description = "카카오 토근 받기 실패",
+                                description = "카카오 토큰 받기 실패",
                                 value = "{\"message\": \"KAKAO_TOKEN_FAILED\", \"data\": null}"
                         ),
                         @ExampleObject(

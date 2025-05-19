@@ -25,6 +25,12 @@ frontend:
 ai:
   server-url: ${AI_SERVER_URL}
 
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
 logging:
   level:
     root: INFO
