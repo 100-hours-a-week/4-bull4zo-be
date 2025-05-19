@@ -9,10 +9,13 @@ import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.AuthService;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
+import com.moa.moa_server.domain.global.dto.ApiResponseVoid;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,7 +38,7 @@ public class AuthController {
 
     @Operation(summary = "소셜 로그인")
     @PostMapping("/login/oauth")
-    public ResponseEntity<ApiResponse> oAuthLogin(
+    public ResponseEntity<ApiResponse<LoginResponse>> oAuthLogin(
             @RequestBody LoginRequest request,
             @RequestHeader("X-Redirect-Uri") String redirectUri,
             HttpServletResponse response
@@ -55,24 +58,31 @@ public class AuthController {
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
 
-        return ResponseEntity.ok(new ApiResponse("SUCCESS", loginResponseDto));
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", loginResponseDto));
     }
 
     @Operation(summary = "토큰 재발급")
     @PostMapping("/token/refresh")
-    public ResponseEntity<ApiResponse> refreshAccessToken(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<TokenRefreshResponse>> refreshAccessToken(HttpServletRequest request) {
         // 쿠키에서 리프레시 토큰 추출
         String refreshToken = extractRefreshTokenFromCookie(request);
 
         // 액세스 토큰 재발급 서비스 로직 수행
         TokenRefreshResponse tokenRefreshResponseDto = authService.refreshAccessToken(refreshToken);
 
-        return ResponseEntity.ok(new ApiResponse("SUCCESS", tokenRefreshResponseDto));
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", tokenRefreshResponseDto));
     }
 
-    @Operation(summary = "로그아웃")
+    @Operation(summary = "로그아웃",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ApiResponseVoid.class))
+                    )
+            }
+    )
     @DeleteMapping("/logout")
-    public ResponseEntity<ApiResponse> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal Long userId,
             HttpServletRequest request,
             HttpServletResponse response
@@ -98,7 +108,7 @@ public class AuthController {
         response.addHeader("Set-Cookie", expiredCookie.toString());
 
         String resultMessage = logout ? "SUCCESS" : "ALREADY_LOGGED_OUT";
-        return ResponseEntity.ok(new ApiResponse(resultMessage, null));
+        return ResponseEntity.ok(new ApiResponse<>(resultMessage, null));
     }
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
