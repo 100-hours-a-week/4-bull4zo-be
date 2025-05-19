@@ -17,8 +17,9 @@ public class AiModerationClient {
     private String aiServerUrl;
 
     public ModerationResponse requestModeration(ModerationRequest request) {
+        String moderationUrl = aiServerUrl + "/api/v1/moderation/test";
+
         try {
-            String moderationUrl = aiServerUrl + "/api/v1/moderation";
             return restTemplate.postForObject(moderationUrl, request, ModerationResponse.class);
         } catch (Exception e) {
             throw new RuntimeException("AI 서버 요청 실패", e);
