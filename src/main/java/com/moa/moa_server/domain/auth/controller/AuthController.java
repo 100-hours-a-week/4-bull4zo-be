@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.auth.controller;
 
+import com.moa.moa_server.domain.global.swagger.CommonErrorResponses;
 import com.moa.moa_server.domain.auth.dto.model.LoginResult;
 import com.moa.moa_server.domain.auth.dto.request.LoginRequest;
 import com.moa.moa_server.domain.auth.dto.response.LoginResponse;
@@ -8,6 +9,7 @@ import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
 import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.AuthService;
 import com.moa.moa_server.domain.auth.service.RefreshTokenService;
+import com.moa.moa_server.domain.auth.swagger.LoginResponses;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.global.dto.ApiResponseVoid;
 import com.moa.moa_server.domain.user.entity.User;
@@ -37,6 +39,7 @@ public class AuthController {
     private final UserRepository userRepository;
 
     @Operation(summary = "소셜 로그인")
+    @LoginResponses
     @PostMapping("/login/oauth")
     public ResponseEntity<ApiResponse<LoginResponse>> oAuthLogin(
             @RequestBody LoginRequest request,
@@ -81,6 +84,7 @@ public class AuthController {
                     )
             }
     )
+    @CommonErrorResponses
     @DeleteMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @AuthenticationPrincipal Long userId,
