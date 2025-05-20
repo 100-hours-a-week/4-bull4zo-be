@@ -3,6 +3,7 @@ package com.moa.moa_server.domain.vote.service;
 import com.moa.moa_server.domain.global.cursor.ClosedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
+import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
@@ -100,10 +101,12 @@ public class VoteService {
         Vote.VoteStatus status = "prod".equals(activeProfile) ? Vote.VoteStatus.PENDING : Vote.VoteStatus.OPEN;
 
         // Vote 생성 및 저장
+        String sanitizedContent = XssUtil.sanitize(request.content());
+
         Vote vote = Vote.createUserVote(
                 user,
                 group,
-                request.content(),
+                sanitizedContent,
                 imageUrl,
                 utcTime,
                 request.anonymous(),
