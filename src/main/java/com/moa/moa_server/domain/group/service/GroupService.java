@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.group.service;
 
+import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
 import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
@@ -111,7 +112,8 @@ public class GroupService {
         String inviteCode = generateUniqueInviteCode();
 
         // 그룹 생성
-        Group group = Group.create(user, request.name(), request.description(), imageUrl, inviteCode);
+        String sanitizedDescription = XssUtil.sanitize(request.description());
+        Group group = Group.create(user, request.name(), sanitizedDescription, imageUrl, inviteCode);
         groupRepository.save(group);
 
         // 그룹 멤버 등록
