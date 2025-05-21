@@ -88,7 +88,7 @@ tasks.named('test') {
 }
 
 tasks.named("checkstyleMain") {
-  dependsOn tasks.named("compileJava")
+  dependsOn "compileJava", "compileTestJava"
 }
 
 // QueryDSL Q파일 생성용
