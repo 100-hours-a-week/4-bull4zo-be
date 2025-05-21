@@ -19,16 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/ai")
 public class VoteModerationController {
 
-    private final VoteModerationService voteModerationService;
+  private final VoteModerationService voteModerationService;
 
-    @Operation(summary = "AI 검열 결과 콜백 처리", description = "\"AI 서버가 투표 내용을 검열한 결과를 백엔드 서버에 전달합니다. 해당 API는 AI 서버에서 직접 호출합니다.")
-    @PostMapping("/votes/moderation/callback")
-    public ResponseEntity<ApiResponse<VoteModerationCallbackResponse>> callback(
-            @RequestBody VoteModerationCallbackRequest request
-    ) {
-        VoteModerationCallbackResponse result = voteModerationService.handleCallback(request);
-        return ResponseEntity
-                .status(201)
-                .body(new ApiResponse<>("SUCCESS", result));
-    }
+  @Operation(
+      summary = "AI 검열 결과 콜백 처리",
+      description = "\"AI 서버가 투표 내용을 검열한 결과를 백엔드 서버에 전달합니다. 해당 API는 AI 서버에서 직접 호출합니다.")
+  @PostMapping("/votes/moderation/callback")
+  public ResponseEntity<ApiResponse<VoteModerationCallbackResponse>> callback(
+      @RequestBody VoteModerationCallbackRequest request) {
+    VoteModerationCallbackResponse result = voteModerationService.handleCallback(request);
+    return ResponseEntity.status(201).body(new ApiResponse<>("SUCCESS", result));
+  }
 }

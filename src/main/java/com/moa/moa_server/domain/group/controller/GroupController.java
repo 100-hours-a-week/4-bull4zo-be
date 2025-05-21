@@ -22,29 +22,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/groups")
 public class GroupController {
 
-    private final GroupService groupService;
+  private final GroupService groupService;
 
-    @Operation(summary = "그룹 가입", description = "초대 코드를 통해 사용자가 그룹에 참여합니다.")
-    @PostMapping("/join")
-    public ResponseEntity<ApiResponse<GroupJoinResponse>> joinGroup(
-            @AuthenticationPrincipal Long userId,
-            @RequestBody GroupJoinRequest request
-    ) {
-        GroupJoinResponse response = groupService.joinGroup(userId, request);
-        return ResponseEntity
-                .status(201)
-                .body(new ApiResponse<>("SUCCESS", response));
-    }
+  @Operation(summary = "그룹 가입", description = "초대 코드를 통해 사용자가 그룹에 참여합니다.")
+  @PostMapping("/join")
+  public ResponseEntity<ApiResponse<GroupJoinResponse>> joinGroup(
+      @AuthenticationPrincipal Long userId, @RequestBody GroupJoinRequest request) {
+    GroupJoinResponse response = groupService.joinGroup(userId, request);
+    return ResponseEntity.status(201).body(new ApiResponse<>("SUCCESS", response));
+  }
 
-    @Operation(summary = "그룹 생성")
-    @PostMapping
-    public ResponseEntity<ApiResponse<GroupCreateResponse>> createGroup(
-            @AuthenticationPrincipal Long userId,
-            @RequestBody GroupCreateRequest request
-    ) {
-        GroupCreateResponse response = groupService.createGroup(userId, request);
-        return ResponseEntity
-                .status(201)
-                .body(new ApiResponse<>("SUCCESS", response));
-    }
+  @Operation(summary = "그룹 생성")
+  @PostMapping
+  public ResponseEntity<ApiResponse<GroupCreateResponse>> createGroup(
+      @AuthenticationPrincipal Long userId, @RequestBody GroupCreateRequest request) {
+    GroupCreateResponse response = groupService.createGroup(userId, request);
+    return ResponseEntity.status(201).body(new ApiResponse<>("SUCCESS", response));
+  }
 }

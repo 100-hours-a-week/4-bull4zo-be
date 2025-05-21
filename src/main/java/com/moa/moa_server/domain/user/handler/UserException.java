@@ -4,7 +4,7 @@ import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import com.moa.moa_server.domain.global.exception.BaseException;
 
 public class UserException extends BaseException {
-    public UserException(BaseErrorCode errorCode) {
-        super(errorCode);
-    }
+  public UserException(BaseErrorCode errorCode) {
+    super(errorCode);
+  }
 }

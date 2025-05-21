@@ -11,16 +11,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SystemDataInitializer implements ApplicationRunner {
 
-    private final UserRepository userRepository;
-    private final GroupRepository groupRepository;
+  private final UserRepository userRepository;
+  private final GroupRepository groupRepository;
 
-    @Override
-    public void run(ApplicationArguments args) {
-        if (!userRepository.existsById(1L)) {
-            throw new IllegalStateException("System user not found. Please execute init-data.sql.");
-        }
-        if (!groupRepository.existsById(1L)) {
-            throw new IllegalStateException("Public group not found. Please execute init-data.sql.");
-        }
+  @Override
+  public void run(ApplicationArguments args) {
+    if (!userRepository.existsById(1L)) {
+      throw new IllegalStateException("System user not found. Please execute init-data.sql.");
     }
+    if (!groupRepository.existsById(1L)) {
+      throw new IllegalStateException("Public group not found. Please execute init-data.sql.");
+    }
+  }
 }

@@ -4,7 +4,6 @@ import com.moa.moa_server.domain.global.entity.BaseTimeEntity;
 import com.moa.moa_server.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
 
 @Entity
 @Getter
@@ -13,21 +12,18 @@ import org.springframework.data.annotation.CreatedDate;
 @Builder
 public class Feedback extends BaseTimeEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-    @Column(length = 500, nullable = false)
-    private String content;
+  @Column(length = 500, nullable = false)
+  private String content;
 
-    public static Feedback create(User user, String content) {
-        return Feedback.builder()
-                .user(user)
-                .content(content)
-                .build();
-    }
+  public static Feedback create(User user, String content) {
+    return Feedback.builder().user(user).content(content).build();
+  }
 }

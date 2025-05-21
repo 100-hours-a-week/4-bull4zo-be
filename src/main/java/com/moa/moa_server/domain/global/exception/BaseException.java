@@ -4,17 +4,18 @@ import org.springframework.http.HttpStatus;
 
 public abstract class BaseException extends RuntimeException {
 
-    private final BaseErrorCode errorCode;
+  private final BaseErrorCode errorCode;
 
-    public BaseException(BaseErrorCode errorCode) {
-        super(errorCode.name());
-        this.errorCode = errorCode;
-    }
+  public BaseException(BaseErrorCode errorCode) {
+    super(errorCode.name());
+    this.errorCode = errorCode;
+  }
 
-    public HttpStatus getStatus() {
-        return errorCode.getStatus();
-    }
-    public String getCode() {
-        return errorCode.name();
-    }
+  public HttpStatus getStatus() {
+    return errorCode.getStatus();
+  }
+
+  public String getCode() {
+    return errorCode.name();
+  }
 }

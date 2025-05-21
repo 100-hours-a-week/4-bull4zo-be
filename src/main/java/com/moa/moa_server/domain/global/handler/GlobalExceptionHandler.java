@@ -10,17 +10,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BaseException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException ex) {
-        return ResponseEntity
-                .status(ex.getStatus())
-                .body(new ApiResponse<>(ex.getCode(), null));
-    }
+  @ExceptionHandler(BaseException.class)
+  public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException ex) {
+    return ResponseEntity.status(ex.getStatus()).body(new ApiResponse<>(ex.getCode(), null));
+  }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleUnhandled(Exception ex) {
-        return ResponseEntity
-                .status(500)
-                .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null));
-    }
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiResponse<Void>> handleUnhandled(Exception ex) {
+    return ResponseEntity.status(500)
+        .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null));
+  }
 }

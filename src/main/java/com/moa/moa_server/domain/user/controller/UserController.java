@@ -23,62 +23,54 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/user")
 public class UserController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    @Operation(summary = "가입한 그룹 라벨 조회", description = "사용자가 가입한 그룹들의 Id와 이름을 조회합니다.")
-    @GetMapping("/groups/labels")
-    public ResponseEntity<ApiResponse<GroupLabelResponse>> getJoinedGroupLabels(
-            @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer size
-    ) {
-        GroupLabelResponse response = userService.getJoinedGroupLabels(userId, cursor, size);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
-    }
+  @Operation(summary = "가입한 그룹 라벨 조회", description = "사용자가 가입한 그룹들의 Id와 이름을 조회합니다.")
+  @GetMapping("/groups/labels")
+  public ResponseEntity<ApiResponse<GroupLabelResponse>> getJoinedGroupLabels(
+      @AuthenticationPrincipal Long userId,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) Integer size) {
+    GroupLabelResponse response = userService.getJoinedGroupLabels(userId, cursor, size);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
 
-    @Operation(summary = "가입한 그룹 목록 조회", description = "사용자가 가입한 그룹들의 상세 정보를 조회합니다.")
-    @GetMapping("/groups")
-    public ResponseEntity<ApiResponse<JoinedGroupResponse>> getJoinedGroups(
-            @AuthenticationPrincipal Long userId,
-            @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer size
-    ) {
-        JoinedGroupResponse response = userService.getJoinedGroups(userId, cursor, size);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
-    }
+  @Operation(summary = "가입한 그룹 목록 조회", description = "사용자가 가입한 그룹들의 상세 정보를 조회합니다.")
+  @GetMapping("/groups")
+  public ResponseEntity<ApiResponse<JoinedGroupResponse>> getJoinedGroups(
+      @AuthenticationPrincipal Long userId,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) Integer size) {
+    JoinedGroupResponse response = userService.getJoinedGroups(userId, cursor, size);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
 
-    @Operation(summary = "회원 정보 조회")
-    @GetMapping
-    public ResponseEntity<ApiResponse<UserInfoResponse>> getUserInfo(
-            @AuthenticationPrincipal Long userId
-    ) {
-        UserInfoResponse response = userService.getUserInfo(userId);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
-    }
+  @Operation(summary = "회원 정보 조회")
+  @GetMapping
+  public ResponseEntity<ApiResponse<UserInfoResponse>> getUserInfo(
+      @AuthenticationPrincipal Long userId) {
+    UserInfoResponse response = userService.getUserInfo(userId);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
 
-    @Operation(summary = "회원 정보 수정")
-    @PatchMapping
-    public ResponseEntity<ApiResponse<UserUpdateResponse>> updateUserInfo(
-            @AuthenticationPrincipal Long userId,
-            @RequestBody UserUpdateRequest request
-    ) {
-        UserUpdateResponse response = userService.updateUserInfo(userId, request);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
-    }
+  @Operation(summary = "회원 정보 수정")
+  @PatchMapping
+  public ResponseEntity<ApiResponse<UserUpdateResponse>> updateUserInfo(
+      @AuthenticationPrincipal Long userId, @RequestBody UserUpdateRequest request) {
+    UserUpdateResponse response = userService.updateUserInfo(userId, request);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
 
-    @Operation(summary = "회원 탈퇴",
-            responses = {
-                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ApiResponseVoid.class))
-                    )
-            }
-    )
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<Void>> deleteUser(
-            @AuthenticationPrincipal Long userId
-    ) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", null));
-    }
+  @Operation(
+      summary = "회원 탈퇴",
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content = @Content(schema = @Schema(implementation = ApiResponseVoid.class)))
+      })
+  @DeleteMapping
+  public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal Long userId) {
+    userService.deleteUser(userId);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", null));
+  }
 }

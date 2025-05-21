@@ -17,21 +17,23 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class FeedbackService {
 
-    private final FeedbackRepository feedbackRepository;
-    private final UserRepository userRepository;
+  private final FeedbackRepository feedbackRepository;
+  private final UserRepository userRepository;
 
-    @Transactional
-    public void createFeedback(Long userId, FeedbackCreateRequest request) {
-        // 유저 조회 및 검증
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-        AuthUserValidator.validateActive(user);
+  @Transactional
+  public void createFeedback(Long userId, FeedbackCreateRequest request) {
+    // 유저 조회 및 검증
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
 
-        //
-        FeedbackValidator.validateContent(request.content());
+    //
+    FeedbackValidator.validateContent(request.content());
 
-        Feedback feedback = Feedback.create(user, request.content());
+    Feedback feedback = Feedback.create(user, request.content());
 
-        feedbackRepository.save(feedback);
-    }
+    feedbackRepository.save(feedback);
+  }
 }

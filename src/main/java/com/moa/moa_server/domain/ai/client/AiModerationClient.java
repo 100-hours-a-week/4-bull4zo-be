@@ -11,18 +11,18 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class AiModerationClient {
 
-    private final RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
 
-    @Value("${ai.server-url}")
-    private String aiServerUrl;
+  @Value("${ai.server-url}")
+  private String aiServerUrl;
 
-    public ModerationResponse requestModeration(ModerationRequest request) {
-        String moderationUrl = aiServerUrl + "/api/v1/moderation/test";
+  public ModerationResponse requestModeration(ModerationRequest request) {
+    String moderationUrl = aiServerUrl + "/api/v1/moderation/test";
 
-        try {
-            return restTemplate.postForObject(moderationUrl, request, ModerationResponse.class);
-        } catch (Exception e) {
-            throw new RuntimeException("AI 서버 요청 실패", e);
-        }
+    try {
+      return restTemplate.postForObject(moderationUrl, request, ModerationResponse.class);
+    } catch (Exception e) {
+      throw new RuntimeException("AI 서버 요청 실패", e);
     }
+  }
 }

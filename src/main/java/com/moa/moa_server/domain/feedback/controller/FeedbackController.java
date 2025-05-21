@@ -22,24 +22,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/user-feedback")
 public class FeedbackController {
 
-    private final FeedbackService feedbackService;
+  private final FeedbackService feedbackService;
 
-    @Operation(summary = "사용자 피드백 등록",
-            responses = {
-                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                            responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ApiResponseVoid.class))
-                    )
-            }
-    )
-    @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createFeedback(
-            @AuthenticationPrincipal Long userId,
-            @RequestBody FeedbackCreateRequest request
-    ) {
-        feedbackService.createFeedback(userId, request);
-        return ResponseEntity
-                .status(201)
-                .body(new ApiResponse<>("SUCCESS", null));
-    }
+  @Operation(
+      summary = "사용자 피드백 등록",
+      responses = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            content = @Content(schema = @Schema(implementation = ApiResponseVoid.class)))
+      })
+  @PostMapping
+  public ResponseEntity<ApiResponse<Void>> createFeedback(
+      @AuthenticationPrincipal Long userId, @RequestBody FeedbackCreateRequest request) {
+    feedbackService.createFeedback(userId, request);
+    return ResponseEntity.status(201).body(new ApiResponse<>("SUCCESS", null));
+  }
 }

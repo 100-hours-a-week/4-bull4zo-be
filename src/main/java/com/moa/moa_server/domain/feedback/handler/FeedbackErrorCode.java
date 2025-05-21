@@ -4,12 +4,15 @@ import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum FeedbackErrorCode implements BaseErrorCode {
-    INVALID_INPUT(HttpStatus.BAD_REQUEST);
+  INVALID_INPUT(HttpStatus.BAD_REQUEST);
 
-    private final HttpStatus status;
+  private final HttpStatus status;
 
-    FeedbackErrorCode(HttpStatus status) { this.status = status; }
+  FeedbackErrorCode(HttpStatus status) {
+    this.status = status;
+  }
 
-    public HttpStatus getStatus() { return status; }
-
+  public HttpStatus getStatus() {
+    return status;
+  }
 }

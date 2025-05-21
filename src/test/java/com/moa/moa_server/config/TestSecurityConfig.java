@@ -8,11 +8,10 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @TestConfiguration
 public class TestSecurityConfig {
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)  // CSRF 완전 비활성화
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-        return http.build();
-    }
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.csrf(AbstractHttpConfigurer::disable) // CSRF 완전 비활성화
+        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+    return http.build();
+  }
 }

@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface VoteRepository extends JpaRepository<Vote, Long>, VoteRepositoryCustom {
 
-    @Modifying
-    @Query("UPDATE Vote v SET v.deletedAt = CURRENT_TIMESTAMP WHERE v.user = :user")
-    void softDeleteAllByUser(@Param("user") User user);
+  @Modifying
+  @Query("UPDATE Vote v SET v.deletedAt = CURRENT_TIMESTAMP WHERE v.user = :user")
+  void softDeleteAllByUser(@Param("user") User user);
 }
