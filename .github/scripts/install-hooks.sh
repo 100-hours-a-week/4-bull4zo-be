@@ -11,3 +11,8 @@ echo "[✓] pre-push hook 설치 완료!"
 cp .github/scripts/pre-commit-build.sh .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 echo "[✓] pre-commit hook 설치 완료!"
+
+# commit-msg hook 추가
+cp .github/scripts/validate-commit-msg.sh .git/hooks/commit-msg
+chmod +x .git/hooks/commit-msg
+echo "[✓] commit-msg hook 설치 완료!"
