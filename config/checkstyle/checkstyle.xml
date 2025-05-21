@@ -33,8 +33,7 @@
 
   <!-- https://checkstyle.org/filters/suppressionfilter.html -->
   <module name="SuppressionFilter">
-    <property name="file" value="${org.checkstyle.google.suppressionfilter.config}"
-           default="checkstyle-suppressions.xml" />
+    <property name="file" value="${checkstyle.suppressions.file}" />
     <property name="optional" value="true"/>
   </module>
 
