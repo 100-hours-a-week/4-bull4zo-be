@@ -76,7 +76,7 @@ spotless {
 }
 
 checkstyle {
-	toolVersion = '10.12.2'
+	toolVersion = '10.23.1'
 	configFile = file("$rootDir/config/checkstyle/checkstyle.xml")
 	configProperties = [
 			'checkstyle.suppressions.file': file("$rootDir/config/checkstyle/suppressions.xml")

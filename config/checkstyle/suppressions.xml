@@ -2,11 +2,5 @@
 <!DOCTYPE suppressions PUBLIC
   "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
   "https://checkstyle.org/dtds/suppressions_1_2.dtd">
-
 <suppressions>
-  <!-- 예: 특정 파일에서 모든 경고 무시 -->
-  <!-- <suppress files=".*Generated.*" checks=".*"/> -->
-
-  <!-- 예: 특정 클래스에서 Javadoc 관련 검사만 무시 -->
-  <!-- <suppress files=".*MyService.java" checks="Javadoc.*"/> -->
 </suppressions>
