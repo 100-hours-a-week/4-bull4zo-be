@@ -1,0 +1,53 @@
+name: SpringBoot Docker CI/CD - Prod V2
+
+on:
+  push:
+    branches:
+      - cicd/*
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+      REGISTRY: ghcr.io
+      REPO: 100-hours-a-week/4-bull4zo-be
+
+    steps:
+      - name: 🐵 Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: 🐵 Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐵 Grant execute permission to Gradle
+        run: chmod +x gradlew
+
+      - name: 🐵 Build with Gradle (Without Tests)
+        run: |
+          echo "🐵 Building JAR without tests..."
+          ./gradlew clean build -x test || { echo '🚨 Build failed!'; exit 1; }
+          echo "✅ Build completed successfully!"
+
+      - name: 🐵 Log in to GHCR
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: 🔍 Check files before docker build
+        run: |
+          pwd
+          ls -al
+          cat Dockerfile || echo "🚨 Dockerfile not found"
+
+      - name: 🐵 Build Docker Image
+        run: |
+          docker build -f ./Dockerfile -t ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }} .
+          docker tag ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.REPO }}:latest
+
+      - name: 🐵 Push to GHCR
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.REPO }}:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.REPO }}:latest
