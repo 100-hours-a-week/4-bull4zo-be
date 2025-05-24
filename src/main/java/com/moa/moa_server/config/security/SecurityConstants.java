@@ -9,6 +9,7 @@ public class SecurityConstants {
     "/swagger-ui/**",
     "v3/api-docs/**",
     "/swagger-resources/**",
-    "/webjars/**"
+    "/webjars/**",
+    "/test-login"
   };
 }
