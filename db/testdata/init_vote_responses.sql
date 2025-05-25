@@ -1,3 +1,5 @@
+USE moa;
+
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS insert_vote_responses$$
