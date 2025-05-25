@@ -27,10 +27,12 @@ import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
+import com.moa.moa_server.domain.vote.entity.VoteResult;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
+import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -61,6 +63,7 @@ public class VoteService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
+  private final VoteResultRepository voteResultRepository;
 
   private final GroupService groupService;
   private final VoteResultService voteResultService;
@@ -120,6 +123,11 @@ public class VoteService {
             status,
             adminVote);
     voteRepository.save(vote);
+
+    // 옵션별 초기 결과 생성
+    VoteResult result1 = VoteResult.createInitial(vote, 1);
+    VoteResult result2 = VoteResult.createInitial(vote, 2);
+    voteResultRepository.saveAll(List.of(result1, result2));
 
     // AI 서버로 검열 요청 (prod 환경에서만)
     if ("prod".equals(activeProfile)) {
