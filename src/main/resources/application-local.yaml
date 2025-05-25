@@ -2,7 +2,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+#    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -28,5 +28,8 @@ mock:
 
 logging:
   level:
+    root: INFO
+    org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.hibernate.type.descriptor.sql: trace
+    org.springframework.web.filter: DEBUG
+#    org.hibernate.type.descriptor.sql: trace
