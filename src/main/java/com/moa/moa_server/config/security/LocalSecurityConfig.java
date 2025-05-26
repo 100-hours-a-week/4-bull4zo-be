@@ -37,6 +37,8 @@ public class LocalSecurityConfig {
                     .permitAll()
                     .requestMatchers("/api/v2/votes/**")
                     .permitAll()
+                    .requestMatchers("/api/v3/votes/**")
+                    .permitAll()
                     .requestMatchers("/test-login")
                     .permitAll()
                     .requestMatchers(ALLOWED_URLS)
