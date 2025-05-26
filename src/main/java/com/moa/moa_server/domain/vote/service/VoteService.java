@@ -33,6 +33,7 @@ import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
+import com.moa.moa_server.domain.vote.service.v3.VoteResultRedisService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -68,6 +69,7 @@ public class VoteService {
   private final GroupService groupService;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
+  private final VoteResultRedisService voteResultRedisService;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -128,6 +130,9 @@ public class VoteService {
     VoteResult result1 = VoteResult.createInitial(vote, 1);
     VoteResult result2 = VoteResult.createInitial(vote, 2);
     voteResultRepository.saveAll(List.of(result1, result2));
+    if ("local".equals(activeProfile)) {
+      voteResultRedisService.initializeCounts(vote.getId());
+    }
 
     // AI 서버로 검열 요청 (prod 환경에서만)
     if ("prod".equals(activeProfile)) {
