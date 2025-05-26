@@ -18,6 +18,11 @@ public class VoteResultRedisService {
     redisTemplate.opsForHash().increment(key, String.valueOf(optionNumber), 1);
   }
 
+  public void setOptionCount(Long voteId, int optionNumber, int count) {
+    String key = PREFIX + voteId;
+    redisTemplate.opsForHash().put(key, String.valueOf(optionNumber), count);
+  }
+
   public Map<String, Integer> getOptionCounts(Long voteId) {
     String key = PREFIX + voteId;
     Map<Object, Object> raw = redisTemplate.opsForHash().entries(key);

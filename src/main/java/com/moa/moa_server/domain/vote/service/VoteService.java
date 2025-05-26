@@ -130,9 +130,6 @@ public class VoteService {
     VoteResult result1 = VoteResult.createInitial(vote, 1);
     VoteResult result2 = VoteResult.createInitial(vote, 2);
     voteResultRepository.saveAll(List.of(result1, result2));
-    if ("local".equals(activeProfile)) {
-      voteResultRedisService.initializeCounts(vote.getId());
-    }
 
     // AI 서버로 검열 요청 (prod 환경에서만)
     if ("prod".equals(activeProfile)) {

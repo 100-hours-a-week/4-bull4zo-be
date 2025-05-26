@@ -65,9 +65,9 @@ public class VoteResultServiceV3 {
             .collect(Collectors.groupingBy(VoteResponse::getOptionNumber, Collectors.counting()));
 
     // Redis에 저장
-    voteResultRedisService.initializeCounts(vote.getId());
     countMap.forEach(
-        (option, count) -> voteResultRedisService.incrementOptionCount(vote.getId(), option));
+        (option, count) ->
+            voteResultRedisService.setOptionCount(vote.getId(), option, count.intValue()));
 
     return Stream.of(1, 2)
         .map(
