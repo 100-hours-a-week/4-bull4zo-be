@@ -64,10 +64,12 @@ public class VoteResultServiceV3 {
             .filter(vr -> vr.getOptionNumber() > 0)
             .collect(Collectors.groupingBy(VoteResponse::getOptionNumber, Collectors.counting()));
 
+    Map<Integer, Integer> intMap =
+        countMap.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().intValue()));
+
     // Redis에 저장
-    countMap.forEach(
-        (option, count) ->
-            voteResultRedisService.setOptionCount(vote.getId(), option, count.intValue()));
+    voteResultRedisService.setCountsWithTTL(vote.getId(), intMap, vote.getClosedAt());
 
     return Stream.of(1, 2)
         .map(

@@ -1,5 +1,7 @@
 package com.moa.moa_server.domain.vote.service.v3;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,18 @@ public class VoteResultRedisService {
   public void setOptionCount(Long voteId, int optionNumber, int count) {
     String key = PREFIX + voteId;
     redisTemplate.opsForHash().put(key, String.valueOf(optionNumber), count);
+  }
+
+  public void setCountsWithTTL(Long voteId, Map<Integer, Integer> counts, LocalDateTime closedAt) {
+    String key = PREFIX + voteId;
+
+    counts.forEach(
+        (option, count) -> redisTemplate.opsForHash().put(key, String.valueOf(option), count));
+
+    Duration ttl = Duration.between(LocalDateTime.now(), closedAt.plusHours(6));
+    if (!ttl.isNegative() && !ttl.isZero()) {
+      redisTemplate.expire(key, ttl);
+    }
   }
 
   public Map<String, Integer> getOptionCounts(Long voteId) {

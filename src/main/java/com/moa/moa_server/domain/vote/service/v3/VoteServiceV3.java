@@ -19,7 +19,6 @@ import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
-import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import jakarta.annotation.Nullable;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,6 @@ public class VoteServiceV3 {
   private static final int DEFAULT_PAGE_SIZE = 10;
 
   private final VoteResponseRepository voteResponseRepository;
-  private final VoteResultRepository voteResultRepository;
   private final VoteRepository voteRepository;
   private final UserRepository userRepository;
   private final GroupMemberRepository groupMemberRepository;
