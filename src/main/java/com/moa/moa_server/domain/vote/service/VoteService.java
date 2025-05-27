@@ -41,6 +41,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -125,6 +126,9 @@ public class VoteService {
             status,
             adminVote);
     voteRepository.save(vote);
+
+    // Redis 캐시 초기화 (옵션별 count 0 설정 및 만료 시간 등록)
+    voteResultRedisService.setCountsWithTTL(vote.getId(), Map.of(1, 0, 2, 0), vote.getClosedAt());
 
     // AI 서버로 검열 요청 (prod 환경에서만)
     if ("prod".equals(activeProfile)) {

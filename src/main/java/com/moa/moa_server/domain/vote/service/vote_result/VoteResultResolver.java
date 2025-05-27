@@ -49,6 +49,9 @@ public class VoteResultResolver {
     }
 
     // 3. Redis miss → 실시간 집계 후 Redis에 저장
+    log.warn(
+        "[Redis MISS] voteId={} - 예상치 못한 Redis 캐시 유실 또는 DB 저장 실패 가능성. 실시간으로 집계 후 Redis에 저장합니다.",
+        vote.getId());
     return computeAndCacheResults(vote);
   }
 
