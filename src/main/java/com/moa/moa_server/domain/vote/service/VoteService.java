@@ -32,7 +32,8 @@ import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
-import com.moa.moa_server.domain.vote.service.v3.VoteResultRedisService;
+import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
+import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -178,6 +179,9 @@ public class VoteService {
     } catch (DataIntegrityViolationException e) {
       throw new VoteException(VoteErrorCode.ALREADY_VOTED);
     }
+
+    // Redis에 투표 결과 반영
+    voteResultRedisService.incrementOptionCount(voteId, response);
   }
 
   @Transactional
@@ -295,7 +299,7 @@ public class VoteService {
     }
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public MyVoteResponse getMyVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
@@ -356,9 +360,10 @@ public class VoteService {
     return new MyVoteResponse(items, nextCursor, hasNext, items.size());
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public SubmittedVoteResponse getSubmittedVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
+
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
     ClosedAtVoteIdCursor parsedCursor = cursor != null ? ClosedAtVoteIdCursor.parse(cursor) : null;
     if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {

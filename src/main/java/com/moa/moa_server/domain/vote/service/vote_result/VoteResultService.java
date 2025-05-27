@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.vote.service.v3;
+package com.moa.moa_server.domain.vote.service.vote_result;
 
 import com.moa.moa_server.domain.vote.dto.response.VoteOptionResultWithId;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteOptionResult;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 /** 사용자에게 제공될 투표 결과 응답을 구성하는 최상위 서비스 */
 @Service
 @RequiredArgsConstructor
-public class VoteResultServiceV3 {
+public class VoteResultService {
 
   private final VoteResultResolver voteResultResolver;
 

@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.vote.service.v3;
+package com.moa.moa_server.domain.vote.service.vote_result;
 
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;

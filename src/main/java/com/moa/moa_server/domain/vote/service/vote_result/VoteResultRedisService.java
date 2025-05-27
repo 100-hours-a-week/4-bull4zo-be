@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.vote.service.v3;
+package com.moa.moa_server.domain.vote.service.vote_result;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
