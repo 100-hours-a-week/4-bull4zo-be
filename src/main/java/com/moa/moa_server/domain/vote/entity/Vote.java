@@ -108,4 +108,8 @@ public class Vote extends BaseTimeEntity {
   public void updateModerationResult(VoteStatus voteStatus) {
     this.voteStatus = voteStatus;
   }
+
+  public void close() {
+    this.voteStatus = VoteStatus.CLOSED;
+  }
 }

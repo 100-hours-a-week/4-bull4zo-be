@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+/** Redis에서 투표 결과를 조회하거나 캐시하는 서비스 */
 @Service
 @RequiredArgsConstructor
 public class VoteResultRedisService {
@@ -18,11 +19,6 @@ public class VoteResultRedisService {
   public void incrementOptionCount(Long voteId, int optionNumber) {
     String key = PREFIX + voteId;
     redisTemplate.opsForHash().increment(key, String.valueOf(optionNumber), 1);
-  }
-
-  public void setOptionCount(Long voteId, int optionNumber, int count) {
-    String key = PREFIX + voteId;
-    redisTemplate.opsForHash().put(key, String.valueOf(optionNumber), count);
   }
 
   public void setCountsWithTTL(Long voteId, Map<Integer, Integer> counts, LocalDateTime closedAt) {
@@ -37,23 +33,16 @@ public class VoteResultRedisService {
     }
   }
 
-  public Map<String, Integer> getOptionCounts(Long voteId) {
+  public Map<Integer, Integer> getOptionCounts(Long voteId) {
     String key = PREFIX + voteId;
     Map<Object, Object> raw = redisTemplate.opsForHash().entries(key);
-    Map<String, Integer> result = new HashMap<>();
-    for (Object option : raw.keySet()) {
-      result.put(option.toString(), Integer.parseInt(raw.get(option).toString()));
+
+    Map<Integer, Integer> result = new HashMap<>();
+    for (Map.Entry<Object, Object> entry : raw.entrySet()) {
+      Integer keyInt = Integer.parseInt(entry.getKey().toString());
+      Integer valueInt = Integer.parseInt(entry.getValue().toString());
+      result.put(keyInt, valueInt);
     }
     return result;
-  }
-
-  public void initializeCounts(Long voteId) {
-    String key = PREFIX + voteId;
-    redisTemplate.opsForHash().put(key, "1", 0);
-    redisTemplate.opsForHash().put(key, "2", 0);
-  }
-
-  public void deleteResult(Long voteId) {
-    redisTemplate.delete(PREFIX + voteId);
   }
 }

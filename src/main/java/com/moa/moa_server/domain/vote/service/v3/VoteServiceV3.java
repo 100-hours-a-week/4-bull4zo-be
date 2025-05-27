@@ -96,7 +96,7 @@ public class VoteServiceV3 {
     voteResultRedisService.incrementOptionCount(voteId, response);
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public SubmittedVoteResponse getSubmittedVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
 
