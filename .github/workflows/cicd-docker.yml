@@ -7,6 +7,8 @@ on:
       - develop
       - cicd/**
       - release/**
+    tags:
+      - 'v*'
 
 jobs:
   build-and-deploy:
@@ -37,19 +39,49 @@ jobs:
       - name: 🐵 Docker Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - name: 🐵 Build and Tag Docker Image
-        env:
-          REF_NAME: ${{ github.ref_name }}
+      - name: 🐵 Set Docker Tag
+        id: tagger
         run: |
-          IMAGE_NAME=4moa/moa-be
-          echo "🔍 REF_NAME is: $REF_NAME"
+          REF_NAME=${{ github.ref_name }}
+          COMMIT_SHA=${{ github.sha }}
 
-          if [[ "$REF_NAME" != "main" ]]; then
-            IMAGE_NAME=4moa/moa-be-dev
+          # 기본값: dev 이미지
+          IMAGE_NAME=4moa/moa-be-dev
+          TAG=${COMMIT_SHA::7}
+
+          # prod 태그인 경우
+          if [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            IMAGE_NAME=4moa/moa-be
+            TAG=$REF_NAME
+          elif [[ "$REF_NAME" == "main" ]]; then
+            IMAGE_NAME=4moa/moa-be
+            TAG=latest
           fi
 
-          echo "📦 Docker Image Name: $IMAGE_NAME"
-          docker buildx build --platform linux/amd64 -t $IMAGE_NAME:latest --push .
+          echo "Image Name: $IMAGE_NAME"
+          echo "Tag: $TAG"
+
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: 🐵 Build & Push Docker Image
+        run: |
+          REF_NAME=${{ github.ref_name }}
+
+          DOCKERFILE_PATH=Dockerfile
+          if [[ "$REF_NAME" != "main" && ! "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            DOCKERFILE_PATH=Dockerfile.dev
+          fi
+
+          echo "📄 Using Dockerfile: $DOCKERFILE_PATH"
+
+          docker buildx build \
+            --platform linux/amd64 \
+            -f $DOCKERFILE_PATH \
+            -t ${{ steps.tagger.outputs.image_name }}:${{ steps.tagger.outputs.tag }} \
+            --push .
+
+          echo "✅ Docker image pushed: ${{ steps.tagger.outputs.image_name }}:${{ steps.tagger.outputs.tag }}"
 
       - name: 🐵 Save SSH Key
         run: |
@@ -58,24 +90,43 @@ jobs:
 
       - name: 🐵 Deploy to Remote Server
         env:
-          REF_NAME: ${{ github.ref_name }}
+          IMAGE_NAME: ${{ steps.tagger.outputs.image_name }}
+          IMAGE_TAG: ${{ steps.tagger.outputs.tag }}
         run: |
-          IMAGE_NAME=4moa/moa-be
-          echo "🔍 REF_NAME is: $REF_NAME"
-
-          if [[ "$REF_NAME" != "main" ]]; then
-            IMAGE_NAME=4moa/moa-be-dev
-          fi
-
-          echo "📦 Pulling Docker Image: $IMAGE_NAME"
-
           ssh -i key.pem -o StrictHostKeyChecking=no cicd@${{ secrets.GCP_BE_HOST }} <<EOF
-            IMAGE_NAME=$IMAGE_NAME
+            set -e
+            
+            IMAGE_NAME=${IMAGE_NAME}
+            IMAGE_TAG=${IMAGE_TAG}
 
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
+            echo "🐵 Pulling image \$IMAGE_NAME:\$IMAGE_TAG"
+            docker pull \$IMAGE_NAME:\$IMAGE_TAG
+
+            echo "🐵 Stopping existing container..."
+            docker stop moa-backend || true
+            docker rm moa-backend || true
+
             echo "🐵 Writing .env on remote server..."
-            cat <<EENV | sudo tee /home/cicd/moa-backend.env > /dev/null
+            if [[ "$REF_NAME" == "main" || "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              cat <<EENV | sudo tee /home/cicd/moa-backend.env > /dev/null
+          SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILE }}
+          SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}
+          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
+          OTEL_SERVICE_NAME=${{ secrets.OTEL_SERVICE_NAME }}
+          OTEL_EXPORTER_OTLP_ENDPOINT=${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          OTEL_RESOURCE_ATTRIBUTES=${{ secrets.OTEL_RESOURCE_ATTRIBUTES }}
+          EENV
+            else
+              cat <<EENV | sudo tee /home/cicd/moa-backend.env > /dev/null
           SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILE }}
           SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
           SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }}
@@ -86,27 +137,24 @@ jobs:
           KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
           EENV
+            fi
+
             sudo chmod 600 /home/cicd/moa-backend.env
             sudo chown cicd:cicd /home/cicd/moa-backend.env
-
-            echo "🐵 Stopping existing container..."
-            docker stop moa-backend || true
-            docker rm moa-backend || true 
-
-            echo "🐵 Starting new container..."
-            docker pull \$IMAGE_NAME:latest
 
             echo "🐵 Running new container..."
             docker run -d --name moa-backend \
               --env-file /home/cicd/moa-backend.env \
               -p 8080:8080 \
               --restart unless-stopped \
-              \$IMAGE_NAME:latest
+              \$IMAGE_NAME:\$IMAGE_TAG
+
+
+            echo "🐵 Pruning unused Docker images (safe cleanup)"
+            docker image prune -af --filter "until=48h" || true
 
             echo "🐵 Listing running containers..."  
-            docker ps
             echo "✅ Container started!"
+            docker ps
 
-            echo "🐵 Logs:"
-            docker logs --tail 20 moa-backend || echo "🚨 Failed to fetch logs"
           EOF
