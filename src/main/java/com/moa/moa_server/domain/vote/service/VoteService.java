@@ -1,8 +1,8 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.global.cursor.ClosedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
+import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
@@ -30,6 +30,7 @@ import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.entity.VoteResult;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
+import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
@@ -364,7 +365,7 @@ public class VoteService {
   public SubmittedVoteResponse getSubmittedVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
-    ClosedAtVoteIdCursor parsedCursor = cursor != null ? ClosedAtVoteIdCursor.parse(cursor) : null;
+    VotedAtVoteIdCursor parsedCursor = cursor != null ? VotedAtVoteIdCursor.parse(cursor) : null;
     if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {
       throw new VoteException(VoteErrorCode.VOTE_NOT_FOUND);
     }
@@ -395,7 +396,8 @@ public class VoteService {
     }
 
     // 참여한 투표 목록 조회
-    List<Vote> votes = voteRepository.findSubmittedVotes(user, groups, parsedCursor, pageSize + 1);
+    List<VoteWithVotedAt> votes =
+        voteRepository.findSubmittedVotes(user, groups, parsedCursor, pageSize + 1);
 
     // 응답 구성
     boolean hasNext = votes.size() > pageSize;
@@ -404,16 +406,16 @@ public class VoteService {
     String nextCursor =
         votes.isEmpty()
             ? null
-            : new ClosedAtVoteIdCursor(votes.getLast().getClosedAt(), votes.getLast().getId())
+            : new VotedAtVoteIdCursor(votes.getLast().votedAt(), votes.getLast().vote().getId())
                 .encode();
 
     // 각 투표별 집계 결과를 포함한 응답 DTO 구성
     List<SubmittedVoteItem> items =
         votes.stream()
             .map(
-                vote -> {
-                  var results = voteResultService.getResultsWithVoteId(vote);
-                  return SubmittedVoteItem.from(vote, results);
+                v -> {
+                  var results = voteResultService.getResultsWithVoteId(v.vote());
+                  return SubmittedVoteItem.from(v.vote(), results);
                 })
             .toList();
     return new SubmittedVoteResponse(items, nextCursor, hasNext, items.size());

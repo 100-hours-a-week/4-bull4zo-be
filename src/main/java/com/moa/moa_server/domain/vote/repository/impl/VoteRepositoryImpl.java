@@ -1,15 +1,17 @@
 package com.moa.moa_server.domain.vote.repository.impl;
 
-import com.moa.moa_server.domain.global.cursor.ClosedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
+import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.QVote;
 import com.moa.moa_server.domain.vote.entity.QVoteResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
+import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteRepositoryCustom;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.annotation.Nullable;
@@ -92,8 +94,8 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
   }
 
   @Override
-  public List<Vote> findSubmittedVotes(
-      User user, List<Group> groups, @Nullable ClosedAtVoteIdCursor cursor, int size) {
+  public List<VoteWithVotedAt> findSubmittedVotes(
+      User user, List<Group> groups, @Nullable VotedAtVoteIdCursor cursor, int size) {
     QVote vote = QVote.vote;
     QVoteResponse voteResponse = QVoteResponse.voteResponse;
 
@@ -105,18 +107,18 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
 
     if (cursor != null) {
       builder.and(
-          vote.closedAt
-              .lt(cursor.closedAt())
-              .or(vote.closedAt.eq(cursor.closedAt()).and(vote.id.lt(cursor.voteId()))));
+          voteResponse
+              .votedAt
+              .lt(cursor.votedAt())
+              .or(voteResponse.votedAt.eq(cursor.votedAt()).and(vote.id.lt(cursor.voteId()))));
     }
 
     return queryFactory
-        .select(vote)
-        .distinct()
+        .select(Projections.constructor(VoteWithVotedAt.class, vote, voteResponse.votedAt))
         .from(voteResponse)
         .join(voteResponse.vote, vote)
         .where(builder)
-        .orderBy(vote.closedAt.desc(), vote.id.desc())
+        .orderBy(voteResponse.votedAt.desc(), vote.id.desc())
         .limit(size)
         .fetch();
   }
