@@ -215,7 +215,7 @@ public class VoteService {
         vote.isAnonymous() ? 0 : (vote.isAdminVote() ? 1 : 0));
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public VoteResultResponse getVoteResult(Long userId, Long voteId) {
     // 유저 조회 및 유효성 검사
     User user =
@@ -303,7 +303,7 @@ public class VoteService {
     }
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public MyVoteResponse getMyVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
@@ -364,7 +364,7 @@ public class VoteService {
     return new MyVoteResponse(items, nextCursor, hasNext, items.size());
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public SubmittedVoteResponse getSubmittedVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
 

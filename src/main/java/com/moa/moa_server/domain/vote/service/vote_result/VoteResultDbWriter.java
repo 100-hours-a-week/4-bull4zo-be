@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 /** 종료된 투표에 대해 결과를 집계하고 DB에 저장하는 서비스 */
 @Service
@@ -26,7 +24,6 @@ public class VoteResultDbWriter {
   private final VoteRepository voteRepository;
 
   /** 종료된 투표에 대해 투표 결과 집계 및 DB 저장 후 반환 */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public List<ResultRaw> finalize(Vote vote) {
     // 투표 상태 변경
     vote.close();
