@@ -10,7 +10,11 @@ public class VoteValidator {
   private static final String UPLOAD_URL_PREFIX = "https://upload-domain/vote";
 
   public static void validateContent(String content) {
-    if (content == null || content.isBlank() || content.length() > 255 || content.length() < 2) {
+    if (content == null || content.isBlank()) {
+      throw new VoteException(VoteErrorCode.INVALID_CONTENT);
+    }
+    int codePointLength = content.codePointCount(0, content.length());
+    if (codePointLength < 2 || codePointLength > 100) {
       throw new VoteException(VoteErrorCode.INVALID_CONTENT);
     }
   }

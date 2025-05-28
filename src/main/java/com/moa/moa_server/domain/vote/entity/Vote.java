@@ -31,7 +31,7 @@ public class Vote extends BaseTimeEntity {
   @JoinColumn(name = "group_id", nullable = false)
   private Group group;
 
-  @Column(length = 500, nullable = false)
+  @Column(length = 100, nullable = false)
   private String content;
 
   @Column(name = "image_url", length = 500)
