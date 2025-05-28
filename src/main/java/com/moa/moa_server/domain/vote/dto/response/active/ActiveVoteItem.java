@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record ActiveVoteItem(
     @Schema(description = "투표 ID", example = "123") Long voteId,
     @Schema(description = "투표가 속한 그룹 ID", example = "1") Long groupId,
+    @Schema(description = "투표가 속한 그룹 이름", example = "공개") String groupName,
     @Schema(description = "투표 등록자 닉네임 (익명 투표인 경우, '익명'으로 전달)", example = "nickname")
         String authorNickname,
     @Schema(description = "투표 본문 내용", example = "에어컨 추우신 분?") String content,
@@ -22,6 +23,9 @@ public record ActiveVoteItem(
     return new ActiveVoteItem(
         vote.getId(),
         vote.getGroup().getId(),
+        vote.getGroup()
+            .getName(), // TODO: group.name 조회 시 N+1 쿼리 발생 가능 → fetch join 또는 DTO projection으로 최적화
+        // 필요
         vote.isAnonymous() ? "익명" : vote.getUser().getNickname(),
         vote.getContent(),
         vote.getImageUrl(),
