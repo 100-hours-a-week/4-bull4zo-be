@@ -22,7 +22,9 @@ public class VoteValidator {
   }
 
   public static void validateClosedAt(LocalDateTime closedAt) {
-    if (closedAt == null || !closedAt.isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+
+    if (closedAt == null || !closedAt.isAfter(now) || closedAt.isAfter(now.plusDays(7))) {
       throw new VoteException(VoteErrorCode.INVALID_TIME);
     }
   }
