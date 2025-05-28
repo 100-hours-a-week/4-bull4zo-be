@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public class UserValidator {
 
   private static final Pattern NICKNAME_PATTERN =
-      Pattern.compile("^(?![\\d\\s])[가-힣a-zA-Z0-9]{2,10}$");
+      Pattern.compile("^(?![\\d\\s])[가-힣a-zA-Z0-9]{2,18}$");
 
   private UserValidator() {
     throw new AssertionError("유틸 클래스는 인스턴스화할 수 없습니다.");
