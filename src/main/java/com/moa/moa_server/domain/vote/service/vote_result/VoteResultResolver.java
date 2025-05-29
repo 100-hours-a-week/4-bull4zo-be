@@ -44,7 +44,7 @@ public class VoteResultResolver {
 
     // 2. 진행 중 투표: Redis 캐시 조회
     Map<Integer, Integer> cached = voteResultRedisService.getOptionCounts(vote.getId());
-    if (cached != null && cached.size() == 2) {
+    if (cached.containsKey(1) && cached.containsKey(2)) {
       return toResultRawListInt(cached);
     }
 
