@@ -27,13 +27,14 @@ import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
-import com.moa.moa_server.domain.vote.entity.VoteResult;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
+import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
+import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -41,6 +42,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +71,7 @@ public class VoteService {
   private final GroupService groupService;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
+  private final VoteResultRedisService voteResultRedisService;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -125,10 +128,8 @@ public class VoteService {
             adminVote);
     voteRepository.save(vote);
 
-    // 옵션별 초기 결과 생성
-    VoteResult result1 = VoteResult.createInitial(vote, 1);
-    VoteResult result2 = VoteResult.createInitial(vote, 2);
-    voteResultRepository.saveAll(List.of(result1, result2));
+    // Redis 캐시 초기화 (옵션별 count 0 설정 및 만료 시간 등록)
+    voteResultRedisService.setCountsWithTTL(vote.getId(), Map.of(1, 0, 2, 0), vote.getClosedAt());
 
     // AI 서버로 검열 요청 (prod 환경에서만)
     if ("prod".equals(activeProfile)) {
@@ -183,6 +184,9 @@ public class VoteService {
     } catch (DataIntegrityViolationException e) {
       throw new VoteException(VoteErrorCode.ALREADY_VOTED);
     }
+
+    // Redis에 투표 결과 반영
+    voteResultRedisService.incrementOptionCount(voteId, response);
   }
 
   @Transactional
@@ -300,7 +304,7 @@ public class VoteService {
     }
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public MyVoteResponse getMyVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
@@ -361,9 +365,10 @@ public class VoteService {
     return new MyVoteResponse(items, nextCursor, hasNext, items.size());
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public SubmittedVoteResponse getSubmittedVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
+
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
     VotedAtVoteIdCursor parsedCursor = cursor != null ? VotedAtVoteIdCursor.parse(cursor) : null;
     if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {

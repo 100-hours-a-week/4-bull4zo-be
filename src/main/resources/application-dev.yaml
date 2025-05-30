@@ -11,6 +11,13 @@ spring:
     hikari:
       maximum-pool-size: 10
 
+  data:
+    redis:
+      host: ${REDIS_URL}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      timeout: 5000
+
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${FRONTEND_URL}/auth/callback
