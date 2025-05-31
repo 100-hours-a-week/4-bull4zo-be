@@ -32,7 +32,6 @@ import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
-import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
@@ -66,7 +65,6 @@ public class VoteService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
-  private final VoteResultRepository voteResultRepository;
 
   private final GroupService groupService;
   private final VoteResultService voteResultService;
