@@ -1,7 +1,8 @@
-package com.moa.moa_server.domain.global.util;
+package com.moa.moa_server.unit.global.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.moa.moa_server.domain.global.util.XssUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
