@@ -8,7 +8,6 @@ import static org.mockito.Mockito.*;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
-import com.moa.moa_server.domain.group.service.GroupService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
@@ -16,11 +15,8 @@ import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
-import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
-import com.moa.moa_server.domain.vote.service.VoteModerationService;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
-import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -44,14 +40,10 @@ public class VoteCreateTest {
   @InjectMocks private VoteService voteService;
 
   @Mock private VoteRepository voteRepository;
-  @Mock private VoteResponseRepository voteResponseRepository;
   @Mock private UserRepository userRepository;
   @Mock private GroupRepository groupRepository;
   @Mock private VoteResultRedisService voteResultRedisService;
   @Mock private GroupMemberRepository groupMemberRepository;
-  @Mock private VoteResultService voteResultService;
-  @Mock private GroupService groupService;
-  @Mock private VoteModerationService voteModerationService;
 
   @Mock private User user;
   @Mock private Group group;
