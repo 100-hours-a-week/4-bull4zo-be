@@ -71,13 +71,13 @@ public class VoteDetailTest {
     @DisplayName("참여자(유효 응답)가 조회")
     void getVoteDetail_success_participant() {
       // given: 투표에 응답한 참여자가 조회 (유효 응답: 1 또는 2)
-      User user2 = mock(User.class);
-      when(user2.getUserStatus()).thenReturn(User.UserStatus.ACTIVE);
-      when(userRepository.findById(2L)).thenReturn(Optional.of(user2));
+      User participant = mock(User.class);
+      when(participant.getUserStatus()).thenReturn(User.UserStatus.ACTIVE);
+      when(userRepository.findById(2L)).thenReturn(Optional.of(participant));
       when(vote.getUser()).thenReturn(mock(User.class)); // 작성자와 다름
       VoteResponse voteResponse = mock(VoteResponse.class);
       when(voteResponse.getOptionNumber()).thenReturn(1);
-      when(voteResponseRepository.findByVoteAndUser(vote, user2))
+      when(voteResponseRepository.findByVoteAndUser(vote, participant))
           .thenReturn(Optional.of(voteResponse));
 
       // when
