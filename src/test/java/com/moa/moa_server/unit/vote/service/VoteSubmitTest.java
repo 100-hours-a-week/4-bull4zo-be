@@ -160,7 +160,7 @@ public class VoteSubmitTest {
       // when & then
       assertThatThrownBy(() -> voteService.submitVote(1L, 999L, request))
           .isInstanceOf(VoteException.class)
-          .hasMessageContaining("VOTE_NOT_FOUND");
+          .hasMessageContaining(VoteErrorCode.VOTE_NOT_FOUND.name());
     }
   }
 }
