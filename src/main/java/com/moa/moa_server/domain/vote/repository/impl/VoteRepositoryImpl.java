@@ -103,7 +103,10 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
         new BooleanBuilder()
             .and(voteResponse.user.eq(user))
             .and(voteResponse.optionNumber.ne(0)) // 기권 제외
-            .and(vote.group.in(groups));
+            .and(vote.group.in(groups))
+            .and(
+                vote.voteStatus.in(
+                    Vote.VoteStatus.OPEN, Vote.VoteStatus.CLOSED)); // PENDING, REJECTED 제외
 
     if (cursor != null) {
       builder.and(
