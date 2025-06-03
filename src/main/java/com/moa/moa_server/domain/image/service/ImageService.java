@@ -93,6 +93,14 @@ public class ImageService {
     s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
   }
 
+  public void validateImageUrl(String imageUrl) {
+    if (imageUrl == null || imageUrl.isBlank()) return;
+    String expectedPrefix = String.format("https://%s.s3.amazonaws.com", bucket);
+    if (!imageUrl.startsWith(expectedPrefix)) {
+      throw new ImageException(ImageErrorCode.INVALID_URL);
+    }
+  }
+
   /** S3 파일 URL에서 key 값 추출 */
   public static String getKeyFromUrl(String url) {
     int idx = url.indexOf(".amazonaws.com/");

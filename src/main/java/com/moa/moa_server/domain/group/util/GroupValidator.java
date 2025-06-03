@@ -8,8 +8,7 @@ public class GroupValidator {
 
   private static final Pattern INVITE_CODE_PATTERN = Pattern.compile("^[A-Z0-9]{6,8}$");
   private static final Pattern NAME_PATTERN =
-      Pattern.compile("^(?![\\d\\s])[가-힣a-zA-Z0-9 ]{2,12}$");
-  private static final String UPLOAD_URL_PREFIX = "https://upload-domain/group";
+      Pattern.compile("^(?![\\d\\s])[가-힣ㄱ-ㅎa-zA-Z0-9 ]{2,12}$");
 
   private GroupValidator() {
     throw new AssertionError("유틸 클래스는 인스턴스화할 수 없습니다.");
@@ -32,12 +31,6 @@ public class GroupValidator {
         || description.isBlank()
         || description.length() < 2
         || description.length() > 50) {
-      throw new GroupException(GroupErrorCode.INVALID_INPUT);
-    }
-  }
-
-  public static void validateImageUrl(String imageUrl) {
-    if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(UPLOAD_URL_PREFIX)) {
       throw new GroupException(GroupErrorCode.INVALID_INPUT);
     }
   }
