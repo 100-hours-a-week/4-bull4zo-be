@@ -12,6 +12,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -30,6 +31,7 @@ public class ImageService {
   private final S3Presigner s3Presigner;
   private final S3Client s3Client;
 
+  @Setter
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
