@@ -23,6 +23,16 @@ kakao:
   redirect-uri: ${FRONTEND_URL}/auth/callback
   admin-key: ${KAKAO_ADMIN_KEY}
 
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${AWS_REGION}
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+
 frontend:
   url: ${FRONTEND_URL}
 
