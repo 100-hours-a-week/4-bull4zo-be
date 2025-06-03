@@ -46,33 +46,37 @@ public class ImageService {
       throw new ImageException(ImageErrorCode.INVALID_FILE);
     }
 
-    // S3 key 생성
-    String extension = fileName.substring(fileName.lastIndexOf("."));
-    String uuid = UUID.randomUUID().toString();
-    String key = "temp/" + uuid + extension;
+    try {
+      // S3 key 생성
+      String extension = fileName.substring(fileName.lastIndexOf("."));
+      String uuid = UUID.randomUUID().toString();
+      String key = "temp/" + uuid + extension;
 
-    // S3에 업로드될 객체 정보
-    PutObjectRequest objectRequest =
-        PutObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .contentType("image/" + extension.replace(".", ""))
-            .build();
+      // S3에 업로드될 객체 정보
+      PutObjectRequest objectRequest =
+          PutObjectRequest.builder()
+              .bucket(bucket)
+              .key(key)
+              .contentType("image/" + extension.replace(".", ""))
+              .build();
 
-    // Presigned URL 요청 생성 (유효기간: 3분)
-    PutObjectPresignRequest presignRequest =
-        PutObjectPresignRequest.builder()
-            .putObjectRequest(objectRequest)
-            .signatureDuration(Duration.ofMinutes(3))
-            .build();
+      // Presigned URL 요청 생성 (유효기간: 3분)
+      PutObjectPresignRequest presignRequest =
+          PutObjectPresignRequest.builder()
+              .putObjectRequest(objectRequest)
+              .signatureDuration(Duration.ofMinutes(3))
+              .build();
 
-    // presinged-url 발급
-    URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
+      // presinged-url 발급
+      URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
 
-    // fileUrl
-    String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
+      // fileUrl
+      String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
 
-    return new PresignedUrlResponse(presignedUrl.toString(), fileUrl);
+      return new PresignedUrlResponse(presignedUrl.toString(), fileUrl);
+    } catch (S3Exception e) {
+      throw new ImageException(ImageErrorCode.AWS_S3_ERROR);
+    }
   }
 
   /** S3의 temp 폴더에서 vote/group 폴더로 이미지를 복사하고 원복 삭제 */
@@ -112,11 +116,14 @@ public class ImageService {
   /** S3 파일 URL에서 key 값 추출 */
   public static String getKeyFromUrl(String url) {
     int idx = url.indexOf(".amazonaws.com/");
-    if (idx == -1) return url;
-    return url.substring(idx + ".amazonaws.com/".length());
+    if (idx == -1) throw new ImageException(ImageErrorCode.INVALID_URL);
+    String key = url.substring(idx + ".amazonaws.com/".length());
+    if (key.isBlank()) throw new ImageException(ImageErrorCode.INVALID_URL);
+    return key;
   }
 
   private boolean isValidExtension(String fileName) {
+    if (fileName == null || !fileName.contains(".")) return false;
     String ext = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
     return ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png");
   }
