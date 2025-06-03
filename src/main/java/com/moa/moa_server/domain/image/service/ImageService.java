@@ -14,6 +14,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -25,10 +26,12 @@ public class ImageService {
   private final UserRepository userRepository;
 
   private final S3Presigner s3Presigner;
+  private final S3Client s3Client;
 
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
+  /** Presigned URL 발급 */
   public PresignedUrlResponse createPresignedUrl(Long userId, String fileName) {
     // 유저 조회 및 유효성 검사
     User user =
@@ -68,6 +71,33 @@ public class ImageService {
     String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
 
     return new PresignedUrlResponse(presignedUrl.toString(), fileUrl);
+  }
+
+  /** S3의 temp 폴더에서 vote/group 폴더로 이미지를 복사하고 원복 삭제 */
+  public void moveImageFromTempToVote(String tempImageUrl, String targetDir) {
+    if (tempImageUrl == null || tempImageUrl.isBlank()) return;
+    String tempKey = getKeyFromUrl(tempImageUrl); // "temp/uuid.jpg"
+    if (!tempKey.startsWith("temp/")) return; // 보안상 체크
+
+    // targetKey: "vote/uuid.jpg" 또는 "group/uuid.jpg"
+    String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
+
+    // S3 복사
+    s3Client.copyObject(
+        builder ->
+            builder
+                .copySource(bucket + "/" + tempKey)
+                .destinationBucket(bucket)
+                .destinationKey(targetKey));
+    // S3 원본 삭제
+    s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
+  }
+
+  /** S3 파일 URL에서 key 값 추출 */
+  public static String getKeyFromUrl(String url) {
+    int idx = url.indexOf(".amazonaws.com/");
+    if (idx == -1) return url;
+    return url.substring(idx + ".amazonaws.com/".length());
   }
 
   private boolean isValidExtension(String fileName) {

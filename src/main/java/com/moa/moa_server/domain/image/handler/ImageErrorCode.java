@@ -4,7 +4,8 @@ import com.moa.moa_server.domain.global.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum ImageErrorCode implements BaseErrorCode {
-  INVALID_FILE(HttpStatus.BAD_REQUEST);
+  INVALID_FILE(HttpStatus.BAD_REQUEST),
+  INVALID_URL(HttpStatus.BAD_REQUEST);
 
   private final HttpStatus status;
 

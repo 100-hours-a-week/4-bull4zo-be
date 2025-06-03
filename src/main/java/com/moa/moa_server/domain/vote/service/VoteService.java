@@ -9,6 +9,7 @@ import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -32,11 +33,11 @@ import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
-import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -66,12 +67,12 @@ public class VoteService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
-  private final VoteResultRepository voteResultRepository;
 
   private final GroupService groupService;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
   private final VoteResultRedisService voteResultRedisService;
+  private final ImageService imageService;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -101,7 +102,7 @@ public class VoteService {
 
     // 요청 값 유효성 검사
     VoteValidator.validateContent(request.content());
-    VoteValidator.validateImageUrl(request.imageUrl());
+    imageService.validateImageUrl(request.imageUrl());
     String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
 
     // 투표 종료 시간 변환
@@ -112,6 +113,12 @@ public class VoteService {
     // VoteStatus 결정 (prod 환경에서만)
     Vote.VoteStatus status =
         "prod".equals(activeProfile) ? Vote.VoteStatus.PENDING : Vote.VoteStatus.OPEN;
+
+    // S3 이미지 이동
+    if (imageUrl != null) {
+      imageService.moveImageFromTempToVote(imageUrl, "vote");
+      imageUrl = imageUrl.replace("/temp/", "/vote/"); // DB에는 vote 경로 저장
+    }
 
     // Vote 생성 및 저장
     String sanitizedContent = XssUtil.sanitize(request.content());
