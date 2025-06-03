@@ -18,6 +18,7 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
+import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
@@ -27,10 +28,12 @@ import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
+import com.moa.moa_server.domain.vote.entity.VoteModerationLog;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
+import com.moa.moa_server.domain.vote.repository.VoteModerationLogRepository;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
@@ -67,6 +70,7 @@ public class VoteService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
+  private final VoteModerationLogRepository voteModerationLogRepository;
 
   private final GroupService groupService;
   private final VoteResultService voteResultService;
@@ -431,6 +435,29 @@ public class VoteService {
                 })
             .toList();
     return new SubmittedVoteResponse(items, nextCursor, hasNext, items.size());
+  }
+
+  @Transactional(readOnly = true)
+  public VoteModerationReasonResponse getModerationReason(Long userId, Long voteId) {
+    // 유저 조회 및 검증
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+
+    Vote vote = findVoteOrThrow(voteId);
+
+    // 조회 권한 검증 - 등록자여야 함
+    if (!vote.getUser().getId().equals(userId)) {
+      throw new VoteException(VoteErrorCode.FORBIDDEN);
+    }
+
+    VoteModerationLog log =
+        voteModerationLogRepository
+            .findFirstByVote_IdOrderByCreatedAtDesc(voteId)
+            .orElseThrow(() -> new VoteException(VoteErrorCode.MODERATION_LOG_NOT_FOUND));
+    return new VoteModerationReasonResponse(voteId, log.getReviewReason().name());
   }
 
   /** 투표 조회 */
