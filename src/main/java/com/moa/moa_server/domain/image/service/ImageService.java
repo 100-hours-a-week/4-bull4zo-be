@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -83,14 +85,20 @@ public class ImageService {
     String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
 
     // S3 복사
-    s3Client.copyObject(
-        builder ->
-            builder
-                .copySource(bucket + "/" + tempKey)
-                .destinationBucket(bucket)
-                .destinationKey(targetKey));
-    // S3 원본 삭제
-    s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
+    try {
+      s3Client.copyObject(
+          builder ->
+              builder
+                  .copySource(bucket + "/" + tempKey)
+                  .destinationBucket(bucket)
+                  .destinationKey(targetKey));
+      // S3 원본 삭제
+      s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
+    } catch (NoSuchKeyException e) {
+      throw new ImageException(ImageErrorCode.FILE_NOT_FOUND);
+    } catch (S3Exception e) {
+      throw new ImageException(ImageErrorCode.AWS_S3_ERROR);
+    }
   }
 
   public void validateImageUrl(String imageUrl) {

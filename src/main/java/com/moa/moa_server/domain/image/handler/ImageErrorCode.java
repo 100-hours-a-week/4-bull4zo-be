@@ -5,7 +5,9 @@ import org.springframework.http.HttpStatus;
 
 public enum ImageErrorCode implements BaseErrorCode {
   INVALID_FILE(HttpStatus.BAD_REQUEST),
-  INVALID_URL(HttpStatus.BAD_REQUEST);
+  INVALID_URL(HttpStatus.BAD_REQUEST),
+  FILE_NOT_FOUND(HttpStatus.NOT_FOUND),
+  AWS_S3_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 
   private final HttpStatus status;
 
