@@ -107,6 +107,16 @@ public class ImageService {
     }
   }
 
+  public void deleteImage(String imageUrl) {
+    if (imageUrl == null || imageUrl.isBlank()) return;
+    String key = getKeyFromUrl(imageUrl);
+    try {
+      s3Client.deleteObject(builder -> builder.bucket(bucket).key(key));
+    } catch (S3Exception e) {
+      throw new ImageException(ImageErrorCode.AWS_S3_ERROR);
+    }
+  }
+
   public void validateImageUrl(String imageUrl) {
     if (imageUrl == null || imageUrl.isBlank()) return;
     String expectedPrefix = String.format("https://%s.s3.amazonaws.com", bucket);
