@@ -109,6 +109,13 @@ public class Vote extends BaseTimeEntity {
     this.voteStatus = voteStatus;
   }
 
+  public void updateForEdit(String content, String imageUrl, LocalDateTime closedAt) {
+    this.content = content;
+    this.imageUrl = imageUrl;
+    this.closedAt = closedAt;
+    this.voteStatus = VoteStatus.PENDING; // 항상 상태 초기화
+  }
+
   public void close() {
     this.voteStatus = VoteStatus.CLOSED;
   }

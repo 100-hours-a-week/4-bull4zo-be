@@ -17,8 +17,10 @@ import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
+import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
+import com.moa.moa_server.domain.vote.dto.response.VoteUpdateResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
@@ -458,6 +460,48 @@ public class VoteService {
             .findFirstByVote_IdOrderByCreatedAtDesc(voteId)
             .orElseThrow(() -> new VoteException(VoteErrorCode.MODERATION_LOG_NOT_FOUND));
     return new VoteModerationReasonResponse(voteId, log.getReviewReason().name());
+  }
+
+  @Transactional
+  public VoteUpdateResponse updateVote(Long userId, Long voteId, VoteUpdateRequest request) {
+    // 1. 유저/투표 조회 및 권한 체크
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+
+    Vote vote =
+        voteRepository
+            .findById(voteId)
+            .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+
+    if (!vote.getUser().getId().equals(userId)) throw new VoteException(VoteErrorCode.FORBIDDEN);
+
+    // 2. 상태/수정 가능 체크 (REJECTED 상태만 수정 가능)
+    if (vote.getVoteStatus() != Vote.VoteStatus.REJECTED)
+      throw new VoteException(VoteErrorCode.FORBIDDEN);
+
+    // 3. 본문, 종료 시각 유효성 검사
+    VoteValidator.validateContent(request.content());
+    ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
+    LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+    VoteValidator.validateClosedAt(utcTime);
+
+    // 4. 이미지 URL 처리
+    String newImageUrl =
+        imageService.processImageOnVoteUpdate(vote.getImageUrl(), request.imageUrl());
+
+    // 5. content, url, closedAt 업데이트 및 저장
+    vote.updateForEdit(request.content(), newImageUrl, utcTime);
+    voteRepository.save(vote);
+
+    // 6. AI 서버로 검열 요청 (prod 환경에서만)
+    if ("prod".equals(activeProfile)) {
+      voteModerationService.requestModeration(vote.getId(), vote.getContent());
+    }
+
+    return new VoteUpdateResponse(vote.getId());
   }
 
   /** 투표 조회 */
