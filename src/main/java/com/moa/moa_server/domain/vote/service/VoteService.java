@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
+import com.moa.moa_server.domain.global.cursor.UpdatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
@@ -42,7 +42,6 @@ import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
-import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -321,8 +320,8 @@ public class VoteService {
   public MyVoteResponse getMyVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
-    CreatedAtVoteIdCursor parsedCursor =
-        cursor != null ? CreatedAtVoteIdCursor.parse(cursor) : null;
+    UpdatedAtVoteIdCursor parsedCursor =
+        cursor != null ? UpdatedAtVoteIdCursor.parse(cursor) : null;
     if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {
       throw new VoteException(VoteErrorCode.VOTE_NOT_FOUND);
     }
@@ -363,7 +362,7 @@ public class VoteService {
     String nextCursor =
         votes.isEmpty()
             ? null
-            : new CreatedAtVoteIdCursor(votes.getLast().getCreatedAt(), votes.getLast().getId())
+            : new UpdatedAtVoteIdCursor(votes.getLast().getUpdatedAt(), votes.getLast().getId())
                 .encode();
 
     // 각 투표별 집계 결과를 포함한 응답 DTO 구성
