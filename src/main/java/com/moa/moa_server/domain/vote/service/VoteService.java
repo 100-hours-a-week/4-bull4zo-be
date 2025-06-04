@@ -214,8 +214,7 @@ public class VoteService {
     Vote vote = findVoteOrThrow(voteId);
 
     // 상태/권한 검사
-    validateVoteReadable(vote);
-    validateVoteAccess(user, vote);
+    validateVoteContentReadable(vote, userId);
 
     return new VoteDetailResponse(
         vote.getId(),
@@ -517,6 +516,18 @@ public class VoteService {
     return groupMemberRepository
         .findByGroupAndUser(group, user)
         .orElseThrow(() -> new VoteException(VoteErrorCode.NOT_GROUP_MEMBER));
+  }
+
+  /** 투표 내용 조회 가능 상태 및 권한 검사 */
+  private void validateVoteContentReadable(Vote vote, Long userId) {
+    if (vote.getVoteStatus() == Vote.VoteStatus.OPEN
+        || vote.getVoteStatus() == Vote.VoteStatus.CLOSED) {
+      return;
+    }
+    if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED && vote.getUser().getId().equals(userId)) {
+      return;
+    }
+    throw new VoteException(VoteErrorCode.FORBIDDEN);
   }
 
   /** 투표 조회 가능한 상태인지 검사 (내용, 결과, 댓글 읽기) 허용 상태: OPEN, CLOSED */
