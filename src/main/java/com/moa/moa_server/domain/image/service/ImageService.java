@@ -9,6 +9,8 @@ import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +72,9 @@ public class ImageService {
       URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
 
       // fileUrl
-      String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
+      String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
+      String encodedKey = "temp/" + uuid + "_" + encodedFileName;
+      String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, encodedKey);
 
       return new PresignedUrlResponse(presignedUrl.toString(), fileUrl);
     } catch (S3Exception e) {
