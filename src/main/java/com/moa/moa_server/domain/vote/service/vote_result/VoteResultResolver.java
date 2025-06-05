@@ -29,6 +29,12 @@ public class VoteResultResolver {
 
   /** 캐시 또는 DB 상태에 따라 투표 결과를 조회하거나 계산 */
   public List<ResultRaw> getOrComputeResults(Vote vote) {
+    // 0. 반려(REJECTED) 또는 미승인(PENDING) 투표는 결과 없음
+    if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED
+        || vote.getVoteStatus() == Vote.VoteStatus.PENDING) {
+      return List.of();
+    }
+
     // 1. 종료된 투표: DB에서 조회 또는 종료 처리
     log.debug(
         "voteClosedAt={}, now={}, result={}",
