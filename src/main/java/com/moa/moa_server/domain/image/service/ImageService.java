@@ -53,7 +53,7 @@ public class ImageService {
       String extension = fileName.substring(fileName.lastIndexOf("."));
       String contentType = getContentType(extension);
       String uuid = UUID.randomUUID().toString();
-      String key = "temp/" + uuid + extension;
+      String key = "temp/" + uuid + "_" + fileName;
 
       // S3에 업로드될 객체 정보
       PutObjectRequest objectRequest =
