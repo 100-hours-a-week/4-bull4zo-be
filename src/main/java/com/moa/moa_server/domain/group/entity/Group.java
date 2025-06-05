@@ -31,7 +31,7 @@ public class Group extends BaseTimeEntity {
   @Column(name = "name", length = 50, nullable = false, unique = true)
   private String name;
 
-  @Column(name = "description", length = 100, nullable = false)
+  @Column(name = "description", length = 300, nullable = false)
   private String description;
 
   @Column(name = "image_url", length = 500)
