@@ -51,16 +51,13 @@ public class ImageService {
     try {
       // S3 key 생성
       String extension = fileName.substring(fileName.lastIndexOf("."));
+      String contentType = getContentType(extension);
       String uuid = UUID.randomUUID().toString();
-      String key = "temp/" + uuid + extension;
+      String key = "temp/" + uuid + "_" + fileName;
 
       // S3에 업로드될 객체 정보
       PutObjectRequest objectRequest =
-          PutObjectRequest.builder()
-              .bucket(bucket)
-              .key(key)
-              .contentType("image/" + extension.replace(".", ""))
-              .build();
+          PutObjectRequest.builder().bucket(bucket).key(key).contentType(contentType).build();
 
       // Presigned URL 요청 생성 (유효기간: 3분)
       PutObjectPresignRequest presignRequest =
@@ -132,6 +129,15 @@ public class ImageService {
     String key = url.substring(idx + ".amazonaws.com/".length());
     if (key.isBlank()) throw new ImageException(ImageErrorCode.INVALID_URL);
     return key;
+  }
+
+  private static String getContentType(String extension) {
+    extension = extension.toLowerCase();
+    return switch (extension) {
+      case ".jpg", ".jpeg" -> "image/jpeg";
+      case ".png" -> "image/png";
+      default -> throw new ImageException(ImageErrorCode.INVALID_FILE);
+    };
   }
 
   private boolean isValidExtension(String fileName) {
