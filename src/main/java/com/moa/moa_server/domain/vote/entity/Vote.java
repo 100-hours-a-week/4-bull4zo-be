@@ -37,6 +37,9 @@ public class Vote extends BaseTimeEntity {
   @Column(name = "image_url", length = 500)
   private String imageUrl;
 
+  @Column(name = "image_name", length = 300)
+  private String imageName;
+
   @Column(name = "closed_at", nullable = false)
   private LocalDateTime closedAt;
 
@@ -83,6 +86,7 @@ public class Vote extends BaseTimeEntity {
       Group group,
       String content,
       String imageUrl,
+      String imageName,
       LocalDateTime closedAt,
       boolean anonymous,
       VoteStatus status,
@@ -92,6 +96,7 @@ public class Vote extends BaseTimeEntity {
         .group(group)
         .content(content)
         .imageUrl(imageUrl)
+        .imageName(imageName)
         .closedAt(closedAt)
         .anonymous(anonymous)
         .voteStatus(status)

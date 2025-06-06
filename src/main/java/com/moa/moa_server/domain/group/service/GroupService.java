@@ -110,6 +110,7 @@ public class GroupService {
     GroupValidator.validateDescription(request.description());
     imageService.validateImageUrl(request.imageUrl());
     String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
+    String imageName = request.imageName().isBlank() ? null : request.imageName().trim();
 
     // 그룹 이름 중복 검사
     if (groupRepository.existsByName(request.name())) {
@@ -123,11 +124,13 @@ public class GroupService {
     if (imageUrl != null) {
       imageService.moveImageFromTempToVote(imageUrl, "group");
       imageUrl = imageUrl.replace("/temp/", "/group/"); // DB에는 vote 경로 저장
+      imageName = XssUtil.sanitize(request.imageName());
     }
 
     // 그룹 생성
     String sanitizedDescription = XssUtil.sanitize(request.description());
-    Group group = Group.create(user, request.name(), sanitizedDescription, imageUrl, inviteCode);
+    Group group =
+        Group.create(user, request.name(), sanitizedDescription, imageUrl, imageName, inviteCode);
     groupRepository.save(group);
 
     // 그룹 멤버 등록
@@ -139,6 +142,7 @@ public class GroupService {
         group.getName(),
         group.getDescription(),
         group.getImageUrl(),
+        group.getImageName(),
         group.getInviteCode(),
         group.getCreatedAt());
   }
