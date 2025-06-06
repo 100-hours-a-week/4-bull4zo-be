@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Hidden
 @RestController
 @RequestMapping("/test-login")
-@Profile({"local", "dev"})
+@Profile("local")
 @RequiredArgsConstructor
 public class TestLoginController {
 

@@ -15,11 +15,6 @@ spring:
     hikari:
       maximum-pool-size: 10
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: http://localhost:8080/api/v1/auth/login/oauth
@@ -31,19 +26,6 @@ mock:
   ai:
     enabled: true
 
-cloud:
-  aws:
-    credentials:
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
-    region:
-      static: ${AWS_REGION}
-    s3:
-      bucket: ${S3_BUCKET_NAME}
-
-cdn:
-  image-base-url: ${CDN_IMAGE_BASE_URL}
-
 logging:
   level:
     root: INFO
@@ -51,4 +33,3 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.web.filter: DEBUG
 #    org.hibernate.type.descriptor.sql: trace
-    com.moa.moa_server.domain.vote.service.v3: DEBUG

@@ -19,6 +19,4 @@ public interface VoteResultRepository extends JpaRepository<VoteResult, Long> {
   int incrementOptionCount(@Param("voteId") Long voteId, @Param("optionNumber") int optionNumber);
 
   List<VoteResult> findAllByVoteId(Long voteId);
-
-  boolean existsByVoteId(Long voteId);
 }

@@ -13,6 +13,6 @@ RUN ./gradlew clean build -x test
 FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
-COPY --from=builder /app/build/libs/moa-server-*.jar app.jar
+COPY --from=builder /app/build/libs/moa-server-0.0.1-SNAPSHOT.jar app.jar
 
 CMD ["java", "-jar", "app.jar"]

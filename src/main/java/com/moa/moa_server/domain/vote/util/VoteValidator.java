@@ -7,6 +7,8 @@ import java.time.ZoneOffset;
 
 public class VoteValidator {
 
+  private static final String UPLOAD_URL_PREFIX = "https://upload-domain/vote";
+
   public static void validateContent(String content) {
     if (content == null || content.isBlank()) {
       throw new VoteException(VoteErrorCode.INVALID_CONTENT);
@@ -14,6 +16,12 @@ public class VoteValidator {
     int codePointLength = content.codePointCount(0, content.length());
     if (codePointLength < 2 || codePointLength > 100) {
       throw new VoteException(VoteErrorCode.INVALID_CONTENT);
+    }
+  }
+
+  public static void validateImageUrl(String imageUrl) {
+    if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.startsWith(UPLOAD_URL_PREFIX)) {
+      throw new VoteException(VoteErrorCode.INVALID_URL);
     }
   }
 

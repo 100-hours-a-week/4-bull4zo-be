@@ -7,6 +7,8 @@ on:
       - develop
       - cicd/**
       - release/**
+    tags:
+      - 'v*'
 
 jobs:
   build-and-deploy:
@@ -17,8 +19,6 @@ jobs:
     steps:
       - name: 🐵 Checkout Repository
         uses: actions/checkout@v3
-        with:
-          persist-credentials: false
 
       - name: 🐵 Set up JDK 21
         uses: actions/setup-java@v3
@@ -28,36 +28,6 @@ jobs:
 
       - name: 🐵 Grant execute permission to Gradle
         run: chmod +x gradlew
-
-      - name: 🐵 Extract version from build.gradle
-        id: version
-        if: github.ref_name == 'main' 
-        run: |
-          VERSION=$(grep '^version' build.gradle | awk -F"'" '{print $2}')
-          echo "version=$VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: 🐵 Create Git Tag (if not exists)
-        if: github.ref_name == 'main' 
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          echo "현재 토큰: ${GH_PAT:0:4}****"
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
-          git config --get remote.origin.url
-
-          git fetch --tags
-          TAG=${{ steps.version.outputs.version }}
-          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "✅ Tag $TAG already exists"
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag $TAG
-            git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}
-            git push origin $TAG
-            echo "✅ Created Git tag: $TAG"
-          fi
 
       - name: 🐵 Build JAR (no tests)
         run: |
@@ -79,10 +49,13 @@ jobs:
           IMAGE_NAME=4moa/moa-be-dev
           TAG=${COMMIT_SHA::7}
 
-          # main 레포인 경우
-          if [[ "$REF_NAME" == "main" ]] ; then
+          # prod 태그인 경우
+          if [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             IMAGE_NAME=4moa/moa-be
-            TAG=${{ steps.version.outputs.version }}
+            TAG=$REF_NAME
+          elif [[ "$REF_NAME" == "main" ]]; then
+            IMAGE_NAME=4moa/moa-be
+            TAG=latest
           fi
 
           echo "Image Name: $IMAGE_NAME"
@@ -96,11 +69,11 @@ jobs:
           REF_NAME=${{ github.ref_name }}
 
           DOCKERFILE_PATH=Dockerfile
-          if [[ "$REF_NAME" != "main" ]]; then
+          if [[ "$REF_NAME" != "main" && ! "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             DOCKERFILE_PATH=Dockerfile.dev
           fi
 
-          echo "🐵 Using Dockerfile: $DOCKERFILE_PATH"
+          echo "📄 Using Dockerfile: $DOCKERFILE_PATH"
 
           docker buildx build \
             --platform linux/amd64 \
@@ -119,8 +92,6 @@ jobs:
         env:
           IMAGE_NAME: ${{ steps.tagger.outputs.image_name }}
           IMAGE_TAG: ${{ steps.tagger.outputs.tag }}
-          REF_NAME: ${{ github.ref_name }}
-
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no cicd@${{ secrets.GCP_BE_HOST }} <<EOF
             set -e
@@ -138,7 +109,7 @@ jobs:
             docker rm moa-backend || true
 
             echo "🐵 Writing .env on remote server..."
-            if [[ "$REF_NAME" == "main" ]]; then
+            if [[ "$REF_NAME" == "main" || "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               cat <<EENV | sudo tee /home/cicd/moa-backend.env > /dev/null
           SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILE }}
           SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
@@ -149,14 +120,6 @@ jobs:
           AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}
           KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_ADMIN_KEY=${{ secrets.KAKAO_ADMIN_KEY }}
-          REDIS_URL=${{ secrets.REDIS_URL }}
-          REDIS_PORT=${{ secrets.REDIS_PORT }}
-          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-          AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-          AWS_REGION=${{ secrets.AWS_REGION }}
-          AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-          S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-          CDN_IMAGE_BASE_URL=${{ secrets.CDN_IMAGE_BASE_URL }}
           OTEL_SERVICE_NAME=${{ secrets.OTEL_SERVICE_NAME }}
           OTEL_EXPORTER_OTLP_ENDPOINT=${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
@@ -176,14 +139,6 @@ jobs:
           REDIS_URL=${{ secrets.REDIS_URL }}
           REDIS_PORT=${{ secrets.REDIS_PORT }}
           REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-          AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-          AWS_REGION=${{ secrets.AWS_REGION }}
-          AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-          S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-          CDN_IMAGE_BASE_URL=${{ secrets.CDN_IMAGE_BASE_URL }}
-          ELASTIC_APM_SERVER_URL=${{ secrets.ELASTIC_APM_SERVER_URL }}
-          ELASTIC_APM_SERVICE_NAME=${{ secrets.ELASTIC_APM_SERVICE_NAME }}
-          ELASTIC_APM_ENVIRONMENT=${{ secrets.ELASTIC_APM_ENVIRONMENT }}
           EENV
             fi
 

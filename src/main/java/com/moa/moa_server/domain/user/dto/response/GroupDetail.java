@@ -11,7 +11,6 @@ public record GroupDetail(
     @Schema(description = "그룹 소개", example = "카카오 부트캠프전용 야자타임 커뮤니티 입니다.") String description,
     @Schema(description = "그룹 이미지 URL", example = "https://s3.amazonaws.com/....jpg")
         String imageUrl,
-    @Schema(description = "그룹 이미지 이름", example = "이미지.jpeg") String imageName,
     @Schema(description = "그룹 초대 코드", example = "E78XC1") String inviteCode,
     @Schema(description = "그룹 내 사용자의 역할", example = "MEMBER") String role) {
   public static GroupDetail from(Group group, GroupMember.Role role) {
@@ -20,7 +19,6 @@ public record GroupDetail(
         group.getName(),
         group.getDescription(),
         group.getImageUrl(),
-        group.getImageName(),
         group.getInviteCode(),
         role.name());
   }

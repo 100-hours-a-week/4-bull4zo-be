@@ -10,6 +10,5 @@ public record GroupCreateResponse(
     @Schema(description = "그룹 설명", example = "매일 춘식이 사진 공유") String description,
     @Schema(description = "그룹 이미지 URL", example = "https://s3.amazonaws.com/....jpg")
         String imageUrl,
-    @Schema(description = "그룹 이미지 이름", example = "이미지.jpeg") String imageName,
     @Schema(description = "초대 코드", example = "ABC123") String inviteCode,
     @Schema(description = "생성 시각", example = "2025-04-25T14:00:00") LocalDateTime createdAt) {}

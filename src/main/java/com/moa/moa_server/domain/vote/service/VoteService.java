@@ -9,7 +9,6 @@ import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
-import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -18,7 +17,6 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
@@ -28,16 +26,14 @@ import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
-import com.moa.moa_server.domain.vote.entity.VoteModerationLog;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
+import com.moa.moa_server.domain.vote.entity.VoteResult;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
-import com.moa.moa_server.domain.vote.repository.VoteModerationLogRepository;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
-import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
-import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
+import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import jakarta.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -45,7 +41,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -69,13 +64,11 @@ public class VoteService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
-  private final VoteModerationLogRepository voteModerationLogRepository;
+  private final VoteResultRepository voteResultRepository;
 
   private final GroupService groupService;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
-  private final VoteResultRedisService voteResultRedisService;
-  private final ImageService imageService;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -105,9 +98,8 @@ public class VoteService {
 
     // 요청 값 유효성 검사
     VoteValidator.validateContent(request.content());
-    imageService.validateImageUrl(request.imageUrl());
+    VoteValidator.validateImageUrl(request.imageUrl());
     String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
-    String imageName = request.imageName().isBlank() ? null : request.imageName().trim();
 
     // 투표 종료 시간 변환
     ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
@@ -118,32 +110,25 @@ public class VoteService {
     Vote.VoteStatus status =
         "prod".equals(activeProfile) ? Vote.VoteStatus.PENDING : Vote.VoteStatus.OPEN;
 
-    // XSS 필터링
+    // Vote 생성 및 저장
     String sanitizedContent = XssUtil.sanitize(request.content());
 
-    // 이미지 처리
-    if (imageUrl != null) {
-      imageService.moveImageFromTempToVote(imageUrl, "vote"); // S3 이미지 처리
-      imageUrl = imageUrl.replace("/temp/", "/vote/"); // DB에는 vote 경로 저장
-      imageName = XssUtil.sanitize(request.imageName());
-    }
-
-    // Vote 생성 및 저장
     Vote vote =
         Vote.createUserVote(
             user,
             group,
             sanitizedContent,
             imageUrl,
-            imageName,
             utcTime,
             request.anonymous(),
             status,
             adminVote);
     voteRepository.save(vote);
 
-    // Redis 캐시 초기화 (옵션별 count 0 설정 및 만료 시간 등록)
-    voteResultRedisService.setCountsWithTTL(vote.getId(), Map.of(1, 0, 2, 0), vote.getClosedAt());
+    // 옵션별 초기 결과 생성
+    VoteResult result1 = VoteResult.createInitial(vote, 1);
+    VoteResult result2 = VoteResult.createInitial(vote, 2);
+    voteResultRepository.saveAll(List.of(result1, result2));
 
     // AI 서버로 검열 요청 (prod 환경에서만)
     if ("prod".equals(activeProfile)) {
@@ -198,9 +183,6 @@ public class VoteService {
     } catch (DataIntegrityViolationException e) {
       throw new VoteException(VoteErrorCode.ALREADY_VOTED);
     }
-
-    // Redis에 투표 결과 반영
-    voteResultRedisService.incrementOptionCount(voteId, response);
   }
 
   @Transactional
@@ -225,7 +207,6 @@ public class VoteService {
         vote.isAnonymous() ? "익명" : vote.getUser().getNickname(),
         vote.getContent(),
         vote.getImageUrl(),
-        vote.getImageName(),
         vote.getCreatedAt(),
         vote.getClosedAt(),
         vote.isAnonymous() ? 0 : (vote.isAdminVote() ? 1 : 0));
@@ -319,7 +300,7 @@ public class VoteService {
     }
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public MyVoteResponse getMyVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
@@ -380,10 +361,9 @@ public class VoteService {
     return new MyVoteResponse(items, nextCursor, hasNext, items.size());
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public SubmittedVoteResponse getSubmittedVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
-
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
     VotedAtVoteIdCursor parsedCursor = cursor != null ? VotedAtVoteIdCursor.parse(cursor) : null;
     if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {
@@ -439,29 +419,6 @@ public class VoteService {
                 })
             .toList();
     return new SubmittedVoteResponse(items, nextCursor, hasNext, items.size());
-  }
-
-  @Transactional(readOnly = true)
-  public VoteModerationReasonResponse getModerationReason(Long userId, Long voteId) {
-    // 유저 조회 및 검증
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    Vote vote = findVoteOrThrow(voteId);
-
-    // 조회 권한 검증 - 등록자여야 함
-    if (!vote.getUser().getId().equals(userId)) {
-      throw new VoteException(VoteErrorCode.FORBIDDEN);
-    }
-
-    VoteModerationLog log =
-        voteModerationLogRepository
-            .findFirstByVote_IdOrderByCreatedAtDesc(voteId)
-            .orElseThrow(() -> new VoteException(VoteErrorCode.MODERATION_LOG_NOT_FOUND));
-    return new VoteModerationReasonResponse(voteId, log.getReviewReason().name());
   }
 
   /** 투표 조회 */

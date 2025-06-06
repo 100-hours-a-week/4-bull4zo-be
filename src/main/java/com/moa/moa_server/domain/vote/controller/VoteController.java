@@ -6,7 +6,6 @@ import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
@@ -103,14 +102,6 @@ public class VoteController {
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) Integer size) {
     SubmittedVoteResponse response = voteService.getSubmittedVotes(userId, groupId, cursor, size);
-    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
-  }
-
-  @Operation(summary = "투표 검열 사유 조회", description = "등록 실패한 투표의 검열 사유를 조회합니다.")
-  @GetMapping("/{voteId}/review")
-  public ResponseEntity<ApiResponse<VoteModerationReasonResponse>> getModerationReason(
-      @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
-    VoteModerationReasonResponse response = voteService.getModerationReason(userId, voteId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }

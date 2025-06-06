@@ -31,14 +31,11 @@ public class Vote extends BaseTimeEntity {
   @JoinColumn(name = "group_id", nullable = false)
   private Group group;
 
-  @Column(length = 400, nullable = false)
+  @Column(length = 100, nullable = false)
   private String content;
 
   @Column(name = "image_url", length = 500)
   private String imageUrl;
-
-  @Column(name = "image_name", length = 300)
-  private String imageName;
 
   @Column(name = "closed_at", nullable = false)
   private LocalDateTime closedAt;
@@ -86,7 +83,6 @@ public class Vote extends BaseTimeEntity {
       Group group,
       String content,
       String imageUrl,
-      String imageName,
       LocalDateTime closedAt,
       boolean anonymous,
       VoteStatus status,
@@ -96,7 +92,6 @@ public class Vote extends BaseTimeEntity {
         .group(group)
         .content(content)
         .imageUrl(imageUrl)
-        .imageName(imageName)
         .closedAt(closedAt)
         .anonymous(anonymous)
         .voteStatus(status)
@@ -112,9 +107,5 @@ public class Vote extends BaseTimeEntity {
 
   public void updateModerationResult(VoteStatus voteStatus) {
     this.voteStatus = voteStatus;
-  }
-
-  public void close() {
-    this.voteStatus = VoteStatus.CLOSED;
   }
 }

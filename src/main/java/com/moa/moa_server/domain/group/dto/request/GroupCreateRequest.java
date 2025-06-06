@@ -7,5 +7,4 @@ public record GroupCreateRequest(
     @Schema(description = "그룹 이름", example = "춘식이 연구회") String name,
     @Schema(description = "그룹 설명", example = "매일 춘식이 사진 공유") String description,
     @Schema(description = "그룹 이미지 URL", example = "https://s3.amazonaws.com/....jpg")
-        String imageUrl,
-    @Schema(description = "그룹 이미지 이름", example = "이미지.jpeg") String imageName) {}
+        String imageUrl) {}
