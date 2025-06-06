@@ -92,7 +92,10 @@ public class ImageService {
     // targetKey: "vote/uuid" 또는 "group/uuid"
     String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
 
-    log.info("[ImageService#moveImageFromTempToVote] 파일 이동 시도: tempKey {} to targetKey {}", tempKey, targetKey);
+    log.info(
+        "[ImageService#moveImageFromTempToVote] 파일 이동 시도: tempKey {} to targetKey {}",
+        tempKey,
+        targetKey);
 
     try {
       // S3 복사
