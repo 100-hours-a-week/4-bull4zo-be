@@ -3,6 +3,7 @@ package com.moa.moa_server.domain.vote.entity;
 import com.moa.moa_server.domain.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import lombok.*;
 
 @Entity
@@ -29,22 +30,17 @@ public class VoteResult extends BaseTimeEntity {
   @Column(name = "count", nullable = false)
   private int count;
 
-  @Column(name = "ratio", precision = 5, scale = 4, nullable = false)
+  @Column(name = "ratio", precision = 7, scale = 4, nullable = false)
   private BigDecimal ratio;
 
-  public static VoteResult createInitial(Vote vote, int optionNumber) {
+  public static VoteResult create(Vote vote, int optionNumber, int count, double ratio) {
+    BigDecimal roundedRatio = BigDecimal.valueOf(ratio).setScale(4, RoundingMode.HALF_UP);
+
     return VoteResult.builder()
         .vote(vote)
         .optionNumber(optionNumber)
-        .count(0)
-        .ratio(BigDecimal.ZERO)
+        .count(count)
+        .ratio(roundedRatio)
         .build();
-  }
-
-  public void update(int count, BigDecimal ratio) {
-    if (this.count != count || this.ratio.compareTo(ratio) != 0) {
-      this.count = count;
-      this.ratio = ratio;
-    }
   }
 }

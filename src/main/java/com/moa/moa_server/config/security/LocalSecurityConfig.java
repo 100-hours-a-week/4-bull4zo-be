@@ -35,8 +35,6 @@ public class LocalSecurityConfig {
             auth ->
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/votes")
                     .permitAll()
-                    .requestMatchers("/api/v2/votes/**")
-                    .permitAll()
                     .requestMatchers("/test-login")
                     .permitAll()
                     .requestMatchers(ALLOWED_URLS)
