@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -22,6 +23,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageService {
@@ -34,6 +36,9 @@ public class ImageService {
   @Setter
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
+
+  @Value("${cdn.image-base-url}")
+  private String cdnBaseUrl;
 
   /** Presigned URL 발급 */
   public PresignedUrlResponse createPresignedUrl(Long userId, String fileName) {
@@ -70,7 +75,7 @@ public class ImageService {
       URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
 
       // fileUrl
-      String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
+      String fileUrl = String.format("%s/%s", cdnBaseUrl, key);
 
       return new PresignedUrlResponse(presignedUrl.toString(), fileUrl);
     } catch (S3Exception e) {
@@ -81,11 +86,16 @@ public class ImageService {
   /** S3의 temp 폴더에서 vote/group 폴더로 이미지를 복사하고 원복 삭제 */
   public void moveImageFromTempToVote(String tempImageUrl, String targetDir) {
     if (tempImageUrl == null || tempImageUrl.isBlank()) return;
-    String tempKey = getKeyFromUrl(tempImageUrl); // "temp/uuid.jpg"
+    String tempKey = getKeyFromUrl(tempImageUrl); // "temp/uuid"
     if (!tempKey.startsWith("temp/")) return; // 보안상 체크
 
-    // targetKey: "vote/uuid.jpg" 또는 "group/uuid.jpg"
+    // targetKey: "vote/uuid" 또는 "group/uuid"
     String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
+
+    log.info(
+        "[ImageService#moveImageFromTempToVote] 파일 이동 시도: tempKey {} to targetKey {}",
+        tempKey,
+        targetKey);
 
     try {
       // S3 복사
@@ -97,6 +107,8 @@ public class ImageService {
                   .destinationKey(targetKey));
       // S3 원본 삭제
       s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
+
+      log.info("[ImageService#moveImageFromTempToVote] 파일 이동 성공");
     } catch (NoSuchKeyException e) {
       throw new ImageException(ImageErrorCode.FILE_NOT_FOUND);
     } catch (S3Exception e) {
@@ -116,17 +128,16 @@ public class ImageService {
 
   public void validateImageUrl(String imageUrl) {
     if (imageUrl == null || imageUrl.isBlank()) return;
-    String expectedPrefix = String.format("https://%s.s3.amazonaws.com", bucket);
-    if (!imageUrl.startsWith(expectedPrefix)) {
+    if (!imageUrl.startsWith(cdnBaseUrl)) {
       throw new ImageException(ImageErrorCode.INVALID_URL);
     }
   }
 
   /** S3 파일 URL에서 key 값 추출 */
-  public static String getKeyFromUrl(String url) {
-    int idx = url.indexOf(".amazonaws.com/");
+  public String getKeyFromUrl(String url) {
+    int idx = url.indexOf(cdnBaseUrl + "/");
     if (idx == -1) throw new ImageException(ImageErrorCode.INVALID_URL);
-    String key = url.substring(idx + ".amazonaws.com/".length());
+    String key = url.substring(idx + (cdnBaseUrl + "/").length());
     if (key.isBlank()) throw new ImageException(ImageErrorCode.INVALID_URL);
     return key;
   }
