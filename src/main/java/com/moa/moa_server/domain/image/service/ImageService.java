@@ -9,8 +9,6 @@ import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +53,7 @@ public class ImageService {
       String extension = fileName.substring(fileName.lastIndexOf("."));
       String contentType = getContentType(extension);
       String uuid = UUID.randomUUID().toString();
-      String key = "temp/" + uuid + "_" + fileName;
+      String key = "temp/" + uuid;
 
       // S3에 업로드될 객체 정보
       PutObjectRequest objectRequest =
@@ -72,9 +70,7 @@ public class ImageService {
       URL presignedUrl = s3Presigner.presignPutObject(presignRequest).url();
 
       // fileUrl
-      String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8);
-      String encodedKey = "temp/" + uuid + "_" + encodedFileName;
-      String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, encodedKey);
+      String fileUrl = String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
 
       return new PresignedUrlResponse(presignedUrl.toString(), fileUrl);
     } catch (S3Exception e) {
@@ -91,8 +87,8 @@ public class ImageService {
     // targetKey: "vote/uuid.jpg" 또는 "group/uuid.jpg"
     String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
 
-    // S3 복사
     try {
+      // S3 복사
       s3Client.copyObject(
           builder ->
               builder
