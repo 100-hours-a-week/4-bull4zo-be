@@ -156,6 +156,7 @@ jobs:
           AWS_REGION=${{ secrets.AWS_REGION }}
           AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
           S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+          CDN_IMAGE_BASE_URL=${{ secrets.CDN_IMAGE_BASE_URL }}
           OTEL_SERVICE_NAME=${{ secrets.OTEL_SERVICE_NAME }}
           OTEL_EXPORTER_OTLP_ENDPOINT=${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
@@ -179,6 +180,7 @@ jobs:
           AWS_REGION=${{ secrets.AWS_REGION }}
           AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
           S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+          CDN_IMAGE_BASE_URL=${{ secrets.CDN_IMAGE_BASE_URL }}
           ELASTIC_APM_SERVER_URL=${{ secrets.ELASTIC_APM_SERVER_URL }}
           ELASTIC_APM_SERVICE_NAME=${{ secrets.ELASTIC_APM_SERVICE_NAME }}
           ELASTIC_APM_ENVIRONMENT=${{ secrets.ELASTIC_APM_ENVIRONMENT }}
