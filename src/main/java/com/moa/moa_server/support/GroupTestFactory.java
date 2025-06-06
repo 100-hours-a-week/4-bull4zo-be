@@ -8,6 +8,6 @@ public class GroupTestFactory {
 
   /** 테스트용 더미 Group 엔티티 생성 */
   public static Group createDummy(User user) {
-    return Group.create(user, "dummyGroup_" + System.nanoTime(), "테스트 그룹 설명", null, "INVITE12");
+    return Group.create(user, "dummyGroup_" + System.nanoTime(), "테스트 그룹 설명", null, "", "INVITE12");
   }
 }
