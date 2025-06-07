@@ -5,7 +5,7 @@ GREEN='\033[0;32m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-REGEX="^(feat|fix|docs|style|refactor|test|chore|cicd|release|rename|remove|build): .+"
+REGEX="^(feat|fix|docs|style|refactor|test|chore|cicd|release|rename|remove|build|revert): .+"
 
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")

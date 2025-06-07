@@ -12,6 +12,7 @@ import com.moa.moa_server.domain.group.handler.GroupException;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.util.GroupValidator;
+import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -33,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class GroupService {
 
   private static final int MAX_INVITE_CODE_RETRY = 10;
+
+  private final ImageService imageService;
 
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
@@ -105,10 +108,9 @@ public class GroupService {
     // 입력 검증
     GroupValidator.validateGroupName(request.name());
     GroupValidator.validateDescription(request.description());
-    if (!request.imageUrl().isBlank()) {
-      GroupValidator.validateImageUrl(request.imageUrl()); // 업로드 도메인 검증
-    }
+    imageService.validateImageUrl(request.imageUrl());
     String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
+    String imageName = request.imageName().isBlank() ? null : request.imageName().trim();
 
     // 그룹 이름 중복 검사
     if (groupRepository.existsByName(request.name())) {
@@ -118,9 +120,17 @@ public class GroupService {
     // 초대 코드 생성
     String inviteCode = generateUniqueInviteCode();
 
+    // S3 이미지 이동
+    if (imageUrl != null) {
+      imageService.moveImageFromTempToVote(imageUrl, "group");
+      imageUrl = imageUrl.replace("/temp/", "/group/"); // DB에는 vote 경로 저장
+      imageName = XssUtil.sanitize(request.imageName());
+    }
+
     // 그룹 생성
     String sanitizedDescription = XssUtil.sanitize(request.description());
-    Group group = Group.create(user, request.name(), sanitizedDescription, imageUrl, inviteCode);
+    Group group =
+        Group.create(user, request.name(), sanitizedDescription, imageUrl, imageName, inviteCode);
     groupRepository.save(group);
 
     // 그룹 멤버 등록
@@ -132,6 +142,7 @@ public class GroupService {
         group.getName(),
         group.getDescription(),
         group.getImageUrl(),
+        group.getImageName(),
         group.getInviteCode(),
         group.getCreatedAt());
   }
