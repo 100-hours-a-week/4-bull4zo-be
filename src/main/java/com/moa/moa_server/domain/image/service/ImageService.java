@@ -84,7 +84,7 @@ public class ImageService {
   }
 
   /** S3의 temp 폴더에서 vote/group 폴더로 이미지를 복사하고 원복 삭제 */
-  public void moveImageFromTempToVote(String tempImageUrl, String targetDir) {
+  public void moveImageFromTempToTarget(String tempImageUrl, String targetDir) {
     if (tempImageUrl == null || tempImageUrl.isBlank()) return;
     String tempKey = getKeyFromUrl(tempImageUrl); // "temp/uuid"
     if (!tempKey.startsWith("temp/")) return; // 보안상 체크
@@ -93,7 +93,7 @@ public class ImageService {
     String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
 
     log.info(
-        "[ImageService#moveImageFromTempToVote] 파일 이동 시도: tempKey {} to targetKey {}",
+        "[ImageService#moveImageFromTempToTarget] 파일 이동 시도: tempKey {} to targetKey {}",
         tempKey,
         targetKey);
 
@@ -108,7 +108,7 @@ public class ImageService {
       // S3 원본 삭제
       s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
 
-      log.info("[ImageService#moveImageFromTempToVote] 파일 이동 성공");
+      log.info("[ImageService#moveImageFromTempToTarget] 파일 이동 성공");
     } catch (NoSuchKeyException e) {
       throw new ImageException(ImageErrorCode.FILE_NOT_FOUND);
     } catch (S3Exception e) {

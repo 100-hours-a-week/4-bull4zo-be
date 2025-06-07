@@ -123,7 +123,7 @@ public class VoteService {
 
     // 이미지 처리
     if (imageUrl != null) {
-      imageService.moveImageFromTempToVote(imageUrl, "vote"); // S3 이미지 처리
+      imageService.moveImageFromTempToTarget(imageUrl, "vote"); // S3 이미지 처리
       imageUrl = imageUrl.replace("/temp/", "/vote/"); // DB에는 vote 경로 저장
       imageName = XssUtil.sanitize(request.imageName());
     }

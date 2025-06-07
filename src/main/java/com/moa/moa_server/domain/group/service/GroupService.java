@@ -122,7 +122,7 @@ public class GroupService {
 
     // S3 이미지 이동
     if (imageUrl != null) {
-      imageService.moveImageFromTempToVote(imageUrl, "group");
+      imageService.moveImageFromTempToTarget(imageUrl, "group");
       imageUrl = imageUrl.replace("/temp/", "/group/"); // DB에는 vote 경로 저장
       imageName = XssUtil.sanitize(request.imageName());
     }
