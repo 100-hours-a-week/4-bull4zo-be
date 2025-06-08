@@ -106,7 +106,7 @@ class ImageServiceTest {
       String targetDir = "vote";
 
       // when
-      imageService.moveImageFromTempToVote(tempImageUrl, targetDir);
+      imageService.moveImageFromTempToTarget(tempImageUrl, targetDir);
 
       // then
       verify(s3Client, times(1)).copyObject(any(Consumer.class));
@@ -121,7 +121,7 @@ class ImageServiceTest {
       doThrow(NoSuchKeyException.builder().build()).when(s3Client).copyObject(any(Consumer.class));
 
       // then
-      assertThatThrownBy(() -> imageService.moveImageFromTempToVote(tempImageUrl, targetDir))
+      assertThatThrownBy(() -> imageService.moveImageFromTempToTarget(tempImageUrl, targetDir))
           .isInstanceOf(ImageException.class)
           .hasMessageContaining(ImageErrorCode.FILE_NOT_FOUND.name());
     }
@@ -131,7 +131,7 @@ class ImageServiceTest {
       // given
       String tempImageUrl = "https://test-bucket.s3.amazonaws.com/vote/uuid.png";
       // when
-      imageService.moveImageFromTempToVote(tempImageUrl, "vote");
+      imageService.moveImageFromTempToTarget(tempImageUrl, "vote");
 
       // then
       verify(s3Client, never()).copyObject(any(CopyObjectRequest.class));

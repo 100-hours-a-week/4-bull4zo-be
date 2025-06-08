@@ -109,6 +109,7 @@ public class VoteService {
     VoteValidator.validateContent(request.content());
     imageService.validateImageUrl(request.imageUrl());
     String imageUrl = request.imageUrl().isBlank() ? null : request.imageUrl().trim();
+    String imageName = request.imageName().isBlank() ? null : request.imageName().trim();
 
     // 투표 종료 시간 변환
     ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
@@ -119,21 +120,24 @@ public class VoteService {
     Vote.VoteStatus status =
         "prod".equals(activeProfile) ? Vote.VoteStatus.PENDING : Vote.VoteStatus.OPEN;
 
-    // S3 이미지 이동
+    // XSS 필터링
+    String sanitizedContent = XssUtil.sanitize(request.content());
+
+    // 이미지 처리
     if (imageUrl != null) {
-      imageService.moveImageFromTempToVote(imageUrl, "vote");
+      imageService.moveImageFromTempToTarget(imageUrl, "vote"); // S3 이미지 처리
       imageUrl = imageUrl.replace("/temp/", "/vote/"); // DB에는 vote 경로 저장
+      imageName = XssUtil.sanitize(request.imageName());
     }
 
     // Vote 생성 및 저장
-    String sanitizedContent = XssUtil.sanitize(request.content());
-
     Vote vote =
         Vote.createUserVote(
             user,
             group,
             sanitizedContent,
             imageUrl,
+            imageName,
             utcTime,
             request.anonymous(),
             status,
@@ -222,6 +226,7 @@ public class VoteService {
         vote.isAnonymous() ? "익명" : vote.getUser().getNickname(),
         vote.getContent(),
         vote.getImageUrl(),
+        vote.getImageName(),
         vote.getCreatedAt(),
         vote.getClosedAt(),
         vote.isAnonymous() ? 0 : (vote.isAdminVote() ? 1 : 0));

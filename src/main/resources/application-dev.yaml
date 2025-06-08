@@ -33,6 +33,9 @@ cloud:
     s3:
       bucket: ${S3_BUCKET_NAME}
 
+cdn:
+  image-base-url: ${CDN_IMAGE_BASE_URL}
+
 frontend:
   url: ${FRONTEND_URL}
 
