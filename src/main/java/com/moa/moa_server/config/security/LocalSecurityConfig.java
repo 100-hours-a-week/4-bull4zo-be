@@ -2,7 +2,6 @@ package com.moa.moa_server.config.security;
 
 import static com.moa.moa_server.config.security.SecurityConstants.ALLOWED_URLS;
 
-import com.moa.moa_server.domain.auth.service.JwtTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,17 +21,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Profile({"local", "test"})
 public class LocalSecurityConfig {
 
-  //  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
   @Bean
-  public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenService jwtTokenService) {
-    return new JwtAuthenticationFilter(jwtTokenService);
-  }
-
-  @Bean
-  public SecurityFilterChain securityFilterChain(
-      HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
         .cors(Customizer.withDefaults())
         .httpBasic(AbstractHttpConfigurer::disable)
