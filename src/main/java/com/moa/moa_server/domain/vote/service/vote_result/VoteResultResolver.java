@@ -90,7 +90,8 @@ public class VoteResultResolver {
 
   /** countMap(Long) 기반으로 ResultRaw 리스트 생성 */
   private List<ResultRaw> toResultRawListLong(Map<Integer, Long> countMap) {
-    int total = countMap.values().stream().mapToInt(Number::intValue).sum();
+    int total =
+        Stream.of(1, 2).mapToInt(option -> countMap.getOrDefault(option, 0L).intValue()).sum();
     return Stream.of(1, 2)
         .map(
             option -> {
@@ -103,7 +104,7 @@ public class VoteResultResolver {
 
   /** countMap(Integer) 기반으로 ResultRaw 리스트 생성 */
   private List<ResultRaw> toResultRawListInt(Map<Integer, Integer> countMap) {
-    int total = countMap.values().stream().mapToInt(Number::intValue).sum();
+    int total = Stream.of(1, 2).mapToInt(option -> countMap.getOrDefault(option, 0)).sum();
     return Stream.of(1, 2)
         .map(
             option -> {
