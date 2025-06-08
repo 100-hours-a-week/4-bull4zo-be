@@ -19,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @RequiredArgsConstructor
 @Configuration
-@Profile("local")
+@Profile({"local", "test"})
 public class LocalSecurityConfig {
 
   //  private final JwtAuthenticationFilter jwtAuthenticationFilter;
