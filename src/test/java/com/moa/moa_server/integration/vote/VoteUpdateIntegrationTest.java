@@ -81,6 +81,7 @@ public class VoteUpdateIntegrationTest {
                 testGroup,
                 "본문입니다",
                 "",
+                "",
                 LocalDateTime.now().plusDays(1),
                 false,
                 Vote.VoteStatus.REJECTED,
@@ -98,7 +99,7 @@ public class VoteUpdateIntegrationTest {
     void updateVote_success() throws Exception {
       // given
       VoteUpdateRequest request =
-          new VoteUpdateRequest("수정된 본문", "", LocalDateTime.now().plusDays(3));
+          new VoteUpdateRequest("수정된 본문", "", "", LocalDateTime.now().plusDays(3));
 
       // when
       mockMvc
@@ -138,7 +139,7 @@ public class VoteUpdateIntegrationTest {
                   .build());
       String otherAccessToken = jwtTokenService.issueAccessToken(otherUser.getId());
       VoteUpdateRequest request =
-          new VoteUpdateRequest("수정된 본문", "", LocalDateTime.now().plusDays(3));
+          new VoteUpdateRequest("수정된 본문", "", "", LocalDateTime.now().plusDays(3));
 
       // when & then
       mockMvc
@@ -164,7 +165,7 @@ public class VoteUpdateIntegrationTest {
       voteRepository.save(testVote);
 
       VoteUpdateRequest request =
-          new VoteUpdateRequest("수정된 본문", "", LocalDateTime.now().plusDays(3));
+          new VoteUpdateRequest("수정된 본문", "", "", LocalDateTime.now().plusDays(3));
 
       // when & then
       mockMvc
@@ -183,7 +184,7 @@ public class VoteUpdateIntegrationTest {
       // given
       Long notExistVoteId = 999999L;
       VoteUpdateRequest request =
-          new VoteUpdateRequest("수정된 본문", "", LocalDateTime.now().plusDays(3));
+          new VoteUpdateRequest("수정된 본문", "", "", LocalDateTime.now().plusDays(3));
 
       // when & then
       mockMvc
@@ -206,7 +207,7 @@ public class VoteUpdateIntegrationTest {
     void updateVote_invalidContent_tooLong(String content, String testName) throws Exception {
       // given
       VoteUpdateRequest request =
-          new VoteUpdateRequest(content, "", LocalDateTime.now().plusDays(3));
+          new VoteUpdateRequest(content, "", "", LocalDateTime.now().plusDays(3));
 
       // when & then
       mockMvc
@@ -230,7 +231,7 @@ public class VoteUpdateIntegrationTest {
     @DisplayName("종료일 유효성 검증 실패")
     void updateVote_invalidClosedAt(LocalDateTime closedAt, String testName) throws Exception {
       // given
-      VoteUpdateRequest request = new VoteUpdateRequest("수정된 본문", "", closedAt);
+      VoteUpdateRequest request = new VoteUpdateRequest("수정된 본문", "", "", closedAt);
 
       // when & then
       mockMvc

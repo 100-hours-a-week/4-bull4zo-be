@@ -40,4 +40,7 @@ cloud:
     region:
       static: dummy
     s3:
-      bucket: dummy
+      bucket: test-bucket
+
+cdn:
+  image-base-url: https://test-cdn.com/

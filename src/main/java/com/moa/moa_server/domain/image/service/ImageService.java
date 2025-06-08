@@ -3,6 +3,7 @@ package com.moa.moa_server.domain.image.service;
 import com.moa.moa_server.domain.image.dto.PresignedUrlResponse;
 import com.moa.moa_server.domain.image.handler.ImageErrorCode;
 import com.moa.moa_server.domain.image.handler.ImageException;
+import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -37,6 +38,7 @@ public class ImageService {
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
+  @Setter
   @Value("${cdn.image-base-url}")
   private String cdnBaseUrl;
 
@@ -146,11 +148,12 @@ public class ImageService {
    * @return S3에 저장된(이동된) 최종 이미지 URL, 이미지가 없으면 빈 문자열 반환
    * @throws ImageException 잘못된 이미지 경로이거나 S3 작업 실패 등 예외
    */
-  public String processImageOnVoteUpdate(String oldImageUrl, String newImageUrl) {
+  public ImageProcessResult processImageOnVoteUpdate(
+      String oldImageUrl, String newImageUrl, String oldImageName, String newImageName) {
     // 1. 새 이미지가 없으면 기존 이미지 삭제 후 빈 문자열 반환
     if (newImageUrl == null || newImageUrl.isBlank()) {
       deleteImage(oldImageUrl);
-      return "";
+      return new ImageProcessResult("", "");
     }
 
     // 이미지 URL 형식/버킷 검증
@@ -161,16 +164,17 @@ public class ImageService {
     if (key.startsWith("vote/")) {
       // old/new가 완전히 같으면 OK (이미 등록된 이미지)
       if (newImageUrl.equals(oldImageUrl)) {
-        return oldImageUrl;
+        return new ImageProcessResult(oldImageUrl, oldImageName);
       }
       // vote/ 경로지만 값이 다르면, presigned-url 발급/업로드 규칙 위반
       throw new ImageException(ImageErrorCode.INVALID_IMAGE_REUSE);
     }
     // 3. 새로운 이미지 업로드
     else if (key.startsWith("temp/")) {
-      moveImageFromTempToVote(newImageUrl, "vote");
+      moveImageFromTempToTarget(newImageUrl, "vote");
       deleteImage(oldImageUrl);
-      return newImageUrl.replace("/temp/", "/vote/");
+      return new ImageProcessResult(
+          newImageUrl.replace("/temp/", "/vote/"), newImageName != null ? newImageName : "");
     } else {
       throw new ImageException(ImageErrorCode.INVALID_URL);
     }

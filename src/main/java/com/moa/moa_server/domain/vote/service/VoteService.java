@@ -9,6 +9,7 @@ import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
@@ -491,12 +492,13 @@ public class VoteService {
     LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
     VoteValidator.validateClosedAt(utcTime);
 
-    // 4. 이미지 URL 처리
-    String newImageUrl =
-        imageService.processImageOnVoteUpdate(vote.getImageUrl(), request.imageUrl());
+    // 4. 이미지 URL/이름 처리
+    ImageProcessResult imageResult =
+        imageService.processImageOnVoteUpdate(
+            vote.getImageUrl(), request.imageUrl(), vote.getImageName(), request.imageName());
 
     // 5. content, url, closedAt 업데이트 및 저장
-    vote.updateForEdit(request.content(), newImageUrl, utcTime);
+    vote.updateForEdit(request.content(), imageResult.imageUrl(), imageResult.imageName(), utcTime);
     voteRepository.save(vote);
 
     // 6. AI 서버로 검열 요청 (prod 환경에서만)
