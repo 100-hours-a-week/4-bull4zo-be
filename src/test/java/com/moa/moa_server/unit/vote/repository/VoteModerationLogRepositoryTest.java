@@ -2,7 +2,7 @@ package com.moa.moa_server.unit.vote.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.moa.moa_server.config.TestJpaAuditingConfig;
+import com.moa.moa_server.config.jpa.JpaAuditingConfig;
 import com.moa.moa_server.config.querydsl.QuerydslConfig;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
@@ -22,7 +22,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
-@Import({TestJpaAuditingConfig.class, QuerydslConfig.class})
+@Import({JpaAuditingConfig.class, QuerydslConfig.class})
 public class VoteModerationLogRepositoryTest {
 
   @Autowired private VoteModerationLogRepository repository;

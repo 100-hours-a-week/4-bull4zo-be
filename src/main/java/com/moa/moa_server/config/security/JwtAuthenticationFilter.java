@@ -13,11 +13,9 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @RequiredArgsConstructor
-@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtTokenService jwtTokenService; // 토큰 유효성 검증 및 userId 추출

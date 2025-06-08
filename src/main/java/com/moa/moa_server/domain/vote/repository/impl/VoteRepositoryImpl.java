@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.repository.impl;
 
-import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
+import com.moa.moa_server.domain.global.cursor.UpdatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
 import com.moa.moa_server.domain.group.entity.Group;
@@ -69,7 +69,7 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
 
   @Override
   public List<Vote> findMyVotes(
-      User user, List<Group> groups, @Nullable CreatedAtVoteIdCursor cursor, int size) {
+      User user, List<Group> groups, @Nullable UpdatedAtVoteIdCursor cursor, int size) {
     QVote vote = QVote.vote;
 
     BooleanBuilder builder =
@@ -80,15 +80,15 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
 
     if (cursor != null) {
       builder.and(
-          vote.createdAt
-              .lt(cursor.createdAt())
-              .or(vote.createdAt.eq(cursor.createdAt()).and(vote.id.lt(cursor.voteId()))));
+          vote.updatedAt
+              .lt(cursor.updatedAt())
+              .or(vote.updatedAt.eq(cursor.updatedAt()).and(vote.id.lt(cursor.voteId()))));
     }
 
     return queryFactory
         .selectFrom(vote)
         .where(builder)
-        .orderBy(vote.createdAt.desc(), vote.id.desc())
+        .orderBy(vote.updatedAt.desc(), vote.id.desc())
         .limit(size)
         .fetch();
   }

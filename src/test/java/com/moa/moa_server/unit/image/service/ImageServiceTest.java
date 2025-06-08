@@ -51,6 +51,13 @@ class ImageServiceTest {
   @Captor private ArgumentCaptor<DeleteObjectRequest> deleteCaptor;
 
   private final String bucket = "test-bucket";
+  private final String cdnBaseUrl = "https://test-cdn.com";
+
+  @BeforeEach
+  void setUp() {
+    imageService.setBucket(bucket);
+    imageService.setCdnBaseUrl(cdnBaseUrl);
+  }
 
   @Nested
   @DisplayName("이미지 Presigned URL 발급")
@@ -65,7 +72,6 @@ class ImageServiceTest {
     @Test
     void 올바른_파일명으로_presigned_url_발급_성공() throws Exception {
       // given
-      imageService.setBucket(bucket); // 테스트용 버킷명 세팅
 
       // PresignedPutObjectRequest 모킹
       PresignedPutObjectRequest fakeRequest = mock(PresignedPutObjectRequest.class);
@@ -81,7 +87,7 @@ class ImageServiceTest {
 
       // then
       assertThat(response.uploadUrl()).contains("https://"); // 업로드용 presigned-url 검증
-      assertThat(response.fileUrl()).contains("test-bucket"); // 반환 fileUrl에 버킷명 포함 여부 검증
+      assertThat(response.fileUrl()).contains(cdnBaseUrl); // 반환 fileUrl에 버킷명 포함 여부 검증
     }
 
     @Test
@@ -102,7 +108,7 @@ class ImageServiceTest {
     @Test
     void 정상적으로_temp에서_vote로_이미지_이동() {
       // given
-      String tempImageUrl = "https://test-bucket.s3.amazonaws.com/temp/uuid.png";
+      String tempImageUrl = cdnBaseUrl + "/temp/uuid.png";
       String targetDir = "vote";
 
       // when
@@ -116,7 +122,7 @@ class ImageServiceTest {
     @Test
     void S3에_key_없으면_FILE_NOT_FOUND_예외() {
       // given
-      String tempImageUrl = "https://test-bucket.s3.amazonaws.com/temp/uuid.png";
+      String tempImageUrl = cdnBaseUrl + "/temp/uuid.png";
       String targetDir = "vote";
       doThrow(NoSuchKeyException.builder().build()).when(s3Client).copyObject(any(Consumer.class));
 
@@ -129,7 +135,7 @@ class ImageServiceTest {
     @Test
     void temp가_아닌_key는_아무것도_안함() {
       // given
-      String tempImageUrl = "https://test-bucket.s3.amazonaws.com/vote/uuid.png";
+      String tempImageUrl = cdnBaseUrl + "/temp/uuid.png";
       // when
       imageService.moveImageFromTempToTarget(tempImageUrl, "vote");
 
