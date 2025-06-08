@@ -68,19 +68,8 @@ public class Vote extends BaseTimeEntity {
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
-  public enum VoteStatus {
-    PENDING,
-    REJECTED,
-    OPEN,
-    CLOSED
-  }
-
-  public enum VoteType {
-    USER,
-    AI,
-    EVENT
-  }
-
+  // ======= 생성자/팩토리 =======
+  /** 사용자 투표 생성 팩토리 */
   public static Vote createUserVote(
       User user,
       Group group,
@@ -106,15 +95,44 @@ public class Vote extends BaseTimeEntity {
         .build();
   }
 
-  public boolean isOpen() {
-    return this.voteStatus == VoteStatus.OPEN;
+  // ======= 상태 변화/비즈니스 메서드 =======
+  /** 투표 수정 (본문, 이미지, 종료일, 상태 PENDING으로) */
+  public void updateForEdit(
+      String content, String imageUrl, String imageName, LocalDateTime closedAt) {
+    this.content = content;
+    this.imageUrl = imageUrl;
+    this.imageName = imageName;
+    this.closedAt = closedAt;
+    this.voteStatus = VoteStatus.PENDING; // 항상 상태 초기화
   }
 
+  /** 검열 결과 반영 (상태만 변경) */
   public void updateModerationResult(VoteStatus voteStatus) {
     this.voteStatus = voteStatus;
   }
 
+  /** 투표를 종료 상태로 변경 */
   public void close() {
     this.voteStatus = VoteStatus.CLOSED;
+  }
+
+  // ======= 조회/편의 메서드 =======
+  /** 투표가 OPEN 상태인지 확인 */
+  public boolean isOpen() {
+    return this.voteStatus == VoteStatus.OPEN;
+  }
+
+  // ======= 내부 Enum 타입 =======
+  public enum VoteStatus {
+    PENDING,
+    REJECTED,
+    OPEN,
+    CLOSED
+  }
+
+  public enum VoteType {
+    USER,
+    AI,
+    EVENT
   }
 }

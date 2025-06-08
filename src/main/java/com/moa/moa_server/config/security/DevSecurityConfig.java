@@ -2,6 +2,7 @@ package com.moa.moa_server.config.security;
 
 import static com.moa.moa_server.config.security.SecurityConstants.ALLOWED_URLS;
 
+import com.moa.moa_server.domain.auth.service.JwtTokenService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,11 @@ public class DevSecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+  @Bean
+  public JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenService jwtTokenService) {
+    return new JwtAuthenticationFilter(jwtTokenService);
+  }
 
   @Bean
   public SecurityFilterChain securityFilterChain(

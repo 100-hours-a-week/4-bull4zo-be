@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
+import com.moa.moa_server.domain.global.cursor.UpdatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
@@ -9,6 +9,7 @@ import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
@@ -17,8 +18,10 @@ import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
+import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
+import com.moa.moa_server.domain.vote.dto.response.VoteUpdateResponse;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteItem;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteItem;
@@ -216,8 +219,7 @@ public class VoteService {
     Vote vote = findVoteOrThrow(voteId);
 
     // 상태/권한 검사
-    validateVoteReadable(vote);
-    validateVoteAccess(user, vote);
+    validateVoteContentReadable(vote, userId);
 
     return new VoteDetailResponse(
         vote.getId(),
@@ -323,8 +325,8 @@ public class VoteService {
   public MyVoteResponse getMyVotes(
       Long userId, @Nullable Long groupId, @Nullable String cursor, @Nullable Integer size) {
     int pageSize = (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
-    CreatedAtVoteIdCursor parsedCursor =
-        cursor != null ? CreatedAtVoteIdCursor.parse(cursor) : null;
+    UpdatedAtVoteIdCursor parsedCursor =
+        cursor != null ? UpdatedAtVoteIdCursor.parse(cursor) : null;
     if (cursor != null && !voteRepository.existsById(parsedCursor.voteId())) {
       throw new VoteException(VoteErrorCode.VOTE_NOT_FOUND);
     }
@@ -365,7 +367,7 @@ public class VoteService {
     String nextCursor =
         votes.isEmpty()
             ? null
-            : new CreatedAtVoteIdCursor(votes.getLast().getCreatedAt(), votes.getLast().getId())
+            : new UpdatedAtVoteIdCursor(votes.getLast().getUpdatedAt(), votes.getLast().getId())
                 .encode();
 
     // 각 투표별 집계 결과를 포함한 응답 DTO 구성
@@ -464,6 +466,49 @@ public class VoteService {
     return new VoteModerationReasonResponse(voteId, log.getReviewReason().name());
   }
 
+  @Transactional
+  public VoteUpdateResponse updateVote(Long userId, Long voteId, VoteUpdateRequest request) {
+    // 1. 유저/투표 조회 및 권한 체크
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+
+    Vote vote =
+        voteRepository
+            .findById(voteId)
+            .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+
+    if (!vote.getUser().getId().equals(userId)) throw new VoteException(VoteErrorCode.FORBIDDEN);
+
+    // 2. 상태/수정 가능 체크 (REJECTED 상태만 수정 가능)
+    if (vote.getVoteStatus() != Vote.VoteStatus.REJECTED)
+      throw new VoteException(VoteErrorCode.FORBIDDEN);
+
+    // 3. 본문, 종료 시각 유효성 검사
+    VoteValidator.validateContent(request.content());
+    ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
+    LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+    VoteValidator.validateClosedAt(utcTime);
+
+    // 4. 이미지 URL/이름 처리
+    ImageProcessResult imageResult =
+        imageService.processImageOnVoteUpdate(
+            vote.getImageUrl(), request.imageUrl(), vote.getImageName(), request.imageName());
+
+    // 5. content, url, closedAt 업데이트 및 저장
+    vote.updateForEdit(request.content(), imageResult.imageUrl(), imageResult.imageName(), utcTime);
+    voteRepository.save(vote);
+
+    // 6. AI 서버로 검열 요청 (prod 환경에서만)
+    if ("prod".equals(activeProfile)) {
+      voteModerationService.requestModeration(vote.getId(), vote.getContent());
+    }
+
+    return new VoteUpdateResponse(vote.getId());
+  }
+
   /** 투표 조회 */
   private Vote findVoteOrThrow(Long voteId) {
     return voteRepository
@@ -478,6 +523,18 @@ public class VoteService {
     return groupMemberRepository
         .findByGroupAndUser(group, user)
         .orElseThrow(() -> new VoteException(VoteErrorCode.NOT_GROUP_MEMBER));
+  }
+
+  /** 투표 내용 조회 가능 상태 및 권한 검사 */
+  private void validateVoteContentReadable(Vote vote, Long userId) {
+    if (vote.getVoteStatus() == Vote.VoteStatus.OPEN
+        || vote.getVoteStatus() == Vote.VoteStatus.CLOSED) {
+      return;
+    }
+    if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED && vote.getUser().getId().equals(userId)) {
+      return;
+    }
+    throw new VoteException(VoteErrorCode.FORBIDDEN);
   }
 
   /** 투표 조회 가능한 상태인지 검사 (내용, 결과, 댓글 읽기) 허용 상태: OPEN, CLOSED */
