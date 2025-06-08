@@ -45,6 +45,8 @@ public class DevSecurityConfig {
             auth ->
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/votes")
                     .permitAll()
+                    .requestMatchers("/test-login")
+                    .permitAll()
                     .requestMatchers(ALLOWED_URLS)
                     .permitAll()
                     .anyRequest()
