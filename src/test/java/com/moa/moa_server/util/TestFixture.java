@@ -1,5 +1,6 @@
 package com.moa.moa_server.util;
 
+import com.moa.moa_server.domain.comment.entity.Comment;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
@@ -33,5 +34,9 @@ public class TestFixture {
 
   public static VoteResponse voteResponse(Vote vote, User user, int option) {
     return VoteResponse.builder().vote(vote).user(user).optionNumber(option).build();
+  }
+
+  public static Comment comment(Vote vote, User user, String content, int anonymousNumber) {
+    return Comment.create(user, vote, content, anonymousNumber);
   }
 }
