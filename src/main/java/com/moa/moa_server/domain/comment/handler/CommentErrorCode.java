@@ -5,8 +5,10 @@ import org.springframework.http.HttpStatus;
 
 public enum CommentErrorCode implements BaseErrorCode {
   INVALID_CONTENT(HttpStatus.BAD_REQUEST),
+  INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),
   FORBIDDEN(HttpStatus.FORBIDDEN),
-  VOTE_NOT_FOUND(HttpStatus.NOT_FOUND);
+  VOTE_NOT_FOUND(HttpStatus.NOT_FOUND),
+  ;
 
   private final HttpStatus status;
 
