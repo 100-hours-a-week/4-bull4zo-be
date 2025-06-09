@@ -35,8 +35,11 @@ public class CommentController {
   @Operation(summary = "댓글 목록 조회", description = "투표에 대한 댓글 목록을 조회합니다.")
   @GetMapping("/votes/{voteId}/comments")
   public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
-      @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
-    CommentListResponse response = commentService.getComments(userId, voteId);
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long voteId,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) Integer size) {
+    CommentListResponse response = commentService.getComments(userId, voteId, cursor, size);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }
