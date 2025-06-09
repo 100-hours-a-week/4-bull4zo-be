@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.comment.controller;
 
 import com.moa.moa_server.domain.comment.dto.request.CommentCreateRequest;
 import com.moa.moa_server.domain.comment.dto.response.CommentCreateResponse;
+import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.service.CommentService;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,5 +30,13 @@ public class CommentController {
       @RequestBody @Valid CommentCreateRequest request) {
     CommentCreateResponse response = commentService.createComment(userId, voteId, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "댓글 목록 조회", description = "투표에 대한 댓글 목록을 조회합니다.")
+  @GetMapping("/votes/{voteId}/comments")
+  public ResponseEntity<ApiResponse<CommentListResponse>> getComments(
+      @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
+    CommentListResponse response = commentService.getComments(userId, voteId);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }

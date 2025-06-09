@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.comment.service;
 
 import com.moa.moa_server.domain.comment.dto.request.CommentCreateRequest;
 import com.moa.moa_server.domain.comment.dto.response.CommentCreateResponse;
+import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.entity.Comment;
 import com.moa.moa_server.domain.comment.handler.CommentErrorCode;
 import com.moa.moa_server.domain.comment.handler.CommentException;
@@ -76,6 +77,10 @@ public class CommentService {
 
     return new CommentCreateResponse(
         comment.getId(), comment.getContent(), authorNickname, comment.getCreatedAt());
+  }
+
+  public CommentListResponse getComments(Long userId, Long voteId) {
+    return null;
   }
 
   /** 댓글 테이블에서 익명 번호 조회 및 할당 */
