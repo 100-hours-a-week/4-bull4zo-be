@@ -48,4 +48,24 @@ public class Comment extends BaseTimeEntity {
 
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
+
+  public static Comment create(User user, Vote vote, String content, int anonymousNumber) {
+    return Comment.builder()
+        .user(user)
+        .vote(vote)
+        .content(content)
+        .anonymousNumber(anonymousNumber)
+        .reportCount(0)
+        .hiddenByReport(false)
+        .hiddenByAdmin(false)
+        .build();
+  }
+
+  public boolean isDeleted() {
+    return deletedAt != null;
+  }
+
+  public boolean isHidden() {
+    return hiddenByReport || hiddenByAdmin;
+  }
 }
