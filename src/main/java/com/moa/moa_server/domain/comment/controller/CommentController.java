@@ -28,6 +28,6 @@ public class CommentController {
       @PathVariable Long voteId,
       @RequestBody @Valid CommentCreateRequest request) {
     CommentCreateResponse response = commentService.createComment(userId, voteId, request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>("success", response));
+    return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>("SUCCESS", response));
   }
 }
