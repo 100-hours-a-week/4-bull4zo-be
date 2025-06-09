@@ -117,7 +117,7 @@ public class CommentService {
     }
 
     // 댓글 목록 조회
-    List<Comment> comments = commentRepository.findComments(vote, parsedCursor, pageSize);
+    List<Comment> comments = commentRepository.findByVoteWithCursor(vote, parsedCursor, pageSize);
 
     // 응답 구성 (nextCursor, hasNext 계산)
     boolean hasNext = comments.size() > pageSize;
