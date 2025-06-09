@@ -73,6 +73,7 @@ dependencies {
 	// 기타
 	implementation "org.apache.httpcomponents.client5:httpclient5:5.4.4" // RestTemplate
 	implementation 'com.navercorp.lucy:lucy-xss:1.6.3' // XSS Filtering
+  implementation 'com.fasterxml.jackson.core:jackson-databind' // JSON 직렬화/역직렬화
 
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

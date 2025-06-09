@@ -116,6 +116,12 @@ public class Vote extends BaseTimeEntity {
     this.voteStatus = VoteStatus.CLOSED;
   }
 
+  /** 마지막 익명 번호 증가 */
+  public int increaseLastAnonymousNumber() {
+    this.lastAnonymousNumber++;
+    return this.lastAnonymousNumber;
+  }
+
   // ======= 조회/편의 메서드 =======
   /** 투표가 OPEN 상태인지 확인 */
   public boolean isOpen() {
