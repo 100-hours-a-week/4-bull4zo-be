@@ -15,6 +15,7 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,9 +45,11 @@ public class CommentService {
             .findById(voteId)
             .orElseThrow(() -> new CommentException(CommentErrorCode.VOTE_NOT_FOUND));
 
-    // 댓글 작성 권한 확인 (투표 참여자이거나 투표 등록자)
+    // 댓글 작성 권한 확인 (투표 참여자(유효 응답: 1, 2)이거나 투표 등록자)
     boolean isOwner = vote.getUser().getId().equals(user.getId());
-    boolean isParticipant = voteResponseRepository.existsByVoteIdAndUserId(voteId, userId);
+    boolean isParticipant =
+        voteResponseRepository.existsByVoteIdAndUserIdAndOptionNumberIn(
+            voteId, userId, List.of(1, 2));
     if (!(isOwner || isParticipant)) {
       throw new CommentException(CommentErrorCode.FORBIDDEN);
     }

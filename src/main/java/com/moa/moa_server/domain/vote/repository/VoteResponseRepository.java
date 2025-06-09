@@ -14,5 +14,5 @@ public interface VoteResponseRepository extends JpaRepository<VoteResponse, Long
 
   List<VoteResponse> findAllByVote(Vote vote);
 
-  boolean existsByVoteIdAndUserId(Long voteId, Long userId);
+  boolean existsByVoteIdAndUserIdAndOptionNumberIn(Long voteId, Long userId, List<Integer> options);
 }
