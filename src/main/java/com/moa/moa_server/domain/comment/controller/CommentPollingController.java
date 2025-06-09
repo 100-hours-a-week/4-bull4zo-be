@@ -21,12 +21,15 @@ public class CommentPollingController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long voteId,
       @RequestParam(required = true) String cursor) {
+    // 서비스에 polling 요청 (비동기)
     DeferredResult<CommentListResponse> deferred =
         commentPollingService.pollComments(userId, voteId, cursor);
 
+    // API 응답 포맷으로 wrapping
     DeferredResult<ResponseEntity<ApiResponse<CommentListResponse>>> apiResult =
         new DeferredResult<>();
 
+    // polling 결과가 오면 바로 클라이언트에 응답
     deferred.onCompletion(
         () -> {
           if (deferred.hasResult()) {
