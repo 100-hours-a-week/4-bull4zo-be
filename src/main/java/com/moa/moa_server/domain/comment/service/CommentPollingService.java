@@ -13,6 +13,7 @@ import jakarta.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,9 @@ public class CommentPollingService {
   private final CommentRepository commentRepository;
   private final CommentPermissionContextFactory permissionContextFactory;
 
+  // 스레드풀 선언
+  private final ExecutorService commentPollingExecutor;
+
   /**
    * 롱폴링 방식으로 새로운 댓글 목록을 반환한다.
    *
@@ -46,67 +50,62 @@ public class CommentPollingService {
     // setResult()가 호출되면 컨트롤러가 바로 클라이언트에 응답
     DeferredResult<CommentListResponse> result = new DeferredResult<>(TIMEOUT_MILLIS);
 
-    // 이렇게 요청마다 스레드를 만들지 않고
-    // TODO: 스레드풀에 작업 제출하는 방식으로 변경
     // 비동기 작업 실행
-    new Thread(
-            () -> {
-              try {
-                // 유저, 투표, 권한 체크
-                CommentPermissionContext context =
-                    permissionContextFactory.validateAndGetContext(userId, voteId);
-                User user = context.user();
-                Vote vote = context.vote();
+    commentPollingExecutor.submit(
+        () -> {
+          try {
+            // 유저, 투표, 권한 체크
+            CommentPermissionContext context =
+                permissionContextFactory.validateAndGetContext(userId, voteId);
+            User user = context.user();
+            Vote vote = context.vote();
 
-                CreatedAtCommentIdCursor parsedCursor =
-                    cursor != null ? CreatedAtCommentIdCursor.parse(cursor) : null;
+            CreatedAtCommentIdCursor parsedCursor =
+                cursor != null ? CreatedAtCommentIdCursor.parse(cursor) : null;
 
-                // 롱폴링 루프
-                LocalDateTime start = LocalDateTime.now();
-                while (Duration.between(start, LocalDateTime.now()).toMillis() < TIMEOUT_MILLIS) {
-                  // 새로운 댓글 조회
-                  List<Comment> newComments =
-                      commentRepository.findByVoteWithCursor(vote, parsedCursor, MAX_POLL_SIZE);
+            // 롱폴링 루프
+            LocalDateTime start = LocalDateTime.now();
+            while (Duration.between(start, LocalDateTime.now()).toMillis() < TIMEOUT_MILLIS) {
+              // 새로운 댓글 조회
+              List<Comment> newComments =
+                  commentRepository.findByVoteWithCursor(vote, parsedCursor, MAX_POLL_SIZE);
 
-                  // 1. 새 댓글이 있으면 결과 즉시 응답
-                  if (!newComments.isEmpty()) {
-                    List<CommentItem> items =
-                        newComments.stream().map(comment -> CommentItem.of(comment, user)).toList();
+              // 1. 새 댓글이 있으면 결과 즉시 응답
+              if (!newComments.isEmpty()) {
+                List<CommentItem> items =
+                    newComments.stream().map(comment -> CommentItem.of(comment, user)).toList();
 
-                    String nextCursor =
-                        newComments.isEmpty()
-                            ? cursor
-                            : new CreatedAtCommentIdCursor(
-                                    newComments.getLast().getCreatedAt(),
-                                    newComments.getLast().getId())
-                                .encode();
+                String nextCursor =
+                    newComments.isEmpty()
+                        ? cursor
+                        : new CreatedAtCommentIdCursor(
+                                newComments.getLast().getCreatedAt(), newComments.getLast().getId())
+                            .encode();
 
-                    CommentListResponse response =
-                        new CommentListResponse(voteId, items, nextCursor, false, items.size());
-                    result.setResult(response);
-                    return;
-                  }
-                  // 2. 새 댓글이 없으면 INTERVAL_MILLIS만큼 대기 후 재시도
-                  try {
-                    Thread.sleep(INTERVAL_MILLIS);
-                  } catch (InterruptedException e) {
-                    // 스레드 인터럽트 발생 시 로그 남기고 즉시 종료
-                    log.warn(
-                        "[CommentPollingService#pollComments] Polling thread interrupted: ", e);
-                    Thread.currentThread().interrupt();
-                    return;
-                  }
-                }
-
-                // 3. 타임아웃까지 새 댓글이 없으면 빈 배열 응답
                 CommentListResponse response =
-                    new CommentListResponse(voteId, List.of(), cursor, false, 0);
+                    new CommentListResponse(voteId, items, nextCursor, false, items.size());
                 result.setResult(response);
-              } catch (Exception e) {
-                result.setErrorResult(e);
+                return;
               }
-            })
-        .start();
+              // 2. 새 댓글이 없으면 INTERVAL_MILLIS만큼 대기 후 재시도
+              try {
+                Thread.sleep(INTERVAL_MILLIS);
+              } catch (InterruptedException e) {
+                // 스레드 인터럽트 발생 시 로그 남기고 즉시 종료
+                log.warn("[CommentPollingService#pollComments] Polling thread interrupted: ", e);
+                Thread.currentThread().interrupt();
+                return;
+              }
+            }
+
+            // 3. 타임아웃까지 새 댓글이 없으면 빈 배열 응답
+            CommentListResponse response =
+                new CommentListResponse(voteId, List.of(), cursor, false, 0);
+            result.setResult(response);
+          } catch (Exception e) {
+            result.setErrorResult(e);
+          }
+        });
 
     return result;
   }
