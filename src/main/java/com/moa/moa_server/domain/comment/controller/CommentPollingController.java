@@ -20,7 +20,7 @@ public class CommentPollingController {
   public DeferredResult<ResponseEntity<ApiResponse<CommentListResponse>>> pollComments(
       @AuthenticationPrincipal Long userId,
       @PathVariable Long voteId,
-      @RequestParam(required = true) String cursor) {
+      @RequestParam(required = false) String cursor) {
     // 서비스에 polling 요청 (비동기)
     DeferredResult<CommentListResponse> deferred =
         commentPollingService.pollComments(userId, voteId, cursor);
@@ -31,13 +31,7 @@ public class CommentPollingController {
 
     // polling 결과가 오면 바로 클라이언트에 응답
     deferred.onCompletion(
-        () -> {
-          if (deferred.hasResult()) {
-            apiResult.setResult(
-                ResponseEntity.ok(
-                    new ApiResponse<>("SUCCESS", (CommentListResponse) deferred.getResult())));
-          }
-        });
+        () -> new ApiResponse<>("SUCCESS", (CommentListResponse) deferred.getResult()));
     deferred.onError(deferred::setErrorResult);
 
     return apiResult;
