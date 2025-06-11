@@ -8,6 +8,7 @@ import com.moa.moa_server.domain.comment.repository.CommentRepository;
 import com.moa.moa_server.domain.comment.service.context.CommentPermissionContext;
 import com.moa.moa_server.domain.comment.service.context.CommentPermissionContextFactory;
 import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
+import com.moa.moa_server.domain.global.exception.BaseException;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import jakarta.annotation.Nullable;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -30,7 +32,7 @@ public class CommentPollingAsyncService {
   private final CommentPermissionContextFactory permissionContextFactory;
 
   @Async("commentPollingExecutor")
-  @Transactional(readOnly = true)
+  @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
   public void pollAsync(
       Long userId,
       Long voteId,
@@ -104,8 +106,11 @@ public class CommentPollingAsyncService {
           userId,
           voteId);
       result.setResult(new CommentListResponse(voteId, List.of(), cursor, false, 0));
+    } catch (BaseException e) {
+      log.error("[CommentPollingService#pollComments] 롱폴링 중 정의된 예외 발생: {}", e.getCode());
+      result.setErrorResult(e);
     } catch (Exception e) {
-      log.error("[CommentPollingService#pollComments] 롱폴링 중 예외 발생", e);
+      log.error("[CommentPollingService#pollComments] 롱폴링 중 예외 발생: {}", e.getMessage());
       result.setErrorResult(e);
     }
   }
