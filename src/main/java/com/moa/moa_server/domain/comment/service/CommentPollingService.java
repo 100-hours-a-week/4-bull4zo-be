@@ -16,14 +16,14 @@ public class CommentPollingService {
   private final CommentPollingAsyncService asyncService;
 
   /**
-   * 롱폴링 방식으로 새로운 댓글 목록을 반환한다.
+   * 댓글 롱폴링을 위한 진입점 서비스.
    *
-   * <p>Spring 비동기 처리(DeferredResult) 기반으로, 새 댓글이 생기면 즉시 응답하고 없으면 최대 TIMEOUT_MILLIS 동안 대기 후 응답한다.
+   * <p>Spring Web의 {@link DeferredResult}를 사용하여 비동기 응답 처리를 시작하고, 실제 댓글 감지 및 응답 로직은 별도의 비동기
+   * 서비스({@link CommentPollingAsyncService})로 위임한다.
    *
-   * @param userId 인증된 유저 ID
-   * @param voteId 대상 투표 ID
-   * @param cursor (선택) 마지막으로 받은 댓글 커서 (createdAt_commentId)
-   * @return DeferredResult<CommentListResponse> - 응답이 준비되면 바로 반환, 없으면 최대 10초간 대기 후 반환
+   * <p>요청 스레드는 즉시 반환되고, 실제 응답은 댓글이 감지되거나 타임아웃이 발생했을 때 클라이언트로 전송된다.
+   *
+   * <p>역할: DeferredResult 생성 및 비동기 처리 위임
    */
   public DeferredResult<CommentListResponse> pollComments(
       Long userId, Long voteId, @Nullable String cursor) {

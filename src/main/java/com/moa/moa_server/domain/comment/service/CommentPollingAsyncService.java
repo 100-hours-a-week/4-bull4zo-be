@@ -12,8 +12,6 @@ import com.moa.moa_server.domain.global.exception.BaseException;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import jakarta.annotation.Nullable;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +21,16 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.async.DeferredResult;
 
+/**
+ * 댓글 롱폴링의 핵심 로직을 담당하는 비동기 서비스.
+ *
+ * <p>지정된 투표와 사용자에 대해 권한 검증을 수행한 뒤, 주기적으로 새로운 댓글을 감지하여 응답한다.
+ *
+ * <p>{@link org.springframework.scheduling.annotation.Async} 기반으로 별도 스레드풀에서 실행되며, 응답은 {@link
+ * DeferredResult#setResult(Object)} 또는 {@link DeferredResult#setErrorResult(Object)}를 통해 비동기 전송된다.
+ *
+ * <p>역할: 댓글 권한 검증, 롱폴링 루프 수행, 응답 구성
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,6 +39,14 @@ public class CommentPollingAsyncService {
   private final CommentRepository commentRepository;
   private final CommentPermissionContextFactory permissionContextFactory;
 
+  /**
+   * 댓글 롱폴링 핵심 비동기 처리 메서드
+   *
+   * @param userId 요청자 ID
+   * @param voteId 대상 투표 ID
+   * @param cursor 이전 커서 위치 (nullable)
+   * @param result 비동기 결과 객체
+   */
   @Async("commentPollingExecutor")
   @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
   public void pollAsync(
@@ -50,68 +66,94 @@ public class CommentPollingAsyncService {
       CreatedAtCommentIdCursor parsedCursor =
           cursor != null ? CreatedAtCommentIdCursor.parse(cursor) : null;
 
-      // 롱폴링 루프: TIMEOUT_MILLIS 까지 INTERVAL_MILLIS 간격으로 새로운 댓글을 조회한다.
-      LocalDateTime start = LocalDateTime.now();
-      log.debug(
-          "[CommentPollingService#pollComments] 롱폴링 시작 - userId={}, voteId={}, cursor={}",
-          userId,
-          voteId,
-          cursor);
-      while (Duration.between(start, LocalDateTime.now()).toMillis()
-          < CommentPollingConstants.TIMEOUT_MILLIS) {
-        // 새로운 댓글 조회
-        List<Comment> newComments =
-            commentRepository.findByVoteWithCursor(
-                vote, parsedCursor, CommentPollingConstants.MAX_POLL_SIZE);
+      // 롱폴링 루프 수행
+      List<Comment> newComments = pollingLoop(vote, user, parsedCursor);
 
-        // 1. 새 댓글이 있으면 결과 즉시 응답 및 종료
-        if (!newComments.isEmpty()) {
-          List<CommentItem> items =
-              newComments.stream().map(comment -> CommentItem.of(comment, user)).toList();
-
-          String nextCursor =
-              newComments.isEmpty()
-                  ? cursor
-                  : new CreatedAtCommentIdCursor(
-                          newComments.getLast().getCreatedAt(), newComments.getLast().getId())
-                      .encode();
-
-          log.debug(
-              "[CommentPollingService#pollComments] 롱폴링 종료 - 새 댓글 감지, userId={}, voteId={}, count={}",
-              userId,
-              voteId,
-              items.size());
-          result.setResult(new CommentListResponse(voteId, items, nextCursor, false, items.size()));
-          return;
-        }
-
-        // 2. 새 댓글이 없으면 INTERVAL_MILLIS 만큼 대기 후 재조회
-        try {
-          Thread.sleep(CommentPollingConstants.INTERVAL_MILLIS);
-        } catch (InterruptedException e) {
-          // 스레드 인터럽트 발생 시 로그 남기고 즉시 종료
-          log.warn(
-              "[CommentPollingService#pollComments] 롱폴링 스레드 인터럽트 발생: userId={}, voteId={}",
-              userId,
-              voteId,
-              e);
-          Thread.currentThread().interrupt();
-          break;
-        }
-      }
-
-      // 3. 타임아웃까지 새 댓글이 없으면 빈 배열 응답
-      log.debug(
-          "[CommentPollingService#pollComments] 롱폴링 종료 - 타임아웃, userId={}, voteId={}",
-          userId,
-          voteId);
-      result.setResult(new CommentListResponse(voteId, List.of(), cursor, false, 0));
+      // 응답 객체 생성 및 반환
+      CommentListResponse response = buildResponse(voteId, user, newComments, cursor);
+      result.setResult(response);
     } catch (BaseException e) {
-      log.error("[CommentPollingService#pollComments] 롱폴링 중 정의된 예외 발생: {}", e.getCode());
+      log.error("[CommentPollingService#pollAsync] 롱폴링 중 정의된 예외 발생: {}", e.getCode());
       result.setErrorResult(e);
     } catch (Exception e) {
-      log.error("[CommentPollingService#pollComments] 롱폴링 중 예외 발생: {}", e.getMessage());
+      log.error("[CommentPollingService#pollAsync] 롱폴링 중 예외 발생: {}", e.getMessage());
       result.setErrorResult(e);
     }
+  }
+
+  /**
+   * 지정된 투표에 대해 새 댓글을 감시하는 롱폴링 루프. TIMEOUT_MILLIS 까지 INTERVAL_MILLIS 간격으로 새로운 댓글을 조회하며, 새 댓글이 발견되면
+   * 즉시 반환한다.
+   *
+   * @param vote 투표 엔티티
+   * @param user 요청자
+   * @param parsedCursor 기준 커서 (nullable)
+   * @return 새 댓글 목록 (없으면 빈 리스트)
+   */
+  private List<Comment> pollingLoop(
+      Vote vote, User user, @Nullable CreatedAtCommentIdCursor parsedCursor) {
+
+    log.debug("[CommentPollingService#pollingLoop] 롱폴링 시작");
+
+    long startTime = System.currentTimeMillis();
+
+    while (System.currentTimeMillis() - startTime < CommentPollingConstants.TIMEOUT_MILLIS) {
+
+      // 커서 이후에 생성된 댓글 조회
+      List<Comment> newComments =
+          commentRepository.findByVoteWithCursor(
+              vote, parsedCursor, CommentPollingConstants.MAX_POLL_SIZE);
+
+      // 새 댓글이 있으면 즉시 반환
+      if (!newComments.isEmpty()) {
+        log.debug(
+            "[CommentPollingService#pollingLoop] 롱폴링 종료 - 새 댓글 감지 count={}", newComments.size());
+        return newComments;
+      }
+
+      // 새 댓글이 없으면 INTERVAL_MILLIS 만큼 대기 후 재조회
+      try {
+        Thread.sleep(CommentPollingConstants.INTERVAL_MILLIS);
+      } catch (InterruptedException e) {
+        // 스레드 인터럽트 발생 시 로그 남기고 즉시 종료
+        log.warn(
+            "[CommentPollingService#pollingLoop] 롱폴링 스레드 인터럽트 발생: userId={}, voteId={}",
+            user.getId(),
+            vote.getId(),
+            e);
+        Thread.currentThread().interrupt();
+        break;
+      }
+    }
+
+    // 타임아웃 도달 또는 인터럽트 발생: 빈 결과 반환
+    log.debug("[CommentPollingService#pollingLoop] 롱폴링 종료 - 타임아웃 또는 인터럽트");
+    return List.of();
+  }
+
+  /**
+   * 댓글 목록 응답 객체를 생성.
+   *
+   * @param voteId 대상 투표 ID
+   * @param user 요청자
+   * @param comments 새 댓글 목록
+   * @param previousCursor 이전 커서 (nullable)
+   * @return 응답 DTO
+   */
+  private CommentListResponse buildResponse(
+      Long voteId, User user, List<Comment> comments, @Nullable String previousCursor) {
+    // 댓글 목록
+    List<CommentItem> items =
+        comments.stream().map(comment -> CommentItem.of(comment, user)).toList();
+
+    // 다음 커서
+    String nextCursor =
+        comments.isEmpty()
+            ? previousCursor
+            : new CreatedAtCommentIdCursor(
+                    comments.getLast().getCreatedAt(), comments.getLast().getId())
+                .encode();
+
+    return new CommentListResponse(voteId, items, nextCursor, false, items.size());
   }
 }
