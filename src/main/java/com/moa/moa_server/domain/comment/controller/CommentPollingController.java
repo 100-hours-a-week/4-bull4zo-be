@@ -4,6 +4,7 @@ import com.moa.moa_server.domain.comment.config.CommentPollingConstants;
 import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.service.CommentPollingService;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
+import com.moa.moa_server.domain.global.exception.BaseException;
 import com.moa.moa_server.domain.global.exception.GlobalErrorCode;
 import com.moa.moa_server.domain.global.security.SecurityContextUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,16 +48,27 @@ public class CommentPollingController {
     // 1. 서비스 polling 완료 시 결과 래핑 후 클라이언트 응답
     deferred.setResultHandler(
         (rawValue) -> {
+          // setResult, setErrorResult 으로 전달된 결과 처리
           log.info("[CommentPollingController] pollComments 완료");
-          CommentListResponse data = (CommentListResponse) deferred.getResult();
-          apiResult.setResult(ResponseEntity.ok(new ApiResponse<>("SUCCESS", data)));
+          if (rawValue instanceof CommentListResponse data) {
+            // 롱폴링 로직이 성공적으로 처리됨
+            apiResult.setResult(ResponseEntity.ok(new ApiResponse<>("SUCCESS", data)));
+          } else if (rawValue instanceof BaseException e) {
+            // 정의된 예외 발생 (ex. USER_NOT_FOUND, VOTE_NOT_FOUND, FORBIDDEN)
+            apiResult.setErrorResult(
+                ResponseEntity.status(e.getStatus()).body(new ApiResponse<>(e.getCode(), null)));
+          } else {
+            // 그 이외 예외 발생
+            apiResult.setErrorResult(
+                ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null)));
+          }
         });
 
-    // 2. 서비스 내부 에러 발생 시 에러 응답 반환
+    // 2. 비동기 처리 과정에서 예외 발생 시 에러 응답 반환
     deferred.onError(
         (e) -> {
-          // setErrorResult가 여기서 처리됨
-          log.warn("[CommentPollingController] pollComments 에러: {}", e.getMessage());
+          log.warn("[CommentPollingController] pollComments 비동기 처리 과정에서 에러 발생: {}", e.getMessage());
           apiResult.setErrorResult(
               ResponseEntity.internalServerError()
                   .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null)));
