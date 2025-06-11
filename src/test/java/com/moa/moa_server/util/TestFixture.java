@@ -6,6 +6,7 @@ import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class TestFixture {
 
@@ -19,9 +20,10 @@ public class TestFixture {
   }
 
   public static Group group(User user, String name) {
+    String inviteCode = UUID.randomUUID().toString().substring(0, 6);
     return Group.builder()
         .name(name)
-        .inviteCode("000000")
+        .inviteCode(inviteCode)
         .user(user)
         .description("테스트 그룹입니다.")
         .build();
