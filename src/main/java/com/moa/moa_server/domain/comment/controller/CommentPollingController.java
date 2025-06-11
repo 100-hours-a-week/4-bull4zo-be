@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.comment.controller;
 
+import com.moa.moa_server.domain.comment.config.CommentPollingConstants;
 import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.service.CommentPollingService;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
@@ -33,13 +34,13 @@ public class CommentPollingController {
     // 비동기 컨트롤러 진입 시 인증 정보를 현재 요청에 수동으로 복원
     SecurityContextUtil.propagateSecurityContextToRequest(request, response);
 
-    // A: 내부 서비스에서 사용하는 DeferredResult (10초 타임아웃)
+    // A: 내부 서비스에서 사용하는 DeferredResult
     DeferredResult<CommentListResponse> deferred =
         commentPollingService.pollComments(userId, voteId, cursor);
 
-    // B: 실제 응답에 사용될 DeferredResult (11초 타임아웃: A보다 크게 설정)
+    // B: 실제 응답에 사용될 DeferredResult
     DeferredResult<ResponseEntity<ApiResponse<CommentListResponse>>> apiResult =
-        new DeferredResult<>(11000L);
+        new DeferredResult<>(CommentPollingConstants.CONTROLLER_TIMEOUT_MILLIS);
 
     // ===== polling 처리 (A) =====
 

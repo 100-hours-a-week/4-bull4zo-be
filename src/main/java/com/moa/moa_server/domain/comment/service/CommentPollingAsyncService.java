@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.comment.service;
 
+import com.moa.moa_server.domain.comment.config.CommentPollingConstants;
 import com.moa.moa_server.domain.comment.dto.response.CommentItem;
 import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.entity.Comment;
@@ -34,9 +35,6 @@ public class CommentPollingAsyncService {
       Long userId,
       Long voteId,
       @Nullable String cursor,
-      long timeoutMillis,
-      int intervalMillis,
-      int maxPollSize,
       DeferredResult<CommentListResponse> result) {
 
     try {
@@ -57,10 +55,12 @@ public class CommentPollingAsyncService {
           userId,
           voteId,
           cursor);
-      while (Duration.between(start, LocalDateTime.now()).toMillis() < timeoutMillis) {
+      while (Duration.between(start, LocalDateTime.now()).toMillis()
+          < CommentPollingConstants.TIMEOUT_MILLIS) {
         // 새로운 댓글 조회
         List<Comment> newComments =
-            commentRepository.findByVoteWithCursor(vote, parsedCursor, maxPollSize);
+            commentRepository.findByVoteWithCursor(
+                vote, parsedCursor, CommentPollingConstants.MAX_POLL_SIZE);
 
         // 1. 새 댓글이 있으면 결과 즉시 응답 및 종료
         if (!newComments.isEmpty()) {
@@ -85,7 +85,7 @@ public class CommentPollingAsyncService {
 
         // 2. 새 댓글이 없으면 INTERVAL_MILLIS 만큼 대기 후 재조회
         try {
-          Thread.sleep(intervalMillis);
+          Thread.sleep(CommentPollingConstants.INTERVAL_MILLIS);
         } catch (InterruptedException e) {
           // 스레드 인터럽트 발생 시 로그 남기고 즉시 종료
           log.warn(
