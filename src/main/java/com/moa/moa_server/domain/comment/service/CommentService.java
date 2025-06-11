@@ -5,20 +5,15 @@ import com.moa.moa_server.domain.comment.dto.response.CommentCreateResponse;
 import com.moa.moa_server.domain.comment.dto.response.CommentItem;
 import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.entity.Comment;
-import com.moa.moa_server.domain.comment.handler.CommentErrorCode;
-import com.moa.moa_server.domain.comment.handler.CommentException;
 import com.moa.moa_server.domain.comment.repository.CommentRepository;
+import com.moa.moa_server.domain.comment.service.context.CommentPermissionContext;
+import com.moa.moa_server.domain.comment.service.context.CommentPermissionContextFactory;
 import com.moa.moa_server.domain.comment.util.CommentNicknameUtil;
 import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.user.entity.User;
-import com.moa.moa_server.domain.user.handler.UserErrorCode;
-import com.moa.moa_server.domain.user.handler.UserException;
-import com.moa.moa_server.domain.user.repository.UserRepository;
-import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
-import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import jakarta.annotation.Nullable;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,35 +27,19 @@ public class CommentService {
   private static final int DEFAULT_PAGE_SIZE = 10;
 
   private final CommentRepository commentRepository;
-  private final UserRepository userRepository;
   private final VoteRepository voteRepository;
-  private final VoteResponseRepository voteResponseRepository;
 
+  private final CommentPermissionContextFactory permissionContextFactory;
+
+  /** 댓글 생성 */
   @Transactional
   public CommentCreateResponse createComment(
       Long userId, Long voteId, CommentCreateRequest request) {
-    // 유저 조회 및 유효성 검사
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    // 투표 존재 확인
-    Vote vote =
-        voteRepository
-            .findById(voteId)
-            .orElseThrow(() -> new CommentException(CommentErrorCode.VOTE_NOT_FOUND));
-
-    // 댓글 작성 권한 확인 (투표 참여자(유효 응답: 1, 2)이거나 투표 등록자)
-    boolean isOwner = vote.getUser().getId().equals(user.getId());
-    boolean isParticipant =
-        voteResponseRepository.existsByVoteIdAndUserIdAndOptionNumberIn(
-            voteId, userId, List.of(1, 2));
-    if (!(isOwner || isParticipant)) {
-      throw new CommentException(CommentErrorCode.FORBIDDEN);
-    }
-    // TODO: 권한 추가 - top3 투표인 경우 모든 사용자가 댓글 작성 가능
+    // 유저, 투표, 권한 체크
+    CommentPermissionContext context =
+        permissionContextFactory.validateAndGetContext(userId, voteId);
+    User user = context.user();
+    Vote vote = context.vote();
 
     // 본문 XSS 필터링
     String sanitizedContent = XssUtil.sanitize(request.content());
@@ -86,6 +65,7 @@ public class CommentService {
         comment.getId(), comment.getContent(), authorNickname, comment.getCreatedAt());
   }
 
+  /** 댓글 목록 조회 */
   @Transactional(readOnly = true)
   public CommentListResponse getComments(
       Long userId, Long voteId, @Nullable String cursor, @Nullable Integer size) {
@@ -93,28 +73,11 @@ public class CommentService {
     CreatedAtCommentIdCursor parsedCursor =
         cursor != null ? CreatedAtCommentIdCursor.parse(cursor) : null;
 
-    // 유저 조회 및 유효성 검사
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    // 투표 존재 확인
-    Vote vote =
-        voteRepository
-            .findById(voteId)
-            .orElseThrow(() -> new CommentException(CommentErrorCode.VOTE_NOT_FOUND));
-
-    // 댓글 조회 권한 확인 (투표 참여자(유효 응답: 1, 2)이거나 투표 등록자)
-    // TODO: 권한 추가 - top3 투표인 경우 모든 사용자가 댓글 작성 가능
-    boolean isOwner = vote.getUser().getId().equals(user.getId());
-    boolean isParticipant =
-        voteResponseRepository.existsByVoteIdAndUserIdAndOptionNumberIn(
-            voteId, userId, List.of(1, 2));
-    if (!(isOwner || isParticipant)) {
-      throw new CommentException(CommentErrorCode.FORBIDDEN);
-    }
+    // 유저, 투표, 권한 체크
+    CommentPermissionContext context =
+        permissionContextFactory.validateAndGetContext(userId, voteId);
+    User user = context.user();
+    Vote vote = context.vote();
 
     // 댓글 목록 조회
     List<Comment> comments = commentRepository.findByVoteWithCursor(vote, parsedCursor, pageSize);
