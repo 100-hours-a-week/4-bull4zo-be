@@ -17,10 +17,25 @@ public class VoteValidator {
     }
   }
 
-  public static void validateClosedAt(LocalDateTime closedAt) {
+  public static void validateOpenAt(LocalDateTime openAt) {
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    if (openAt == null || openAt.isBefore(now)) {
+      throw new VoteException(VoteErrorCode.INVALID_TIME);
+    }
+  }
 
+  public static void validateUserVoteClosedAt(LocalDateTime closedAt) {
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     if (closedAt == null || !closedAt.isAfter(now) || closedAt.isAfter(now.plusDays(7))) {
+      throw new VoteException(VoteErrorCode.INVALID_TIME);
+    }
+  }
+
+  public static void validateAIVoteClosedAt(LocalDateTime openAt, LocalDateTime closedAt) {
+    if (openAt == null
+        || closedAt == null
+        || !closedAt.isAfter(openAt)
+        || closedAt.isAfter(openAt.plusDays(7))) {
       throw new VoteException(VoteErrorCode.INVALID_TIME);
     }
   }
