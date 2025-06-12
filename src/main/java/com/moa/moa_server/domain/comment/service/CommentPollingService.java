@@ -8,6 +8,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 
+/**
+ * 댓글 롱폴링을 위한 진입점 서비스.
+ *
+ * <p>Spring Web의 {@link DeferredResult}를 사용하여 비동기 응답 처리를 시작하고, 실제 댓글 감지 및 응답 로직은 별도의 비동기 서비스({@link
+ * CommentPollingAsyncService})로 위임한다.
+ *
+ * <p>요청 스레드는 즉시 반환되고, 실제 응답은 댓글이 감지되거나 타임아웃이 발생했을 때 클라이언트로 전송된다.
+ *
+ * <p>역할: DeferredResult 생성 및 비동기 처리 위임
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -15,16 +25,6 @@ public class CommentPollingService {
 
   private final CommentPollingAsyncService asyncService;
 
-  /**
-   * 댓글 롱폴링을 위한 진입점 서비스.
-   *
-   * <p>Spring Web의 {@link DeferredResult}를 사용하여 비동기 응답 처리를 시작하고, 실제 댓글 감지 및 응답 로직은 별도의 비동기
-   * 서비스({@link CommentPollingAsyncService})로 위임한다.
-   *
-   * <p>요청 스레드는 즉시 반환되고, 실제 응답은 댓글이 감지되거나 타임아웃이 발생했을 때 클라이언트로 전송된다.
-   *
-   * <p>역할: DeferredResult 생성 및 비동기 처리 위임
-   */
   public DeferredResult<CommentListResponse> pollComments(
       Long userId, Long voteId, @Nullable String cursor) {
     // 비동기 응답 컨테이너
