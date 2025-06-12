@@ -40,6 +40,9 @@ public class Vote extends BaseTimeEntity {
   @Column(name = "image_name", length = 300)
   private String imageName;
 
+  @Column(name = "open_at", nullable = false)
+  private LocalDateTime openAt;
+
   @Column(name = "closed_at", nullable = false)
   private LocalDateTime closedAt;
 
@@ -86,11 +89,37 @@ public class Vote extends BaseTimeEntity {
         .content(content)
         .imageUrl(imageUrl)
         .imageName(imageName)
+        .openAt(LocalDateTime.now())
         .closedAt(closedAt)
         .anonymous(anonymous)
         .voteStatus(status)
         .adminVote(adminVote)
         .voteType(VoteType.USER)
+        .lastAnonymousNumber(0)
+        .build();
+  }
+
+  /** AI 투표 생성 팩토리 */
+  public static Vote createAIVote(
+      String content,
+      String imageUrl,
+      String imageName,
+      LocalDateTime openAt,
+      LocalDateTime closedAt,
+      User systemUser,
+      Group publicGroup) {
+    return Vote.builder()
+        .user(systemUser) // 시스템 유저
+        .group(publicGroup) // 공개 그룹
+        .content(content)
+        .imageUrl(imageUrl)
+        .imageName(imageName)
+        .openAt(openAt)
+        .closedAt(closedAt)
+        .anonymous(false)
+        .voteStatus(VoteStatus.PENDING) // 백그라운드 스케줄러를 통해 openAt 시간이 되면 OPEN으로 전환됨
+        .adminVote(false)
+        .voteType(VoteType.AI)
         .lastAnonymousNumber(0)
         .build();
   }
