@@ -1,10 +1,8 @@
 package com.moa.moa_server.domain.vote.scheduler;
 
-import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,17 +21,9 @@ public class AIVoteOpenScheduler {
   @Transactional
   public void openAIVotes() {
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-
-    List<Vote> pendingVotes =
-        voteRepository.findAllByVoteStatusAndVoteTypeAndOpenAtLessThanEqual(
-            Vote.VoteStatus.PENDING, Vote.VoteType.AI, now);
-
-    if (pendingVotes.isEmpty()) return;
-
-    for (Vote vote : pendingVotes) {
-      vote.open();
+    int updatedCount = voteRepository.updateOpenStatusForAIVotes(now);
+    if (updatedCount > 0) {
+      log.info("AI 투표 자동 오픈 처리 완료: {}건", updatedCount);
     }
-
-    log.info("AI 투표 자동 오픈 처리 완료: {}건", pendingVotes.size());
   }
 }
