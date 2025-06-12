@@ -14,8 +14,8 @@ public class SecurityContextUtil {
 
   public static void propagateSecurityContextToRequest(
       HttpServletRequest req, HttpServletResponse res) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     // 현재 스레드의 SecurityContext에서 인증 정보 추출
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth != null) {
       // 새로운 SecurityContext에 인증 정보 복사
       SecurityContext newContext = SecurityContextHolder.createEmptyContext();
