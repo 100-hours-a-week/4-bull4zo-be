@@ -145,6 +145,11 @@ public class Vote extends BaseTimeEntity {
     this.voteStatus = VoteStatus.CLOSED;
   }
 
+  /** 투표를 open 상태로 변경 */
+  public void open() {
+    this.voteStatus = VoteStatus.OPEN;
+  }
+
   /** 마지막 익명 번호 증가 */
   public int increaseLastAnonymousNumber() {
     this.lastAnonymousNumber++;
