@@ -40,7 +40,7 @@ public class Vote extends BaseTimeEntity {
   @Column(name = "image_name", length = 300)
   private String imageName;
 
-  @Column(name = "open_at", nullable = false)
+  @Column(name = "open_at")
   private LocalDateTime openAt;
 
   @Column(name = "closed_at", nullable = false)

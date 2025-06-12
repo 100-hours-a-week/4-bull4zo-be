@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.vote.dto.ai_vote;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 public record AIVoteCreateRequest(
@@ -9,7 +10,7 @@ public record AIVoteCreateRequest(
         String content,
     @Schema(description = "이미지 URL") String imageUrl,
     @Schema(description = "이미지 이름") String imageName,
-    @Schema(description = "투표 시작 일시", example = "2025-06-20T10:00:00") @NotBlank
+    @Schema(description = "투표 시작 일시", example = "2025-06-20T10:00:00") @NotNull
         LocalDateTime openAt,
-    @Schema(description = "투표 종료 일시", example = "2025-06-27T10:00:00") @NotBlank
+    @Schema(description = "투표 종료 일시", example = "2025-06-27T10:00:00") @NotNull
         LocalDateTime closedAt) {}

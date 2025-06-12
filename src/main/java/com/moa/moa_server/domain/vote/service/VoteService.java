@@ -115,7 +115,7 @@ public class VoteService {
     // 투표 종료 시간 변환
     ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
     LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-    VoteValidator.validateClosedAt(utcTime);
+    VoteValidator.validateUserVoteClosedAt(utcTime);
 
     // VoteStatus 결정 (prod 환경에서만)
     Vote.VoteStatus status =
@@ -490,7 +490,7 @@ public class VoteService {
     VoteValidator.validateContent(request.content());
     ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
     LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-    VoteValidator.validateClosedAt(utcTime);
+    VoteValidator.validateUserVoteClosedAt(utcTime);
 
     // 4. 이미지 URL/이름 처리
     ImageProcessResult imageResult =

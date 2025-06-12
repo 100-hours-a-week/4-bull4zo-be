@@ -39,8 +39,7 @@ public class AIVoteService {
     LocalDateTime openUtc = toUtc(request.openAt());
     LocalDateTime closedUtc = toUtc(request.closedAt());
     VoteValidator.validateOpenAt(openUtc);
-    VoteValidator.validateClosedAt(closedUtc);
-    VoteValidator.validateOpenBeforeClose(openUtc, closedUtc);
+    VoteValidator.validateAIVoteClosedAt(openUtc, closedUtc);
 
     // 이미지 처리
     String imageUrl = processImageUrl(request.imageUrl());
