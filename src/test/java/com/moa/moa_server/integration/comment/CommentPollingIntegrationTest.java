@@ -134,7 +134,8 @@ public class CommentPollingIntegrationTest {
                   commentRepository.save(comment(testVote, testUser, "새 댓글", 0));
                   em.flush();
                   em.clear();
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                  throw new IllegalStateException("댓글 저장 중 예외 발생", e);
                 }
               })
           .start();
