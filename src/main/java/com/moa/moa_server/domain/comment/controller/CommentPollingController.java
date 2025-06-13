@@ -77,11 +77,11 @@ public class CommentPollingController {
     // 3. 서비스 polling 타임아웃 발생
     deferred.onTimeout(
         () -> {
-          log.warn("[CommentPollingController] pollComments 타임아웃 fallback");
           if (!deferred.hasResult()) {
-            apiResult.setErrorResult(
-                ResponseEntity.internalServerError()
-                    .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null)));
+            log.warn("[CommentPollingController] pollComments 타임아웃 fallback");
+            apiResult.setResult(
+                ResponseEntity.ok(
+                    new ApiResponse<>("SUCCESS", CommentListResponse.empty(voteId, cursor))));
           }
         });
 
