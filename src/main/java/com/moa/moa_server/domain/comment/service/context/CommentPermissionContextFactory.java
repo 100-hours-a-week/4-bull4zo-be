@@ -13,6 +13,7 @@ import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class CommentPermissionContextFactory {
   private final VoteRepository voteRepository;
   private final VoteResponseRepository voteResponseRepository;
 
+  @Transactional(readOnly = true)
   public CommentPermissionContext validateAndGetContext(Long userId, Long voteId) {
     // 유저 조회 및 유효성 검사
     User user =

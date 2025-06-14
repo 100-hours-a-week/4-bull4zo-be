@@ -17,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.async.DeferredResult;
 
 /**
@@ -38,6 +36,7 @@ public class CommentPollingAsyncService {
 
   private final CommentRepository commentRepository;
   private final CommentPermissionContextFactory permissionContextFactory;
+  private final CommentPollingQueryService pollingQueryService;
 
   /**
    * 댓글 롱폴링 핵심 비동기 처리 메서드
@@ -48,7 +47,7 @@ public class CommentPollingAsyncService {
    * @param result 비동기 결과 객체
    */
   @Async("commentPollingExecutor")
-  @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+  //  @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
   public void pollAsync(
       Long userId,
       Long voteId,
@@ -56,7 +55,7 @@ public class CommentPollingAsyncService {
       DeferredResult<CommentListResponse> result) {
 
     try {
-      // 유저, 투표, 권한 체크
+      // 유저, 투표, 권한 체크 (내부에서 트랜잭션 적용)
       CommentPermissionContext context =
           permissionContextFactory.validateAndGetContext(userId, voteId);
       User user = context.user();
@@ -99,10 +98,8 @@ public class CommentPollingAsyncService {
 
     while (System.currentTimeMillis() - startTime < CommentPollingConstants.TIMEOUT_MILLIS) {
 
-      // 커서 이후에 생성된 댓글 조회
-      List<Comment> newComments =
-          commentRepository.findByVoteWithCursor(
-              vote, parsedCursor, CommentPollingConstants.MAX_POLL_SIZE);
+      // 커서 이후에 생성된 댓글 조회 (내부에서 트랜잭션 적용)
+      List<Comment> newComments = pollingQueryService.getNewComments(vote, parsedCursor);
 
       // 새 댓글이 있으면 즉시 반환
       if (!newComments.isEmpty()) {
@@ -142,9 +139,14 @@ public class CommentPollingAsyncService {
    */
   private CommentListResponse buildResponse(
       Long voteId, User user, List<Comment> comments, @Nullable String previousCursor) {
+    int pageSize = CommentPollingConstants.MAX_POLL_SIZE;
+    boolean hasNext = comments.size() > pageSize;
+    if (hasNext) comments = comments.subList(0, pageSize);
+
     // 댓글 목록
     List<CommentItem> items =
         comments.stream().map(comment -> CommentItem.of(comment, user)).toList();
+    // of 메서드에서 Lazy Loading 발생할 수 있으나, fetch join으로 필요한 연관 엔티티 미리 로딩하여 트랜잭션 외부에서도 안전하게 접근 가능
 
     // 다음 커서
     String nextCursor =
