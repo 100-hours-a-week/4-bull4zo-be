@@ -47,7 +47,6 @@ public class CommentPollingAsyncService {
    * @param result 비동기 결과 객체
    */
   @Async("commentPollingExecutor")
-  //  @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
   public void pollAsync(
       Long userId,
       Long voteId,
