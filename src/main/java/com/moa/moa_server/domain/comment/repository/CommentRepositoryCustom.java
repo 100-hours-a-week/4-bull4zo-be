@@ -9,4 +9,7 @@ import java.util.List;
 public interface CommentRepositoryCustom {
   List<Comment> findByVoteWithCursor(
       Vote vote, @Nullable CreatedAtCommentIdCursor cursor, int size);
+
+  List<Comment> findByVoteWithCursorFetchUser(
+      Vote vote, @Nullable CreatedAtCommentIdCursor cursor, int size);
 }

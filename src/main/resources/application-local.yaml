@@ -52,3 +52,4 @@ logging:
     org.springframework.web.filter: DEBUG
 #    org.hibernate.type.descriptor.sql: trace
     com.moa.moa_server.domain.vote.service.v3: DEBUG
+    com.moa.moa_server.domain.comment: DEBUG

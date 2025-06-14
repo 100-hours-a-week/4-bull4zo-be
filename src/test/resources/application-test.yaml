@@ -44,3 +44,13 @@ cloud:
 
 cdn:
   image-base-url: https://test-cdn.com/
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.filter: DEBUG
+    #    org.hibernate.type.descriptor.sql: trace
+    com.moa.moa_server.domain.vote.service.v3: DEBUG
