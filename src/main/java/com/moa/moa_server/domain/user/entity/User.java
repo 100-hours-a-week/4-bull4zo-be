@@ -52,6 +52,10 @@ public class User extends BaseTimeEntity {
     this.nickname = nickname;
   }
 
+  public void updateEmail(String email) {
+    this.email = email;
+  }
+
   public void withdraw() {
     this.userStatus = UserStatus.WITHDRAWN;
     this.withdrawn_at = LocalDateTime.now();
