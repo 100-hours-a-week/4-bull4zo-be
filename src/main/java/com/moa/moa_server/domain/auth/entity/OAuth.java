@@ -27,11 +27,18 @@ public class OAuth {
   @Column(name = "provider_code", length = 20, nullable = false)
   private ProviderCode providerCode;
 
+  @Column(name = "oauth_nickname", length = 200)
+  private String oauthNickname;
+
   public enum ProviderCode {
     KAKAO;
 
     public static boolean isSupported(String provider) {
       return Arrays.stream(values()).anyMatch(p -> p.name().equalsIgnoreCase(provider));
     }
+  }
+
+  public void updateOauthNickname(String nickname) {
+    this.oauthNickname = nickname;
   }
 }
