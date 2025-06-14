@@ -11,8 +11,6 @@ public final class CommentPollingConstants {
   public static final long TIMEOUT_MILLIS = 10_000L; // 롱폴링 내부 대기 시간 (10초)
   public static final int INTERVAL_MILLIS = 500; // 폴링 주기 (0.5초)
   public static final int MAX_POLL_SIZE = 10; // 최대 조회 개수
-  public static final long CONTROLLER_TIMEOUT_MILLIS =
-      11_000L; // 컨트롤러 응답 타임아웃 (timeoutMillis 보다 길어야 함)
 
   private CommentPollingConstants() {
     throw new AssertionError("Cannot instantiate constant class");

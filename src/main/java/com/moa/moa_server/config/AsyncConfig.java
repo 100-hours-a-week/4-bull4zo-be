@@ -26,7 +26,7 @@ public class AsyncConfig {
 
   // CommentPollingService 전용 스레드풀
   @Bean(name = "commentPollingExecutor")
-  public Executor commentPollingExecutor() {
+  public ThreadPoolTaskExecutor commentPollingExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(10); // 스레드풀 크기
     executor.setMaxPoolSize(20); // 최대 스레드풀 크기
