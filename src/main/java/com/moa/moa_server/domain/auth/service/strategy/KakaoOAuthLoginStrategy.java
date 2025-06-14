@@ -73,25 +73,8 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     User user =
         oAuthOptional
             .map(OAuth::getUser)
-            .orElseGet(
-                () -> {
-                  // 신규 회원가입
-                  KakaoUserInfo userInfo = getUserInfo(kakaoAccessToken);
-                  String nickname = NicknameGenerator.generate(userRepository);
-                  User newUser =
-                      User.builder()
-                          .nickname(nickname)
-                          .role(User.Role.USER)
-                          .userStatus(User.UserStatus.ACTIVE)
-                          .lastActiveAt(LocalDateTime.now())
-                          .email(userInfo.email())
-                          .withdrawn_at(null)
-                          .build();
-                  userRepository.save(newUser);
-                  oAuthRepository.save(
-                      new OAuth(kakaoId, newUser, OAuth.ProviderCode.KAKAO, userInfo.nickname()));
-                  return newUser;
-                });
+            // 없으면 회원가입
+            .orElseGet(() -> registerKakaoUser(kakaoId, kakaoAccessToken));
 
     // 기존 회원이라면 누락된 oauthNickname, email 보완
     updateMissingUserInfo(user, oAuthOptional.orElse(null), kakaoAccessToken);
@@ -103,6 +86,35 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     LoginResponse loginResponseDto =
         new LoginResponse(accessToken, user.getId(), user.getNickname());
     return new LoginResult(loginResponseDto, refreshToken);
+  }
+
+  @Override
+  public void unlink(Long kakaoUserId) {
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "KakaoAK " + kakaoAdminKey);
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.add("target_id_type", "user_id");
+    params.add("target_id", String.valueOf(kakaoUserId));
+
+    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+    try {
+      ResponseEntity<Map> response = restTemplate.postForEntity(kakaoUnlinkUri, request, Map.class);
+      Long returnedId = ((Number) response.getBody().get("id")).longValue();
+      log.info(
+          "[KakaoOAuthLoginStrategy#unlink] 카카오 unlink 성공: 요청 userId={}, 응답 userId={}",
+          kakaoUserId,
+          returnedId);
+    } catch (Exception e) {
+      log.warn(
+          "[KakaoOAuthLoginStrategy#unlink] 카카오 unlink 실패: 요청 userId={}, error={}",
+          kakaoUserId,
+          e.getMessage());
+      // 필요 시 큐 적재 등 처리
+    }
   }
 
   /** 카카오 로그인 토큰 받기를 통해 카카오 액세스 토큰을 가져온다. */
@@ -206,32 +218,22 @@ public class KakaoOAuthLoginStrategy implements OAuthLoginStrategy {
     }
   }
 
-  @Override
-  public void unlink(Long kakaoUserId) {
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "KakaoAK " + kakaoAdminKey);
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    params.add("target_id_type", "user_id");
-    params.add("target_id", String.valueOf(kakaoUserId));
-
-    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-
-    try {
-      ResponseEntity<Map> response = restTemplate.postForEntity(kakaoUnlinkUri, request, Map.class);
-      Long returnedId = ((Number) response.getBody().get("id")).longValue();
-      log.info(
-          "[KakaoOAuthLoginStrategy#unlink] 카카오 unlink 성공: 요청 userId={}, 응답 userId={}",
-          kakaoUserId,
-          returnedId);
-    } catch (Exception e) {
-      log.warn(
-          "[KakaoOAuthLoginStrategy#unlink] 카카오 unlink 실패: 요청 userId={}, error={}",
-          kakaoUserId,
-          e.getMessage());
-      // 필요 시 큐 적재 등 처리
-    }
+  /** 회원가입 처리 */
+  private User registerKakaoUser(String kakaoId, String kakaoAccessToken) {
+    KakaoUserInfo userInfo = getUserInfo(kakaoAccessToken);
+    String nickname = NicknameGenerator.generate(userRepository);
+    User newUser =
+        User.builder()
+            .nickname(nickname)
+            .role(User.Role.USER)
+            .userStatus(User.UserStatus.ACTIVE)
+            .lastActiveAt(LocalDateTime.now())
+            .email(userInfo.email())
+            .withdrawn_at(null)
+            .build();
+    userRepository.save(newUser);
+    oAuthRepository.save(
+        new OAuth(kakaoId, newUser, OAuth.ProviderCode.KAKAO, userInfo.nickname()));
+    return newUser;
   }
 }
