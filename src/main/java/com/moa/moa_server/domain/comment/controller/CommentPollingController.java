@@ -9,6 +9,7 @@ import com.moa.moa_server.domain.global.exception.GlobalErrorCode;
 import com.moa.moa_server.domain.global.security.SecurityContextUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.concurrent.RejectedExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -68,10 +69,16 @@ public class CommentPollingController {
     // 2. 비동기 처리 과정에서 예외 발생 시 에러 응답 반환
     deferred.onError(
         (e) -> {
-          log.warn("[CommentPollingController] pollComments 비동기 처리 과정에서 에러 발생: {}", e.getMessage());
-          apiResult.setErrorResult(
-              ResponseEntity.internalServerError()
-                  .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null)));
+          log.warn("[CommentPollingController] pollComments 비동기 처리 과정에서 예외 발생: {}", e.getMessage());
+          if (e instanceof RejectedExecutionException) {
+            // 스레드풀이 꽉 찬 경우 (RejectedExecutionException) 이곳으로 들어옴
+            apiResult.setErrorResult(
+                ResponseEntity.status(503).body(new ApiResponse<>("THREAD_POOL_REJECTED", null)));
+          } else {
+            apiResult.setErrorResult(
+                ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null)));
+          }
         });
 
     // 3. 서비스 polling 타임아웃 발생

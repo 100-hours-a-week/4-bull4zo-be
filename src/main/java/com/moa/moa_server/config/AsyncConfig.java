@@ -1,6 +1,7 @@
 package com.moa.moa_server.config;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -28,9 +29,12 @@ public class AsyncConfig {
   public Executor commentPollingExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(10); // 스레드풀 크기
-    executor.setMaxPoolSize(20);
-    executor.setQueueCapacity(200);
-    executor.setThreadNamePrefix("comment-polling-");
+    executor.setMaxPoolSize(20); // 최대 스레드풀 크기
+    executor.setQueueCapacity(200); // 작업 대기 큐 용량 (초과 시 새로운 스레드 생성 또는 거부 정책 적용)
+    executor.setRejectedExecutionHandler(
+        new ThreadPoolExecutor.AbortPolicy() // 작업 거부 및 예외 발생 (FE에서 재요청 유도)
+        ); // 풀이 가득 찼을 때 대응
+    executor.setThreadNamePrefix("comment-polling-"); // 스레드 이름
     executor.initialize();
     return executor;
   }
