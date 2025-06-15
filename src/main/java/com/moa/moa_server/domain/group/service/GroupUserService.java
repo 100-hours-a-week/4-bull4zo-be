@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.group.service;
 
 import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupJoinResponse;
+import com.moa.moa_server.domain.group.dto.response.GroupLeaveResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
@@ -81,5 +82,31 @@ public class GroupUserService {
     }
 
     return new GroupJoinResponse(group.getId(), group.getName(), member.getRole().name());
+  }
+
+  /** 그룹 탈퇴 */
+  @Transactional
+  public GroupLeaveResponse leaveGroup(Long userId, Long groupId) {
+    // 그룹 존재 확인
+    Group group =
+        groupRepository
+            .findById(groupId)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+
+    // 멤버 여부 확인
+    GroupMember member =
+        groupMemberRepository
+            .findByGroupAndUserIncludingDeleted(groupId, userId)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.MEMBERSHIP_NOT_FOUND));
+
+    // 소유자는 탈퇴 불가
+    if (member.getRole() == GroupMember.Role.OWNER) {
+      throw new GroupException(GroupErrorCode.OWNER_CANNOT_LEAVE);
+    }
+
+    // 탈퇴 처리 (soft delete)
+    member.leave();
+
+    return new GroupLeaveResponse(groupId);
   }
 }
