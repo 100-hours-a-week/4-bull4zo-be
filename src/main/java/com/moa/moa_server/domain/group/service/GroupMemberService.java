@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.group.service;
 
+import com.moa.moa_server.domain.group.dto.response.ChangeRoleResponse;
 import com.moa.moa_server.domain.group.dto.response.MemberItem;
 import com.moa.moa_server.domain.group.dto.response.MemberListResponse;
 import com.moa.moa_server.domain.group.entity.Group;
@@ -32,6 +33,7 @@ public class GroupMemberService {
   private final UserRepository userRepository;
   private final GroupMemberRepository groupMemberRepository;
 
+  /** 멤버 목록 조회 */
   @Transactional(readOnly = true)
   public MemberListResponse getMemberList(Long userId, Long groupId) {
     // 유저 조회 및 검증
@@ -65,6 +67,87 @@ public class GroupMemberService {
             .toList();
 
     return new MemberListResponse(groupId, items);
+  }
+
+  /** 멤버 역할 변경 */
+  @Transactional
+  public ChangeRoleResponse changeRole(
+      Long requesterId, Long groupId, Long targetUserId, String newRoleStr) {
+    User requester = findActiveUser(requesterId);
+    Group group = findGroup(groupId);
+
+    // 요청자의 멤버십 조회 및 권한 검사
+    GroupMember requesterMember =
+        groupMemberRepository
+            .findByGroupAndUser(group, requester)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.FORBIDDEN));
+    if (!requesterMember.isOwnerOrManager()) { // 그룹 소유자, 관리자만 가능
+      throw new GroupException(GroupErrorCode.FORBIDDEN);
+    }
+
+    // 대상 사용자 조회
+    User targetUser =
+        userRepository
+            .findById(targetUserId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    GroupMember targetMember =
+        groupMemberRepository
+            .findByGroupAndUser(group, targetUser)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.MEMBERSHIP_NOT_FOUND));
+
+    // 역할 파싱 및 유효성 검사
+    GroupMember.Role newRole =
+        GroupMember.Role.from(newRoleStr)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.INVALID_ROLE_NAME));
+
+    GroupMember.Role requesterRole = requesterMember.getRole();
+    GroupMember.Role targetRole = targetMember.getRole();
+
+    // 동일 역할이면 무시
+    if (targetRole == newRole) {
+      return new ChangeRoleResponse(targetUserId, newRole.name());
+    }
+
+    // 자기 자신 역할 변경 제약
+    if (requester.getId().equals(targetUserId)) {
+      // 소유자는 자기 자신 역할 변경 불가
+      if (requesterRole == GroupMember.Role.OWNER) {
+        throw new GroupException(GroupErrorCode.FORBIDDEN);
+      }
+
+      // 관리자는 자기 자신을 멤버로 변경 가능 (단, role == MANAGER → MEMBER)
+      if (requesterRole == GroupMember.Role.MANAGER) {
+        if (newRole != GroupMember.Role.MEMBER) {
+          throw new GroupException(GroupErrorCode.FORBIDDEN);
+        }
+        requesterMember.changeRole(GroupMember.Role.MEMBER);
+        return new ChangeRoleResponse(targetUserId, newRole.name());
+      }
+
+      // 기타 자기 자신 변경은 차단
+      throw new GroupException(GroupErrorCode.FORBIDDEN);
+    }
+
+    // 관리자: 일반 멤버 -> 관리자로 변경 가능 (소유자나 다른 관리자의 역할 변경 불가능)
+    if (requesterRole == GroupMember.Role.MANAGER) {
+      if (targetRole != GroupMember.Role.MEMBER || newRole != GroupMember.Role.MANAGER) {
+        throw new GroupException(GroupErrorCode.FORBIDDEN);
+      }
+      targetMember.changeRole(newRole);
+      return new ChangeRoleResponse(targetUserId, newRole.name());
+    }
+
+    // 소유자: 모든 멤버의 역할 변경 가능
+    if (newRole == GroupMember.Role.OWNER) {
+      // 다른 멤버를 소유자로 변경하는 경우, 자신은 관리자로 변경
+      targetMember.changeRole(GroupMember.Role.OWNER);
+      requesterMember.changeRole(GroupMember.Role.MANAGER);
+      group.changeOwner(targetUser);
+    } else {
+      targetMember.changeRole(newRole);
+    }
+
+    return new ChangeRoleResponse(targetUserId, newRole.name());
   }
 
   private User findActiveUser(Long userId) {
