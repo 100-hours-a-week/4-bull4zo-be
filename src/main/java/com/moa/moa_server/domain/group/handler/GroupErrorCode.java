@@ -16,6 +16,7 @@ public enum GroupErrorCode implements BaseErrorCode {
   MEMBERSHIP_NOT_FOUND(HttpStatus.NOT_FOUND),
   ALREADY_JOINED(HttpStatus.CONFLICT),
   DUPLICATED_NAME(HttpStatus.CONFLICT),
+  CANNOT_KICK_SELF(HttpStatus.CONFLICT),
   INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR),
   ;
 

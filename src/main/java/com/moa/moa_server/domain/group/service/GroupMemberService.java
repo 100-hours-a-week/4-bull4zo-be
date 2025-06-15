@@ -1,6 +1,7 @@
 package com.moa.moa_server.domain.group.service;
 
 import com.moa.moa_server.domain.group.dto.response.ChangeRoleResponse;
+import com.moa.moa_server.domain.group.dto.response.MemberDeleteResponse;
 import com.moa.moa_server.domain.group.dto.response.MemberItem;
 import com.moa.moa_server.domain.group.dto.response.MemberListResponse;
 import com.moa.moa_server.domain.group.entity.Group;
@@ -86,10 +87,7 @@ public class GroupMemberService {
     }
 
     // 대상 사용자 조회
-    User targetUser =
-        userRepository
-            .findById(targetUserId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    User targetUser = findActiveUser(targetUserId);
     GroupMember targetMember =
         groupMemberRepository
             .findByGroupAndUser(group, targetUser)
@@ -148,6 +146,39 @@ public class GroupMemberService {
     }
 
     return new ChangeRoleResponse(targetUserId, newRole.name());
+  }
+
+  /** 멤버 내보내기 */
+  @Transactional
+  public MemberDeleteResponse deleteMember(Long requesterId, Long groupId, Long targetUserId) {
+    User requester = findActiveUser(requesterId);
+    Group group = findGroup(groupId);
+
+    // 요청자 멤버십 및 권한 확인
+    GroupMember requesterMember =
+        groupMemberRepository
+            .findByGroupAndUser(group, requester)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.FORBIDDEN));
+    if (requesterMember.getRole() != GroupMember.Role.OWNER) { // 소유자만 권한 있음
+      throw new GroupException(GroupErrorCode.FORBIDDEN);
+    }
+
+    // 대상 사용자 조회
+    if (requesterId.equals(targetUserId)) {
+      throw new GroupException(GroupErrorCode.CANNOT_KICK_SELF); // 자기 자신(소유자)은 불가
+    }
+
+    User targetUser = findActiveUser(targetUserId);
+
+    GroupMember targetMember =
+        groupMemberRepository
+            .findByGroupAndUser(group, targetUser)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.MEMBERSHIP_NOT_FOUND));
+
+    // 실제 추방 처리 (Soft Delete)
+    targetMember.leave();
+
+    return new MemberDeleteResponse(targetUserId);
   }
 
   private User findActiveUser(Long userId) {
