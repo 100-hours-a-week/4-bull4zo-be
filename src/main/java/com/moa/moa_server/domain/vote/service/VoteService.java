@@ -1,6 +1,5 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.comment.repository.CommentRepository;
 import com.moa.moa_server.domain.global.cursor.UpdatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
@@ -9,7 +8,7 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
-import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.group.util.GroupLookupHelper;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
@@ -41,7 +40,6 @@ import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteModerationLogRepository;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
-import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
@@ -64,8 +62,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class VoteService {
 
-  private final CommentRepository commentRepository;
-
   @Value("${spring.profiles.active:}")
   private String activeProfile;
 
@@ -78,13 +74,13 @@ public class VoteService {
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
   private final VoteModerationLogRepository voteModerationLogRepository;
-  private final VoteResultRepository voteResultRepository;
 
-  private final GroupService groupService;
+  private final GroupLookupHelper groupLookupHelper;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
   private final VoteResultRedisService voteResultRedisService;
   private final ImageService imageService;
+  private final VoteRelatedDataCleaner voteRelatedDataCleaner;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -357,7 +353,7 @@ public class VoteService {
       // 전체 그룹 조회: 유저가 속한 그룹 + 공개 그룹
       groups = groupMemberRepository.findAllActiveGroupsByUser(user);
 
-      Group publicGroup = groupService.getPublicGroup();
+      Group publicGroup = groupLookupHelper.getPublicGroup();
       if (!groups.contains(publicGroup)) {
         groups.add(publicGroup);
       }
@@ -417,7 +413,7 @@ public class VoteService {
     } else {
       // 전체 그룹 조회: 유저가 속한 그룹 + 공개 그룹
       groups = groupMemberRepository.findAllActiveGroupsByUser(user);
-      Group publicGroup = groupService.getPublicGroup();
+      Group publicGroup = groupLookupHelper.getPublicGroup();
       if (!groups.contains(publicGroup)) {
         groups.add(publicGroup);
       }
@@ -539,7 +535,7 @@ public class VoteService {
     vote.softDelete();
 
     // 4. 관련 데이터 정리 (존재할 수 있는 경우)
-    commentRepository.softDeleteByVoteId(voteId);
+    voteRelatedDataCleaner.cleanup(voteId);
 
     return new VoteDeleteResponse(voteId);
   }
@@ -622,9 +618,20 @@ public class VoteService {
     }
 
     // 전체 그룹 조회: 공개 그룹 + 사용자의 그룹
-    Group publicGroup = groupService.getPublicGroup();
+    Group publicGroup = groupLookupHelper.getPublicGroup();
     List<Group> userGroups = groupMemberRepository.findAllActiveGroupsByUser(user);
 
     return Stream.concat(Stream.of(publicGroup), userGroups.stream()).distinct().toList();
+  }
+
+  public void deleteVoteByGroupId(Long groupId) {
+    // 1. 해당 그룹의 모든 투표 soft delete
+    voteRepository.softDeleteByGroupId(groupId);
+
+    // 2. 각 투표의 연관 데이터 정리
+    List<Long> voteIds = voteRepository.findAllIdsByGroupId(groupId);
+    for (Long voteId : voteIds) {
+      voteRelatedDataCleaner.cleanup(voteId);
+    }
   }
 }
