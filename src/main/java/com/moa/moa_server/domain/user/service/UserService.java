@@ -11,6 +11,7 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.service.GroupService;
+import com.moa.moa_server.domain.group.util.GroupLookupHelper;
 import com.moa.moa_server.domain.user.dto.request.UserUpdateRequest;
 import com.moa.moa_server.domain.user.dto.response.*;
 import com.moa.moa_server.domain.user.entity.User;
@@ -40,6 +41,7 @@ public class UserService {
   private final TokenRepository tokenRepository;
   private final VoteRepository voteRepository;
 
+  private final GroupLookupHelper groupLookupHelper;
   private final GroupService groupService;
   private final AuthService authService;
 
@@ -64,7 +66,7 @@ public class UserService {
 
     // 첫 페이지인 경우 공개 그룹을 제일 앞에 추가
     if (cursor == null) {
-      Group publicGroup = groupService.getPublicGroup();
+      Group publicGroup = groupLookupHelper.getPublicGroup();
       groups.addFirst(publicGroup);
     }
 

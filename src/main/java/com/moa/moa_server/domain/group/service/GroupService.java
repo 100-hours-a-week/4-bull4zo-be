@@ -4,6 +4,7 @@ import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
 import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
+import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupJoinResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
@@ -18,8 +19,7 @@ import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
-import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
-import com.moa.moa_server.domain.vote.handler.VoteException;
+import com.moa.moa_server.domain.vote.service.VoteService;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -36,17 +36,13 @@ public class GroupService {
   private static final int MAX_INVITE_CODE_RETRY = 10;
 
   private final ImageService imageService;
+  private final VoteService voteService;
 
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
   private final GroupMemberRepository groupMemberRepository;
 
-  public Group getPublicGroup() {
-    return groupRepository
-        .findById(1L)
-        .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
-  }
-
+  /** 그룹 가입 */
   @Transactional
   public GroupJoinResponse joinGroup(Long userId, GroupJoinRequest request) {
     String inviteCode = request.inviteCode().trim().toUpperCase();
@@ -96,6 +92,7 @@ public class GroupService {
     return new GroupJoinResponse(group.getId(), group.getName(), member.getRole().name());
   }
 
+  /** 그룹 생성 */
   @Transactional
   public GroupCreateResponse createGroup(Long userId, GroupCreateRequest request) {
     // 유저 조회 및 검증
@@ -157,6 +154,7 @@ public class GroupService {
     throw new GroupException(GroupErrorCode.INVITE_CODE_GENERATION_FAILED);
   }
 
+  /** 그룹 소유권 승계 (그룹 소유자가 회원탈퇴 시 사용) */
   @Transactional
   public void reassignOrDeleteGroupsOwnedBy(User user) {
     // 사용자가 소유한 그룹 목록 조회
