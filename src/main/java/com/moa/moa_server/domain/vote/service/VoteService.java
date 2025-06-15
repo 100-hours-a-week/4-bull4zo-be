@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
+import com.moa.moa_server.domain.comment.repository.CommentRepository;
 import com.moa.moa_server.domain.global.cursor.UpdatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
@@ -19,6 +20,7 @@ import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
+import com.moa.moa_server.domain.vote.dto.response.VoteDeleteResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteUpdateResponse;
@@ -39,6 +41,7 @@ import com.moa.moa_server.domain.vote.model.VoteWithVotedAt;
 import com.moa.moa_server.domain.vote.repository.VoteModerationLogRepository;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
+import com.moa.moa_server.domain.vote.repository.VoteResultRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
@@ -61,6 +64,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class VoteService {
 
+  private final CommentRepository commentRepository;
+
   @Value("${spring.profiles.active:}")
   private String activeProfile;
 
@@ -73,6 +78,7 @@ public class VoteService {
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
   private final VoteModerationLogRepository voteModerationLogRepository;
+  private final VoteResultRepository voteResultRepository;
 
   private final GroupService groupService;
   private final VoteResultService voteResultService;
@@ -507,6 +513,35 @@ public class VoteService {
     }
 
     return new VoteUpdateResponse(vote.getId());
+  }
+
+  @Transactional
+  public VoteDeleteResponse deleteVote(Long userId, Long voteId) {
+    // 1. 유저/투표 조회 및 권한 체크
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+
+    Vote vote =
+        voteRepository
+            .findById(voteId)
+            .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+
+    if (!vote.getUser().getId().equals(userId)) throw new VoteException(VoteErrorCode.FORBIDDEN);
+
+    // 2. 삭제 가능 체크 (REJECTED 상태만 수정 가능)
+    if (vote.getVoteStatus() != Vote.VoteStatus.REJECTED)
+      throw new VoteException(VoteErrorCode.FORBIDDEN);
+
+    // 3. 투표 삭제
+    vote.softDelete();
+
+    // 4. 관련 데이터 정리 (존재할 수 있는 경우)
+    commentRepository.softDeleteByVoteId(voteId);
+
+    return new VoteDeleteResponse(voteId);
   }
 
   /** 투표 조회 */
