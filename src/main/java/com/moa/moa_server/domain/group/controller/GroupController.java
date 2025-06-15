@@ -2,9 +2,11 @@ package com.moa.moa_server.domain.group.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
+import com.moa.moa_server.domain.group.dto.request.GroupUpdateRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupInfoResponse;
+import com.moa.moa_server.domain.group.dto.response.GroupUpdateResponse;
 import com.moa.moa_server.domain.group.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +44,16 @@ public class GroupController {
   public ResponseEntity<ApiResponse<GroupInfoResponse>> getGroupInfo(
       @AuthenticationPrincipal Long userId, @PathVariable Long groupId) {
     GroupInfoResponse response = groupService.getGroupInfo(userId, groupId);
+    return ResponseEntity.status(200).body(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "그룹 정보 수정")
+  @PatchMapping("/{groupId}")
+  public ResponseEntity<ApiResponse<GroupUpdateResponse>> updateGroup(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long groupId,
+      @RequestBody GroupUpdateRequest request) {
+    GroupUpdateResponse response = groupService.updateGroup(userId, groupId, request);
     return ResponseEntity.status(200).body(new ApiResponse<>("SUCCESS", response));
   }
 }

@@ -87,4 +87,8 @@ public class GroupMember {
   public void changeToOwner() {
     this.role = Role.OWNER;
   }
+
+  public boolean isOwnerOrManager() {
+    return this.role == Role.OWNER || this.role == Role.MANAGER;
+  }
 }
