@@ -54,7 +54,10 @@ public class GroupMemberService {
             .filter(GroupMember::isActiveUser)
             .sorted(
                 Comparator.comparingInt(
-                    m -> m.getRole().ordinal())) // OWNER -> MANAGER -> MEMBER 순 정렬
+                        (GroupMember m) -> m.getRole().ordinal()) // OWNER -> MANAGER -> MEMBER 순 정렬
+                    .thenComparing(
+                        m -> m.getUser().getNickname(), Comparator.naturalOrder()) // 닉네임 오름차순 정렬
+                )
             .map(
                 m ->
                     new MemberItem(
