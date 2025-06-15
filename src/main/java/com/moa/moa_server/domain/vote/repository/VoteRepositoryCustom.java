@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.vote.repository;
 
+import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.UpdatedAtVoteIdCursor;
 import com.moa.moa_server.domain.global.cursor.VoteClosedCursor;
 import com.moa.moa_server.domain.global.cursor.VotedAtVoteIdCursor;
@@ -22,4 +23,6 @@ public interface VoteRepositoryCustom {
 
   List<VoteWithVotedAt> findSubmittedVotes(
       User user, List<Group> groups, @Nullable VotedAtVoteIdCursor cursor, int size);
+
+  List<Vote> findVotesInGroup(Group group, @Nullable CreatedAtVoteIdCursor cursor, int size);
 }

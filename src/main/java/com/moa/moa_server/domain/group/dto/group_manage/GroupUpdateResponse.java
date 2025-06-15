@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.group.dto.response;
+package com.moa.moa_server.domain.group.dto.group_manage;
 
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
