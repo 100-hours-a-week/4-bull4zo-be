@@ -144,6 +144,28 @@ public class GroupService {
         group.getCreatedAt());
   }
 
+  /** 그룹 삭제 */
+  @Transactional
+  public GroupDeleteResponse deleteGroup(Long userId, Long groupId) {
+    // 그룹 조회 및 권한 검사
+    Group group =
+        groupRepository
+            .findById(groupId)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+
+    if (!group.isOwnedBy(userId)) {
+      throw new GroupException(GroupErrorCode.NOT_GROUP_OWNER);
+    }
+
+    // 그룹 soft delete
+    group.softDelete();
+
+    // 관련 데이터 처리
+    voteService.deleteVoteByGroupId(groupId); // 투표
+
+    return new GroupDeleteResponse(groupId);
+  }
+
   private String generateUniqueInviteCode() {
     for (int i = 0; i < MAX_INVITE_CODE_RETRY; i++) {
       String code = RandomStringUtils.randomAlphanumeric(6, 8).toUpperCase();
