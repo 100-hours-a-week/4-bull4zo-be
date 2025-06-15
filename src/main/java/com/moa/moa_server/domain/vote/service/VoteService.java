@@ -535,7 +535,7 @@ public class VoteService {
     vote.softDelete();
 
     // 4. 관련 데이터 정리 (존재할 수 있는 경우)
-    commentRepository.softDeleteByVoteId(voteId);
+    voteRelatedDataCleaner.cleanup(voteId);
 
     return new VoteDeleteResponse(voteId);
   }
@@ -622,5 +622,16 @@ public class VoteService {
     List<Group> userGroups = groupMemberRepository.findAllActiveGroupsByUser(user);
 
     return Stream.concat(Stream.of(publicGroup), userGroups.stream()).distinct().toList();
+  }
+
+  public void deleteVoteByGroupId(Long groupId) {
+    // 1. 해당 그룹의 모든 투표 soft delete
+    voteRepository.softDeleteByGroupId(groupId);
+
+    // 2. 각 투표의 연관 데이터 정리
+    List<Long> voteIds = voteRepository.findAllIdsByGroupId(groupId);
+    for (Long voteId : voteIds) {
+      voteRelatedDataCleaner.cleanup(voteId);
+    }
   }
 }
