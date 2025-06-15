@@ -2,6 +2,7 @@ package com.moa.moa_server.domain.comment.controller;
 
 import com.moa.moa_server.domain.comment.dto.request.CommentCreateRequest;
 import com.moa.moa_server.domain.comment.dto.response.CommentCreateResponse;
+import com.moa.moa_server.domain.comment.dto.response.CommentDeleteResponse;
 import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.service.CommentService;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
@@ -40,6 +41,14 @@ public class CommentController {
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) Integer size) {
     CommentListResponse response = commentService.getComments(userId, voteId, cursor, size);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "댓글 삭제", description = "작성한 댓글을 삭제합니다.")
+  @DeleteMapping("/comments/{commentId}")
+  public ResponseEntity<ApiResponse<CommentDeleteResponse>> deleteComment(
+      @AuthenticationPrincipal Long userId, @PathVariable Long commentId) {
+    CommentDeleteResponse response = commentService.deleteComment(userId, commentId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }

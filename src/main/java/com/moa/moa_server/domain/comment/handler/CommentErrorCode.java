@@ -8,6 +8,7 @@ public enum CommentErrorCode implements BaseErrorCode {
   INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST),
   FORBIDDEN(HttpStatus.FORBIDDEN),
   VOTE_NOT_FOUND(HttpStatus.NOT_FOUND),
+  COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND),
   ;
 
   private final HttpStatus status;
