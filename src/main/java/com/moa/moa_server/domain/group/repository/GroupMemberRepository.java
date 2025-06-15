@@ -33,4 +33,6 @@ public interface GroupMemberRepository
   void hardDeleteAllByUserId(@Param("userId") Long userId);
 
   List<GroupMember> findAllByGroupOrderByJoinedAtAsc(Group group);
+
+  List<GroupMember> findAllByGroup(Group group);
 }
