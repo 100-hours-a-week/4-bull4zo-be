@@ -3,6 +3,8 @@ package com.moa.moa_server.domain.group.entity;
 import com.moa.moa_server.domain.user.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Optional;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -45,7 +47,11 @@ public class GroupMember {
   public enum Role {
     OWNER,
     MANAGER,
-    MEMBER
+    MEMBER;
+
+    public static Optional<Role> from(String name) {
+      return Arrays.stream(values()).filter(r -> r.name().equalsIgnoreCase(name)).findFirst();
+    }
   }
 
   public boolean isActive() {
@@ -86,6 +92,10 @@ public class GroupMember {
 
   public void changeToOwner() {
     this.role = Role.OWNER;
+  }
+
+  public void changeRole(Role role) {
+    this.role = role;
   }
 
   public boolean isOwnerOrManager() {
