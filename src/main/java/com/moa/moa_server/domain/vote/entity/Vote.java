@@ -135,6 +135,11 @@ public class Vote extends BaseTimeEntity {
     this.voteStatus = VoteStatus.PENDING; // 항상 상태 초기화
   }
 
+  /** 투표 삭제 */
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
   /** 검열 결과 반영 (상태만 변경) */
   public void updateModerationResult(VoteStatus voteStatus) {
     this.voteStatus = voteStatus;
