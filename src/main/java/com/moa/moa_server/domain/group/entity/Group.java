@@ -67,6 +67,17 @@ public class Group extends BaseTimeEntity {
     this.deletedAt = LocalDateTime.now();
   }
 
+  public void updateInfo(String name, String description, String imageUrl, String imageName) {
+    this.name = name;
+    this.description = description;
+    this.imageUrl = imageUrl;
+    this.imageName = imageName;
+  }
+
+  public void updateInviteCode(String newCode) {
+    this.inviteCode = newCode;
+  }
+
   public void changeOwner(User newOwner) {
     this.user = newOwner;
   }

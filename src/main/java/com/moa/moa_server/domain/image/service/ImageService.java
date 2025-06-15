@@ -136,20 +136,25 @@ public class ImageService {
   }
 
   /**
-   * 투표 이미지 수정 시 S3 이미지 이동/삭제/검증 로직을 처리한다.
+   * 도메인(vote, group) 이미지 수정 시 S3 이미지 이동/삭제/검증 로직을 처리한다.
    *
    * <p>1. 새 이미지가 없으면(oldImageUrl만 존재) 기존 이미지를 S3에서 삭제<br>
-   * 2. 새 이미지가 기존과 동일한 vote/ 경로면(이미 등록된 이미지) 그대로 유지<br>
-   * 3. 새 이미지가 temp/ 경로면 S3에서 vote/ 경로로 이동, 기존 이미지는 삭제<br>
+   * 2. 새 이미지가 기존과 동일한 {domain}/ 경로면(이미 등록된 이미지) 그대로 유지<br>
+   * 3. 새 이미지가 temp/ 경로면 S3에서 {domain}/ 경로로 이동, 기존 이미지는 삭제<br>
    * 4. 그 외 경로는 INVALID_URL 예외 발생
    *
+   * @param domain 도메인명 (vote, group)
    * @param oldImageUrl 기존 이미지 URL (null/빈값 허용)
    * @param newImageUrl 새 이미지 URL (null/빈값: 이미지 삭제)
    * @return S3에 저장된(이동된) 최종 이미지 URL, 이미지가 없으면 빈 문자열 반환
    * @throws ImageException 잘못된 이미지 경로이거나 S3 작업 실패 등 예외
    */
-  public ImageProcessResult processImageOnVoteUpdate(
-      String oldImageUrl, String newImageUrl, String oldImageName, String newImageName) {
+  public ImageProcessResult processImageOnUpdate(
+      String domain,
+      String oldImageUrl,
+      String newImageUrl,
+      String oldImageName,
+      String newImageName) {
     // 1. 새 이미지가 없으면 기존 이미지 삭제 후 빈 문자열 반환
     if (newImageUrl == null || newImageUrl.isBlank()) {
       deleteImage(oldImageUrl);
@@ -161,20 +166,21 @@ public class ImageService {
     String key = getKeyFromUrl(newImageUrl);
 
     // 2. 기존 이미지 유지
-    if (key.startsWith("vote/")) {
+    if (key.startsWith(domain + "/")) {
       // old/new가 완전히 같으면 OK (이미 등록된 이미지)
       if (newImageUrl.equals(oldImageUrl)) {
         return new ImageProcessResult(oldImageUrl, oldImageName);
       }
-      // vote/ 경로지만 값이 다르면, presigned-url 발급/업로드 규칙 위반
+      // {domain}/ 경로지만 값이 다르면, presigned-url 발급/업로드 규칙 위반
       throw new ImageException(ImageErrorCode.INVALID_IMAGE_REUSE);
     }
     // 3. 새로운 이미지 업로드
     else if (key.startsWith("temp/")) {
-      moveImageFromTempToTarget(newImageUrl, "vote");
+      moveImageFromTempToTarget(newImageUrl, domain);
       deleteImage(oldImageUrl);
       return new ImageProcessResult(
-          newImageUrl.replace("/temp/", "/vote/"), newImageName != null ? newImageName : "");
+          newImageUrl.replace("/temp/", "/" + domain + "/"),
+          newImageName != null ? newImageName : "");
     } else {
       throw new ImageException(ImageErrorCode.INVALID_URL);
     }

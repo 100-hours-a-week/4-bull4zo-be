@@ -496,11 +496,16 @@ public class VoteService {
 
     // 4. 이미지 URL/이름 처리
     ImageProcessResult imageResult =
-        imageService.processImageOnVoteUpdate(
-            vote.getImageUrl(), request.imageUrl(), vote.getImageName(), request.imageName());
+        imageService.processImageOnUpdate(
+            "vote",
+            vote.getImageUrl(),
+            request.imageUrl(),
+            vote.getImageName(),
+            request.imageName());
 
     // 5. content, url, closedAt 업데이트 및 저장
-    vote.updateForEdit(request.content(), imageResult.imageUrl(), imageResult.imageName(), utcTime);
+    String sanitizedContent = XssUtil.sanitize(request.content());
+    vote.updateForEdit(sanitizedContent, imageResult.imageUrl(), imageResult.imageName(), utcTime);
     voteRepository.save(vote);
 
     // 6. AI 서버로 검열 요청 (prod 환경에서만)

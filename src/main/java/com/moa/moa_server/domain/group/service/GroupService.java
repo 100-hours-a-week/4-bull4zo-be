@@ -2,9 +2,11 @@ package com.moa.moa_server.domain.group.service;
 
 import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
+import com.moa.moa_server.domain.group.dto.request.GroupUpdateRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupInfoResponse;
+import com.moa.moa_server.domain.group.dto.response.GroupUpdateResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
@@ -12,6 +14,7 @@ import com.moa.moa_server.domain.group.handler.GroupException;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.util.GroupValidator;
+import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
@@ -45,11 +48,7 @@ public class GroupService {
   @Transactional
   public GroupCreateResponse createGroup(Long userId, GroupCreateRequest request) {
     // 유저 조회 및 검증
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
+    User user = findActiveUser(userId);
 
     // 입력 검증
     GroupValidator.validateGroupName(request.name());
@@ -96,12 +95,11 @@ public class GroupService {
   /** 그룹 삭제 */
   @Transactional
   public GroupDeleteResponse deleteGroup(Long userId, Long groupId) {
-    // 그룹 조회 및 권한 검사
-    Group group =
-        groupRepository
-            .findById(groupId)
-            .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+    // 유저 조회 및 검증
+    User user = findActiveUser(userId);
 
+    // 그룹 조회 및 권한 검사 (그룹 소유자만 가능)
+    Group group = findGroup(groupId);
     if (!group.isOwnedBy(userId)) {
       throw new GroupException(GroupErrorCode.NOT_GROUP_OWNER);
     }
@@ -118,11 +116,10 @@ public class GroupService {
   /** 그룹 정보 조회 */
   @Transactional(readOnly = true)
   public GroupInfoResponse getGroupInfo(Long userId, Long groupId) {
+    // 유저 조회 및 검증
+    User user = findActiveUser(userId);
     // 그룹 존재 확인
-    Group group =
-        groupRepository
-            .findById(groupId)
-            .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+    Group group = findGroup(groupId);
 
     // 멤버 여부 확인
     // 그룹 정보는 모든 멤버가 조회 가능
@@ -132,6 +129,36 @@ public class GroupService {
             .orElseThrow(() -> new GroupException(GroupErrorCode.FORBIDDEN));
 
     return new GroupInfoResponse(group, member.getRole().name());
+  }
+
+  /** 그룹 정보 수정 */
+  @Transactional
+  public GroupUpdateResponse updateGroup(Long userId, Long groupId, GroupUpdateRequest request) {
+    // 유저, 그룹 조회, 권한 확인
+    User user = findActiveUser(userId);
+    Group group = findGroup(groupId);
+    GroupMember member = getAuthorizedMember(userId, groupId);
+
+    // 그룹 이름, 소개 유효성 및 중복 검사
+    validateGroupUpdate(request, group);
+
+    // 초대 코드 생성
+    if (request.changeInviteCode()) {
+      String newCode = generateUniqueInviteCode();
+      group.updateInviteCode(newCode);
+    }
+
+    // 이미지 처리
+    ImageProcessResult imageResult = updateGroupImage(group, request);
+
+    // 정보 업데이트
+    group.updateInfo(
+        sanitize(request.name()),
+        sanitize(request.description()),
+        imageResult.imageUrl(),
+        imageResult.imageName());
+
+    return GroupUpdateResponse.of(group, member.getRole());
   }
 
   /** 초대코드 생성 */
@@ -192,5 +219,54 @@ public class GroupService {
           "[GroupService#reassignOrDeleteGroupsOwnedBy] 활성 멤버가 없어 그룹 {}을(를) 삭제했습니다.",
           group.getId() != null ? group.getId() : "unknown");
     }
+  }
+
+  private User findActiveUser(Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+    return user;
+  }
+
+  private Group findGroup(Long groupId) {
+    return groupRepository
+        .findById(groupId)
+        .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+  }
+
+  private GroupMember getAuthorizedMember(Long userId, Long groupId) {
+    GroupMember member =
+        groupMemberRepository
+            .findByGroupAndUserIncludingDeleted(groupId, userId)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.FORBIDDEN));
+    if (!member.isActive() || !member.isOwnerOrManager()) {
+      throw new GroupException(GroupErrorCode.FORBIDDEN);
+    }
+    return member;
+  }
+
+  private void validateGroupUpdate(GroupUpdateRequest request, Group group) {
+    GroupValidator.validateGroupName(request.name());
+    GroupValidator.validateDescription(request.description());
+
+    String newName = sanitize(request.name());
+    if (!group.getName().equals(newName) && groupRepository.existsByName(newName)) {
+      throw new GroupException(GroupErrorCode.DUPLICATED_NAME);
+    }
+  }
+
+  private ImageProcessResult updateGroupImage(Group group, GroupUpdateRequest request) {
+    return imageService.processImageOnUpdate(
+        "group",
+        group.getImageUrl(),
+        request.imageUrl(),
+        group.getImageName(),
+        request.imageName());
+  }
+
+  private String sanitize(String input) {
+    return XssUtil.sanitize(input);
   }
 }
