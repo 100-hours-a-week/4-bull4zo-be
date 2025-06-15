@@ -6,6 +6,7 @@ import com.moa.moa_server.domain.vote.entity.Vote;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Getter
@@ -13,6 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Table(name = "comment")
+@Where(clause = "deleted_at IS NULL")
 public class Comment extends BaseTimeEntity {
 
   @Id
@@ -59,6 +61,10 @@ public class Comment extends BaseTimeEntity {
         .hiddenByReport(false)
         .hiddenByAdmin(false)
         .build();
+  }
+
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
   }
 
   public boolean isDeleted() {
