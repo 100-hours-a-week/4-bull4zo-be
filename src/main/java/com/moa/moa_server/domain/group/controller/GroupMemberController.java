@@ -3,6 +3,7 @@ package com.moa.moa_server.domain.group.controller;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.group.dto.request.ChangeRoleRequest;
 import com.moa.moa_server.domain.group.dto.response.ChangeRoleResponse;
+import com.moa.moa_server.domain.group.dto.response.MemberDeleteResponse;
 import com.moa.moa_server.domain.group.dto.response.MemberListResponse;
 import com.moa.moa_server.domain.group.service.GroupMemberService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +39,16 @@ public class GroupMemberController {
       @RequestBody @Valid ChangeRoleRequest request) {
     ChangeRoleResponse response =
         groupMemberService.changeRole(userId, groupId, targetUserId, request.role());
+    return ResponseEntity.status(200).body(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "그룹 멤버 내보내기", description = "소유자가 그룹 멤버를 그룹에서 내보낼 수 있습니다.")
+  @DeleteMapping("/{groupId}/members/{targetUserId}")
+  public ResponseEntity<ApiResponse<MemberDeleteResponse>> deleteMember(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long groupId,
+      @PathVariable Long targetUserId) {
+    MemberDeleteResponse response = groupMemberService.deleteMember(userId, groupId, targetUserId);
     return ResponseEntity.status(200).body(new ApiResponse<>("SUCCESS", response));
   }
 }
