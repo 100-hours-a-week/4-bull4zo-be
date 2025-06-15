@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.group.dto.response;
+package com.moa.moa_server.domain.group.dto.group_manage;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

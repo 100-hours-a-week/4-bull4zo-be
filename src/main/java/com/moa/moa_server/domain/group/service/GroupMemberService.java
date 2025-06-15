@@ -1,9 +1,9 @@
 package com.moa.moa_server.domain.group.service;
 
-import com.moa.moa_server.domain.group.dto.response.ChangeRoleResponse;
-import com.moa.moa_server.domain.group.dto.response.MemberDeleteResponse;
-import com.moa.moa_server.domain.group.dto.response.MemberItem;
-import com.moa.moa_server.domain.group.dto.response.MemberListResponse;
+import com.moa.moa_server.domain.group.dto.group_member.ChangeRoleResponse;
+import com.moa.moa_server.domain.group.dto.group_member.MemberDeleteResponse;
+import com.moa.moa_server.domain.group.dto.group_member.MemberItem;
+import com.moa.moa_server.domain.group.dto.group_member.MemberListResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
