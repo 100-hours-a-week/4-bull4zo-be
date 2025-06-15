@@ -2,10 +2,8 @@ package com.moa.moa_server.domain.group.service;
 
 import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
-import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
-import com.moa.moa_server.domain.group.dto.response.GroupJoinResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
@@ -41,56 +39,6 @@ public class GroupService {
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
   private final GroupMemberRepository groupMemberRepository;
-
-  /** 그룹 가입 */
-  @Transactional
-  public GroupJoinResponse joinGroup(Long userId, GroupJoinRequest request) {
-    String inviteCode = request.inviteCode().trim().toUpperCase();
-
-    // 초대 코드 형식 검증
-    GroupValidator.validateInviteCode(inviteCode);
-
-    // 유저 조회 및 상태 확인
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    // 초대 코드로 그룹 조회
-    // deletedAt IS NULL 조건은 Group 엔티티의 @Where에서 자동으로 적용됨
-    Group group =
-        groupRepository
-            .findByInviteCode(inviteCode)
-            .orElseThrow(() -> new GroupException(GroupErrorCode.INVITE_CODE_NOT_FOUND));
-
-    // 공개 그룹은 가입 불가
-    if (group.isPublicGroup()) {
-      throw new GroupException(GroupErrorCode.CANNOT_JOIN_PUBLIC_GROUP);
-    }
-
-    // 가입 이력 조회
-    Optional<GroupMember> memberOpt =
-        groupMemberRepository.findByGroupAndUserIncludingDeleted(group.getId(), user.getId());
-
-    GroupMember member;
-    if (memberOpt.isPresent()) {
-      // 가입 이력이 있는 경우
-      member = memberOpt.get();
-
-      if (member.isActive()) { // 이미 가입 상태
-        throw new GroupException(GroupErrorCode.ALREADY_JOINED);
-      } else { // 탈퇴 상태 → 복구
-        member.rejoin();
-      }
-    } else {
-      // 가입 이력이 없는 경우
-      member = GroupMember.create(user, group);
-      groupMemberRepository.save(member);
-    }
-
-    return new GroupJoinResponse(group.getId(), group.getName(), member.getRole().name());
-  }
 
   /** 그룹 생성 */
   @Transactional
@@ -166,6 +114,7 @@ public class GroupService {
     return new GroupDeleteResponse(groupId);
   }
 
+  /** 초대코드 생성 */
   private String generateUniqueInviteCode() {
     for (int i = 0; i < MAX_INVITE_CODE_RETRY; i++) {
       String code = RandomStringUtils.randomAlphanumeric(6, 8).toUpperCase();

@@ -61,12 +61,6 @@ public class GroupMember {
         .build();
   }
 
-  public void rejoin() {
-    this.deletedAt = null;
-    this.joinedAt = LocalDateTime.now();
-    this.role = Role.MEMBER;
-  }
-
   public static GroupMember createAsOwner(User user, Group group) {
     return GroupMember.builder()
         .user(user)
@@ -74,6 +68,16 @@ public class GroupMember {
         .role(Role.OWNER)
         .joinedAt(LocalDateTime.now())
         .build();
+  }
+
+  public void leave() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
+  public void rejoin() {
+    this.deletedAt = null;
+    this.joinedAt = LocalDateTime.now();
+    this.role = Role.MEMBER;
   }
 
   public boolean isActiveUser() {
