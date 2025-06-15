@@ -4,6 +4,7 @@ import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
+import com.moa.moa_server.domain.group.dto.response.GroupInfoResponse;
 import com.moa.moa_server.domain.group.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +34,14 @@ public class GroupController {
   public ResponseEntity<ApiResponse<GroupDeleteResponse>> deleteGroup(
       @AuthenticationPrincipal Long userId, @PathVariable Long groupId) {
     GroupDeleteResponse response = groupService.deleteGroup(userId, groupId);
+    return ResponseEntity.status(200).body(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "그룹 정보 조회")
+  @GetMapping("/{groupId}")
+  public ResponseEntity<ApiResponse<GroupInfoResponse>> getGroupInfo(
+      @AuthenticationPrincipal Long userId, @PathVariable Long groupId) {
+    GroupInfoResponse response = groupService.getGroupInfo(userId, groupId);
     return ResponseEntity.status(200).body(new ApiResponse<>("SUCCESS", response));
   }
 }

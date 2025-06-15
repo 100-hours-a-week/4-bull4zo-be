@@ -4,6 +4,7 @@ import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
 import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
 import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
+import com.moa.moa_server.domain.group.dto.response.GroupInfoResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
@@ -112,6 +113,25 @@ public class GroupService {
     voteService.deleteVoteByGroupId(groupId); // 투표
 
     return new GroupDeleteResponse(groupId);
+  }
+
+  /** 그룹 정보 조회 */
+  @Transactional(readOnly = true)
+  public GroupInfoResponse getGroupInfo(Long userId, Long groupId) {
+    // 그룹 존재 확인
+    Group group =
+        groupRepository
+            .findById(groupId)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+
+    // 멤버 여부 확인
+    // 그룹 정보는 모든 멤버가 조회 가능
+    GroupMember member =
+        groupMemberRepository
+            .findByGroupAndUserIncludingDeleted(groupId, userId)
+            .orElseThrow(() -> new GroupException(GroupErrorCode.FORBIDDEN));
+
+    return new GroupInfoResponse(group, member.getRole().name());
   }
 
   /** 초대코드 생성 */
