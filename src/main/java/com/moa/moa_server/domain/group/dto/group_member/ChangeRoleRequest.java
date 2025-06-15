@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.group.dto.request;
+package com.moa.moa_server.domain.group.dto.group_member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

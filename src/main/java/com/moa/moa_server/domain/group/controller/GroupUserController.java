@@ -1,9 +1,9 @@
 package com.moa.moa_server.domain.group.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
-import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
-import com.moa.moa_server.domain.group.dto.response.GroupJoinResponse;
-import com.moa.moa_server.domain.group.dto.response.GroupLeaveResponse;
+import com.moa.moa_server.domain.group.dto.group_user.GroupJoinRequest;
+import com.moa.moa_server.domain.group.dto.group_user.GroupJoinResponse;
+import com.moa.moa_server.domain.group.dto.group_user.GroupLeaveResponse;
 import com.moa.moa_server.domain.group.service.GroupUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

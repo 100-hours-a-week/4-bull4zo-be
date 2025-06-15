@@ -1,12 +1,12 @@
 package com.moa.moa_server.domain.group.service;
 
 import com.moa.moa_server.domain.global.util.XssUtil;
-import com.moa.moa_server.domain.group.dto.request.GroupCreateRequest;
-import com.moa.moa_server.domain.group.dto.request.GroupUpdateRequest;
-import com.moa.moa_server.domain.group.dto.response.GroupCreateResponse;
-import com.moa.moa_server.domain.group.dto.response.GroupDeleteResponse;
-import com.moa.moa_server.domain.group.dto.response.GroupInfoResponse;
-import com.moa.moa_server.domain.group.dto.response.GroupUpdateResponse;
+import com.moa.moa_server.domain.group.dto.group_manage.GroupCreateRequest;
+import com.moa.moa_server.domain.group.dto.group_manage.GroupCreateResponse;
+import com.moa.moa_server.domain.group.dto.group_manage.GroupDeleteResponse;
+import com.moa.moa_server.domain.group.dto.group_manage.GroupInfoResponse;
+import com.moa.moa_server.domain.group.dto.group_manage.GroupUpdateRequest;
+import com.moa.moa_server.domain.group.dto.group_manage.GroupUpdateResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;

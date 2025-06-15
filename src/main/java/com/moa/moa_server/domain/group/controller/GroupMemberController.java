@@ -1,10 +1,10 @@
 package com.moa.moa_server.domain.group.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
-import com.moa.moa_server.domain.group.dto.request.ChangeRoleRequest;
-import com.moa.moa_server.domain.group.dto.response.ChangeRoleResponse;
-import com.moa.moa_server.domain.group.dto.response.MemberDeleteResponse;
-import com.moa.moa_server.domain.group.dto.response.MemberListResponse;
+import com.moa.moa_server.domain.group.dto.group_member.ChangeRoleRequest;
+import com.moa.moa_server.domain.group.dto.group_member.ChangeRoleResponse;
+import com.moa.moa_server.domain.group.dto.group_member.MemberDeleteResponse;
+import com.moa.moa_server.domain.group.dto.group_member.MemberListResponse;
 import com.moa.moa_server.domain.group.service.GroupMemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

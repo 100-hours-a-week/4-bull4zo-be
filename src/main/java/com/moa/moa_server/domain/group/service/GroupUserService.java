@@ -1,8 +1,8 @@
 package com.moa.moa_server.domain.group.service;
 
-import com.moa.moa_server.domain.group.dto.request.GroupJoinRequest;
-import com.moa.moa_server.domain.group.dto.response.GroupJoinResponse;
-import com.moa.moa_server.domain.group.dto.response.GroupLeaveResponse;
+import com.moa.moa_server.domain.group.dto.group_user.GroupJoinRequest;
+import com.moa.moa_server.domain.group.dto.group_user.GroupJoinResponse;
+import com.moa.moa_server.domain.group.dto.group_user.GroupLeaveResponse;
 import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.handler.GroupErrorCode;
