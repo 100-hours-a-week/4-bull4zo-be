@@ -2,9 +2,12 @@ package com.moa.moa_server.domain.comment.service;
 
 import com.moa.moa_server.domain.comment.dto.request.CommentCreateRequest;
 import com.moa.moa_server.domain.comment.dto.response.CommentCreateResponse;
+import com.moa.moa_server.domain.comment.dto.response.CommentDeleteResponse;
 import com.moa.moa_server.domain.comment.dto.response.CommentItem;
 import com.moa.moa_server.domain.comment.dto.response.CommentListResponse;
 import com.moa.moa_server.domain.comment.entity.Comment;
+import com.moa.moa_server.domain.comment.handler.CommentErrorCode;
+import com.moa.moa_server.domain.comment.handler.CommentException;
 import com.moa.moa_server.domain.comment.repository.CommentRepository;
 import com.moa.moa_server.domain.comment.service.context.CommentPermissionContext;
 import com.moa.moa_server.domain.comment.service.context.CommentPermissionContextFactory;
@@ -98,6 +101,25 @@ public class CommentService {
 
     // 응답
     return new CommentListResponse(voteId, items, nextCursor, hasNext, items.size());
+  }
+
+  /** 댓글 삭제 */
+  @Transactional
+  public CommentDeleteResponse deleteComment(Long userId, Long commentId) {
+    Comment comment =
+        commentRepository
+            .findById(commentId)
+            .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
+
+    if (!comment.getUser().getId().equals(userId)) {
+      throw new CommentException(CommentErrorCode.FORBIDDEN);
+    }
+
+    if (!comment.isDeleted()) {
+      comment.softDelete();
+    }
+
+    return new CommentDeleteResponse(commentId);
   }
 
   /** 댓글 테이블에서 익명 번호 조회 및 할당 */
