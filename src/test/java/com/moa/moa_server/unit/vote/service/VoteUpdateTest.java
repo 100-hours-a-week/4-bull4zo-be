@@ -50,7 +50,7 @@ public class VoteUpdateTest {
       when(vote.getId()).thenReturn(voteId);
       when(vote.getUser()).thenReturn(user);
       when(vote.getVoteStatus()).thenReturn(Vote.VoteStatus.REJECTED);
-      when(imageService.processImageOnVoteUpdate(any(), any(), any(), any()))
+      when(imageService.processImageOnUpdate(eq("vote"), any(), any(), any(), any()))
           .thenReturn(new ImageProcessResult("vote/abc.jpg", "파일이름.jpeg"));
 
       // when
@@ -90,7 +90,7 @@ public class VoteUpdateTest {
       when(vote.getVoteStatus()).thenReturn(Vote.VoteStatus.REJECTED);
 
       // 기존 이미지와 동일한 경우 그대로 반환
-      when(imageService.processImageOnVoteUpdate(any(), any(), any(), any()))
+      when(imageService.processImageOnUpdate(eq("vote"), any(), any(), any(), any()))
           .thenReturn(new ImageProcessResult(oldImageUrl, oldImageName));
 
       // when
@@ -127,7 +127,7 @@ public class VoteUpdateTest {
       when(vote.getVoteStatus()).thenReturn(Vote.VoteStatus.REJECTED);
 
       // 빈 이미지면 기존 이미지 삭제 & 빈 문자열 반환
-      when(imageService.processImageOnVoteUpdate(any(), any(), any(), any()))
+      when(imageService.processImageOnUpdate(eq("vote"), any(), any(), any(), any()))
           .thenReturn(new ImageProcessResult("", ""));
 
       // when
@@ -137,7 +137,7 @@ public class VoteUpdateTest {
       assertThat(resp.voteId()).isEqualTo(voteId);
       verify(vote).updateForEdit(eq("본문"), eq(""), eq(""), any(LocalDateTime.class));
       verify(voteRepository).save(any(Vote.class));
-      verify(imageService).processImageOnVoteUpdate(any(), any(), any(), any());
+      verify(imageService).processImageOnUpdate(eq("vote"), any(), any(), any(), any());
     }
   }
 }
