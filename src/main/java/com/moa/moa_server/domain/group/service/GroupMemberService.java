@@ -159,13 +159,13 @@ public class GroupMemberService {
         groupMemberRepository
             .findByGroupAndUser(group, requester)
             .orElseThrow(() -> new GroupException(GroupErrorCode.FORBIDDEN));
-    if (requesterMember.getRole() != GroupMember.Role.OWNER) { // 소유자만 권한 있음
+    if (!requesterMember.isOwnerOrManager()) { // 그룹 소유자, 관리자만 가능
       throw new GroupException(GroupErrorCode.FORBIDDEN);
     }
 
     // 대상 사용자 조회
     if (requesterId.equals(targetUserId)) {
-      throw new GroupException(GroupErrorCode.CANNOT_KICK_SELF); // 자기 자신(소유자)은 불가
+      throw new GroupException(GroupErrorCode.CANNOT_KICK_SELF); // 스스로 추방 불가
     }
 
     User targetUser = findActiveUser(targetUserId);
@@ -174,6 +174,11 @@ public class GroupMemberService {
         groupMemberRepository
             .findByGroupAndUser(group, targetUser)
             .orElseThrow(() -> new GroupException(GroupErrorCode.MEMBERSHIP_NOT_FOUND));
+
+    // 매니저는 일반 멤버만 추방 가능
+    if (requesterMember.isManager() && targetMember.isOwnerOrManager()) {
+      throw new GroupException(GroupErrorCode.FORBIDDEN);
+    }
 
     // 실제 추방 처리 (Soft Delete)
     targetMember.leave();

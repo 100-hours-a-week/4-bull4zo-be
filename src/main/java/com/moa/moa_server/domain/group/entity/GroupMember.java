@@ -101,4 +101,8 @@ public class GroupMember {
   public boolean isOwnerOrManager() {
     return this.role == Role.OWNER || this.role == Role.MANAGER;
   }
+
+  public boolean isManager() {
+    return this.role == Role.MANAGER;
+  }
 }
