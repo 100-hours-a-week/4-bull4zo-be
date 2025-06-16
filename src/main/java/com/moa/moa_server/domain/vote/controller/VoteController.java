@@ -4,9 +4,8 @@ import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.global.dto.ApiResponseVoid;
 import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
-import com.moa.moa_server.domain.vote.dto.response.VoteCreateResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
+import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
+import com.moa.moa_server.domain.vote.dto.response.*;
 import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
@@ -111,6 +110,24 @@ public class VoteController {
   public ResponseEntity<ApiResponse<VoteModerationReasonResponse>> getModerationReason(
       @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
     VoteModerationReasonResponse response = voteService.getModerationReason(userId, voteId);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "투표 수정", description = "등록 실패한 투표의 내용을 수정합니다.")
+  @PatchMapping("/{voteId}")
+  public ResponseEntity<ApiResponse<VoteUpdateResponse>> updateVote(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long voteId,
+      @RequestBody VoteUpdateRequest request) {
+    VoteUpdateResponse response = voteService.updateVote(userId, voteId, request);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "투표 삭제", description = "등록 실패한 투표를 삭제합니다.")
+  @DeleteMapping("/{voteId}")
+  public ResponseEntity<ApiResponse<VoteDeleteResponse>> deleteVote(
+      @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
+    VoteDeleteResponse response = voteService.deleteVote(userId, voteId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }

@@ -1,7 +1,7 @@
 package com.moa.moa_server.domain.global.cursor;
 
-import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
-import com.moa.moa_server.domain.vote.handler.VoteException;
+import com.moa.moa_server.domain.group.handler.GroupErrorCode;
+import com.moa.moa_server.domain.group.handler.GroupException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -16,13 +16,13 @@ public record CreatedAtVoteIdCursor(LocalDateTime createdAt, Long voteId) {
       String[] parts = cursor.split("_");
       if (parts.length != 2) {
         log.warn("[CreatedAtVoteIdCursor#parse] Cursor must contain exactly two parts.");
-        throw new VoteException(VoteErrorCode.INVALID_CURSOR_FORMAT);
+        throw new GroupException(GroupErrorCode.INVALID_CURSOR_FORMAT);
       }
       return new CreatedAtVoteIdCursor(LocalDateTime.parse(parts[0]), Long.parseLong(parts[1]));
     } catch (DateTimeParseException | NumberFormatException e) {
       log.warn(
           "[CreatedAtVoteIdCursor#parse] Failed to parse cursor '{}': {}", cursor, e.toString());
-      throw new VoteException(VoteErrorCode.INVALID_CURSOR_FORMAT);
+      throw new GroupException(GroupErrorCode.INVALID_CURSOR_FORMAT);
     }
   }
 

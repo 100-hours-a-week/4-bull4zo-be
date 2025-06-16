@@ -3,6 +3,7 @@ package com.moa.moa_server.domain.image.service;
 import com.moa.moa_server.domain.image.dto.PresignedUrlResponse;
 import com.moa.moa_server.domain.image.handler.ImageErrorCode;
 import com.moa.moa_server.domain.image.handler.ImageException;
+import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -37,6 +38,7 @@ public class ImageService {
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
+  @Setter
   @Value("${cdn.image-base-url}")
   private String cdnBaseUrl;
 
@@ -84,7 +86,7 @@ public class ImageService {
   }
 
   /** S3의 temp 폴더에서 vote/group 폴더로 이미지를 복사하고 원복 삭제 */
-  public void moveImageFromTempToVote(String tempImageUrl, String targetDir) {
+  public void moveImageFromTempToTarget(String tempImageUrl, String targetDir) {
     if (tempImageUrl == null || tempImageUrl.isBlank()) return;
     String tempKey = getKeyFromUrl(tempImageUrl); // "temp/uuid"
     if (!tempKey.startsWith("temp/")) return; // 보안상 체크
@@ -93,7 +95,7 @@ public class ImageService {
     String targetKey = tempKey.replaceFirst("temp/", targetDir + "/");
 
     log.info(
-        "[ImageService#moveImageFromTempToVote] 파일 이동 시도: tempKey {} to targetKey {}",
+        "[ImageService#moveImageFromTempToTarget] 파일 이동 시도: tempKey {} to targetKey {}",
         tempKey,
         targetKey);
 
@@ -108,7 +110,7 @@ public class ImageService {
       // S3 원본 삭제
       s3Client.deleteObject(builder -> builder.bucket(bucket).key(tempKey));
 
-      log.info("[ImageService#moveImageFromTempToVote] 파일 이동 성공");
+      log.info("[ImageService#moveImageFromTempToTarget] 파일 이동 성공");
     } catch (NoSuchKeyException e) {
       throw new ImageException(ImageErrorCode.FILE_NOT_FOUND);
     } catch (S3Exception e) {
@@ -129,6 +131,57 @@ public class ImageService {
   public void validateImageUrl(String imageUrl) {
     if (imageUrl == null || imageUrl.isBlank()) return;
     if (!imageUrl.startsWith(cdnBaseUrl)) {
+      throw new ImageException(ImageErrorCode.INVALID_URL);
+    }
+  }
+
+  /**
+   * 도메인(vote, group) 이미지 수정 시 S3 이미지 이동/삭제/검증 로직을 처리한다.
+   *
+   * <p>1. 새 이미지가 없으면(oldImageUrl만 존재) 기존 이미지를 S3에서 삭제<br>
+   * 2. 새 이미지가 기존과 동일한 {domain}/ 경로면(이미 등록된 이미지) 그대로 유지<br>
+   * 3. 새 이미지가 temp/ 경로면 S3에서 {domain}/ 경로로 이동, 기존 이미지는 삭제<br>
+   * 4. 그 외 경로는 INVALID_URL 예외 발생
+   *
+   * @param domain 도메인명 (vote, group)
+   * @param oldImageUrl 기존 이미지 URL (null/빈값 허용)
+   * @param newImageUrl 새 이미지 URL (null/빈값: 이미지 삭제)
+   * @return S3에 저장된(이동된) 최종 이미지 URL, 이미지가 없으면 빈 문자열 반환
+   * @throws ImageException 잘못된 이미지 경로이거나 S3 작업 실패 등 예외
+   */
+  public ImageProcessResult processImageOnUpdate(
+      String domain,
+      String oldImageUrl,
+      String newImageUrl,
+      String oldImageName,
+      String newImageName) {
+    // 1. 새 이미지가 없으면 기존 이미지 삭제 후 빈 문자열 반환
+    if (newImageUrl == null || newImageUrl.isBlank()) {
+      deleteImage(oldImageUrl);
+      return new ImageProcessResult("", "");
+    }
+
+    // 이미지 URL 형식/버킷 검증
+    validateImageUrl(newImageUrl);
+    String key = getKeyFromUrl(newImageUrl);
+
+    // 2. 기존 이미지 유지
+    if (key.startsWith(domain + "/")) {
+      // old/new가 완전히 같으면 OK (이미 등록된 이미지)
+      if (newImageUrl.equals(oldImageUrl)) {
+        return new ImageProcessResult(oldImageUrl, oldImageName);
+      }
+      // {domain}/ 경로지만 값이 다르면, presigned-url 발급/업로드 규칙 위반
+      throw new ImageException(ImageErrorCode.INVALID_IMAGE_REUSE);
+    }
+    // 3. 새로운 이미지 업로드
+    else if (key.startsWith("temp/")) {
+      moveImageFromTempToTarget(newImageUrl, domain);
+      deleteImage(oldImageUrl);
+      return new ImageProcessResult(
+          newImageUrl.replace("/temp/", "/" + domain + "/"),
+          newImageName != null ? newImageName : "");
+    } else {
       throw new ImageException(ImageErrorCode.INVALID_URL);
     }
   }

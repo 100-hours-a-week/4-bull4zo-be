@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'com.moa'
-version = 'v1.4.1'
+version = 'v2.0.0'
 
 java {
 	toolchain {
@@ -73,12 +73,14 @@ dependencies {
 	// 기타
 	implementation "org.apache.httpcomponents.client5:httpclient5:5.4.4" // RestTemplate
 	implementation 'com.navercorp.lucy:lucy-xss:1.6.3' // XSS Filtering
+  implementation 'com.fasterxml.jackson.core:jackson-databind' // JSON 직렬화/역직렬화
 
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
   testImplementation 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+  testImplementation 'com.jayway.jsonpath:json-path'
 
   // Prometheus / Micrometer
   implementation 'org.springframework.boot:spring-boot-starter-actuator'

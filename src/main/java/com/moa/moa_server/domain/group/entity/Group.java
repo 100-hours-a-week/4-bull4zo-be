@@ -63,15 +63,30 @@ public class Group extends BaseTimeEntity {
         .build();
   }
 
-  public boolean isPublicGroup() {
-    return this.id != null && this.id.equals(PUBLIC_GROUP_ID);
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
+  public void updateInfo(String name, String description, String imageUrl, String imageName) {
+    this.name = name;
+    this.description = description;
+    this.imageUrl = imageUrl;
+    this.imageName = imageName;
+  }
+
+  public void updateInviteCode(String newCode) {
+    this.inviteCode = newCode;
   }
 
   public void changeOwner(User newOwner) {
     this.user = newOwner;
   }
 
-  public void softDelete() {
-    this.deletedAt = LocalDateTime.now();
+  public boolean isPublicGroup() {
+    return this.id != null && this.id.equals(PUBLIC_GROUP_ID);
+  }
+
+  public boolean isOwnedBy(long userId) {
+    return this.user.getId().equals(userId);
   }
 }

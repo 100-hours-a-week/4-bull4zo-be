@@ -1,6 +1,9 @@
 spring:
+  config:
+    activate:
+      on-profile: test
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;MODE=MYSQL
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -8,3 +11,46 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+  sql:
+    init:
+      mode: always
+
+jwt:
+  secret: qjN9SPLXUJtM6MxwTqz8RP9WBJgA9bBdMPVFC3e0w/k=
+
+kakao:
+  token-uri: dummy
+  user-info-uri: dummy
+  unlink-uri: dummy
+  client-id: dummy
+  redirect-uri: dummy
+  admin-key: dummy
+
+ai:
+  server-url: dummy
+mock:
+  ai:
+    enabled: true
+
+cloud:
+  aws:
+    credentials:
+      access-key: dummy
+      secret-key: dummy
+    region:
+      static: dummy
+    s3:
+      bucket: test-bucket
+
+cdn:
+  image-base-url: https://test-cdn.com/
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.filter: DEBUG
+    #    org.hibernate.type.descriptor.sql: trace
+    com.moa.moa_server.domain.vote.service.v3: DEBUG
