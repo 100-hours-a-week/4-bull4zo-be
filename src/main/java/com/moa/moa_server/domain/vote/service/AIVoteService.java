@@ -17,8 +17,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AIVoteService {
@@ -56,6 +58,8 @@ public class AIVoteService {
 
     voteRepository.save(vote);
     voteResultRedisService.setCountsWithTTL(vote.getId(), Map.of(1, 0, 2, 0), vote.getClosedAt());
+
+    log.info("[AIVoteService#createVote] AI 투표 저장 완료: {}", vote);
 
     return vote.getId();
   }
