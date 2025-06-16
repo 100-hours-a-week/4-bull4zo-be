@@ -106,10 +106,10 @@ public class Vote extends BaseTimeEntity {
       String imageName,
       LocalDateTime openAt,
       LocalDateTime closedAt,
-      User systemUser,
+      User systemAIUser,
       Group publicGroup) {
     return Vote.builder()
-        .user(systemUser) // 시스템 유저
+        .user(systemAIUser) // 시스템 AI 유저
         .group(publicGroup) // 공개 그룹
         .content(content)
         .imageUrl(imageUrl)

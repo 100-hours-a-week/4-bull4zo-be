@@ -45,14 +45,14 @@ public class AIVoteService {
     String imageUrl = processImageUrl(request.imageUrl());
     String imageName = processImageName(request.imageName());
 
-    // 시스템 유저 / 공개 그룹 조회
-    User systemUser = getSystemUser();
+    // 시스템 AI 유저 / 공개 그룹 조회
+    User systemAIUser = getSystemAIUser();
     Group publicGroup = getPublicGroup();
 
     // Vote 생성 및 저장
     Vote vote =
         Vote.createAIVote(
-            request.content(), imageUrl, imageName, openUtc, closedUtc, systemUser, publicGroup);
+            request.content(), imageUrl, imageName, openUtc, closedUtc, systemAIUser, publicGroup);
 
     voteRepository.save(vote);
     voteResultRedisService.setCountsWithTTL(vote.getId(), Map.of(1, 0, 2, 0), vote.getClosedAt());
@@ -80,10 +80,10 @@ public class AIVoteService {
     return XssUtil.sanitize(name.trim());
   }
 
-  private User getSystemUser() {
+  private User getSystemAIUser() {
     return userRepository
-        .findById(SystemConstants.SYSTEM_USER_ID)
-        .orElseThrow(() -> new IllegalStateException("System user not found"));
+        .findById(SystemConstants.SYSTEM_AI_USER_ID)
+        .orElseThrow(() -> new IllegalStateException("System ai user not found"));
   }
 
   private Group getPublicGroup() {
