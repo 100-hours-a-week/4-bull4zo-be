@@ -24,7 +24,7 @@ public class AsyncConfig {
     return executor;
   }
 
-  // CommentPollingService 전용 스레드풀
+  // 댓글 롱폴링 전용 스레드풀
   @Bean(name = "commentPollingExecutor")
   public ThreadPoolTaskExecutor commentPollingExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -35,6 +35,18 @@ public class AsyncConfig {
         new ThreadPoolExecutor.AbortPolicy() // 작업 거부 및 예외 발생 (FE에서 재요청 유도)
         ); // 풀이 가득 찼을 때 대응
     executor.setThreadNamePrefix("comment-polling-"); // 스레드 이름
+    executor.initialize();
+    return executor;
+  }
+
+  // NotificationHandler 전용 스레드풀
+  @Bean(name = "notificationExecutor")
+  public Executor notificationExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(3); // 자주 발생하지만 빠르게 끝나는 작업이므로 작게 시작
+    executor.setMaxPoolSize(6);
+    executor.setQueueCapacity(100); // 초당 수십 건 수준이면 충분
+    executor.setThreadNamePrefix("notification-async-");
     executor.initialize();
     return executor;
   }
