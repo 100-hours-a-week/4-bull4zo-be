@@ -25,6 +25,9 @@ kakao:
   redirect-uri: http://localhost:8080/api/v1/auth/login/oauth
   admin-key: ${KAKAO_ADMIN_KEY}
 
+frontend:
+  url: https://test-domain.com
+
 ai:
   server-url: ${AI_SERVER_URL}
 mock:

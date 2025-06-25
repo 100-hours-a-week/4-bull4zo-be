@@ -26,6 +26,9 @@ kakao:
   redirect-uri: dummy
   admin-key: dummy
 
+frontend:
+  url: https://test-domain.com
+
 ai:
   server-url: dummy
 mock:
@@ -44,7 +47,6 @@ cloud:
 
 cdn:
   image-base-url: https://test-cdn.com/
-
 
 logging:
   level:

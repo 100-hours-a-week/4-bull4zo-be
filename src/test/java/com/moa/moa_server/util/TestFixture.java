@@ -2,6 +2,7 @@ package com.moa.moa_server.util;
 
 import com.moa.moa_server.domain.comment.entity.Comment;
 import com.moa.moa_server.domain.group.entity.Group;
+import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
@@ -40,5 +41,14 @@ public class TestFixture {
 
   public static Comment comment(Vote vote, User user, String content, int anonymousNumber) {
     return Comment.create(user, vote, content, anonymousNumber);
+  }
+
+  public static GroupMember groupMember(User user, Group group, String role) {
+    if (role.equals("OWNER")) {
+      return GroupMember.createAsOwner(user, group);
+    } else if (role.equals("MEMBER")) {
+      return GroupMember.create(user, group);
+    }
+    throw new IllegalArgumentException("Invalid role: " + role);
   }
 }
