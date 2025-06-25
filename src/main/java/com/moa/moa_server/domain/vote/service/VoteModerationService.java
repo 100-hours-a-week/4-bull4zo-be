@@ -1,6 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
-import com.moa.moa_server.domain.notification.producer.VoteNotificationProducerImpl;
+import com.moa.moa_server.domain.notification.application.producer.VoteNotificationProducerImpl;
 import com.moa.moa_server.domain.vote.dto.moderation.VoteModerationCallbackRequest;
 import com.moa.moa_server.domain.vote.dto.moderation.VoteModerationCallbackResponse;
 import com.moa.moa_server.domain.vote.dto.moderation.VoteModerationRequest;

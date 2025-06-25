@@ -14,7 +14,7 @@ import com.moa.moa_server.domain.comment.service.context.CommentPermissionContex
 import com.moa.moa_server.domain.comment.util.CommentNicknameUtil;
 import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
-import com.moa.moa_server.domain.notification.producer.VoteNotificationProducerImpl;
+import com.moa.moa_server.domain.notification.application.producer.VoteNotificationProducerImpl;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;

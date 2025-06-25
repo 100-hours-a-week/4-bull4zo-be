@@ -1,8 +1,8 @@
-package com.moa.moa_server.domain.notification.producer;
+package com.moa.moa_server.domain.notification.application.producer;
 
+import com.moa.moa_server.domain.notification.application.event.EventPublisher;
+import com.moa.moa_server.domain.notification.application.event.NotificationEvent;
 import com.moa.moa_server.domain.notification.entity.NotificationType;
-import com.moa.moa_server.domain.notification.event.EventPublisher;
-import com.moa.moa_server.domain.notification.event.NotificationEvent;
 import com.moa.moa_server.domain.notification.util.NotificationContentFormatter;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;

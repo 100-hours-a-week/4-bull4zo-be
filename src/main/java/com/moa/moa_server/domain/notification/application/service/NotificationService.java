@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.notification.service;
+package com.moa.moa_server.domain.notification.application.service;
 
 import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.cursor.CreatedAtNotificationIdCursor;

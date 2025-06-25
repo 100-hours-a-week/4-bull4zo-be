@@ -1,4 +1,4 @@
-package com.moa.moa_server.domain.notification.event;
+package com.moa.moa_server.domain.notification.application.event;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

@@ -16,7 +16,7 @@ import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.util.GroupValidator;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
-import com.moa.moa_server.domain.notification.producer.GroupNotificationProducerImpl;
+import com.moa.moa_server.domain.notification.application.producer.GroupNotificationProducerImpl;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;

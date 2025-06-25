@@ -1,9 +1,9 @@
 package com.moa.moa_server.domain.notification.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
+import com.moa.moa_server.domain.notification.application.service.NotificationService;
 import com.moa.moa_server.domain.notification.dto.NotificationListResponse;
 import com.moa.moa_server.domain.notification.dto.NotificationReadResponse;
-import com.moa.moa_server.domain.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
