@@ -3,11 +3,13 @@ package com.moa.moa_server.domain.notification.producer;
 import com.moa.moa_server.domain.notification.entity.NotificationType;
 import com.moa.moa_server.domain.notification.event.EventPublisher;
 import com.moa.moa_server.domain.notification.event.NotificationEvent;
+import com.moa.moa_server.domain.notification.util.NotificationContentFormatter;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,7 +19,10 @@ public class VoteNotificationProducerImpl implements NotificationProducer {
   private final VoteRepository voteRepository;
   private final EventPublisher eventPublisher;
 
-  public void notifyVoteCommented(Long voteId, Long commenterId) {
+  @Value("${frontend.url}")
+  private String frontendUrl;
+
+  public void notifyVoteCommented(Long voteId, Long commenterId, String commentContent) {
     Vote vote =
         voteRepository
             .findById(voteId)
@@ -29,12 +34,16 @@ public class VoteNotificationProducerImpl implements NotificationProducer {
       return;
     }
 
-    String content = "내 투표에 댓글이 달렸습니다.";
-    String url = "https://moagenda.com/research/" + voteId;
+    String content = NotificationContentFormatter.truncateComment(commentContent); // 알림 내용
+    String url = getCommentUrl(voteId); // 알림 URL
 
     // 이벤트 발행
     NotificationEvent event =
         NotificationEvent.forSingleUser(authorId, NotificationType.MY_VOTE_COMMENT, content, url);
     eventPublisher.publish(event);
+  }
+
+  private String getCommentUrl(Long voteId) {
+    return String.format("%s/research/%d", frontendUrl, voteId);
   }
 }

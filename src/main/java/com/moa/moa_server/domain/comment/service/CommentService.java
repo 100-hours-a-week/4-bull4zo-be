@@ -67,7 +67,7 @@ public class CommentService {
         CommentNicknameUtil.generateNickname(
             request.anonymous(), anonymousNumber, user.getNickname());
 
-    voteNotificationProducer.notifyVoteCommented(voteId, userId);
+    voteNotificationProducer.notifyVoteCommented(voteId, userId, comment.getContent());
 
     return new CommentCreateResponse(
         comment.getId(), comment.getContent(), authorNickname, comment.getCreatedAt());

@@ -89,4 +89,29 @@ public class VoteCommentNotificationIntegrationTest {
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(() -> assertThat(notificationRepository.findAll()).isEmpty());
   }
+
+  @Test
+  @DisplayName("댓글 내용이 36자를 초과하면 알림 내용이 36자로 잘린 후 '...'이 붙는다")
+  void notificationContentIsTrimmedIfCommentIsTooLong() {
+    // given
+    voteResponseRepository.save(voteResponse(vote, commenter, 1));
+    String longComment = "이 댓글은 36자를 넘는 매우 긴 댓글입니다. 총 37글자 입니다.";
+    CommentCreateRequest request = new CommentCreateRequest(longComment, false);
+
+    // when
+    commentService.createComment(commenter.getId(), vote.getId(), request);
+
+    // then
+    await()
+        .atMost(2, TimeUnit.SECONDS)
+        .untilAsserted(
+            () -> {
+              var notifications = notificationRepository.findAll();
+              assertThat(notifications).hasSize(1);
+              var content = notifications.getFirst().getContent();
+              assertThat(content.length()).isLessThanOrEqualTo(39); // 36 + "..."
+              assertThat(content).startsWith(longComment.substring(0, 36));
+              assertThat(content).endsWith("...");
+            });
+  }
 }
