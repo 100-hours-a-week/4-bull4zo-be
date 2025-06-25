@@ -16,6 +16,7 @@ import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.group.util.GroupValidator;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
+import com.moa.moa_server.domain.notification.application.producer.GroupNotificationProducerImpl;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -39,6 +40,7 @@ public class GroupService {
 
   private final ImageService imageService;
   private final VoteService voteService;
+  private final GroupNotificationProducerImpl groupNotificationProducer;
 
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
@@ -109,6 +111,9 @@ public class GroupService {
 
     // 관련 데이터 처리
     voteService.deleteVoteByGroupId(groupId); // 투표
+
+    // 알림 이벤트 발생
+    groupNotificationProducer.notifyAllMembersGroupDeleted(group);
 
     return new GroupDeleteResponse(groupId);
   }
