@@ -17,10 +17,12 @@ public class GroupNotificationProducerImpl implements NotificationProducer {
   private final EventPublisher eventPublisher;
 
   public void notifyAllMembersGroupDeleted(Group group) {
+    Long ownerId = group.getUser().getId();
 
     List<Long> members =
         groupMemberRepository.findAllByGroup(group).stream()
             .map(GroupMember -> GroupMember.getUser().getId())
+            .filter(id -> !id.equals(ownerId)) // 그룹 소유자 제외
             .toList();
 
     String content = group.getName() + " 그룹이 삭제되었습니다.";
