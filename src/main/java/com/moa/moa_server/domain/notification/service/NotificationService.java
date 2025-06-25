@@ -4,7 +4,10 @@ import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.cursor.CreatedAtNotificationIdCursor;
 import com.moa.moa_server.domain.notification.dto.NotificationItem;
 import com.moa.moa_server.domain.notification.dto.NotificationListResponse;
+import com.moa.moa_server.domain.notification.dto.NotificationReadResponse;
 import com.moa.moa_server.domain.notification.entity.Notification;
+import com.moa.moa_server.domain.notification.handler.NotificationErrorCode;
+import com.moa.moa_server.domain.notification.handler.NotificationException;
 import com.moa.moa_server.domain.notification.repository.NotificationRepository;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
@@ -58,5 +61,36 @@ public class NotificationService {
 
     // 응답
     return new NotificationListResponse(items, nextCursor, hasNext, notifications.size());
+  }
+
+  @Transactional
+  public NotificationReadResponse readNotification(Long userId, Long notificationId) {
+    // 유저 조회 및 유효성 검사
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+
+    // 알림 조회
+    Notification notification =
+        notificationRepository
+            .findById(notificationId)
+            .orElseThrow(
+                () -> new NotificationException(NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+
+    // 권한 조회
+    validateOwner(user, notification);
+
+    // 읽음 처리
+    notification.markAsRead();
+
+    return new NotificationReadResponse(notification.getId());
+  }
+
+  private void validateOwner(User user, Notification notification) {
+    if (!user.equals(notification.getUser())) {
+      throw new NotificationException(NotificationErrorCode.FORBIDDEN);
+    }
   }
 }

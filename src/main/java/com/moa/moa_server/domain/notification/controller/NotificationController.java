@@ -2,16 +2,14 @@ package com.moa.moa_server.domain.notification.controller;
 
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.notification.dto.NotificationListResponse;
+import com.moa.moa_server.domain.notification.dto.NotificationReadResponse;
 import com.moa.moa_server.domain.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Notification", description = "알림 도메인 API")
 @RestController
@@ -28,6 +26,15 @@ public class NotificationController {
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) Integer size) {
     NotificationListResponse response = notificationService.getNotifications(userId, cursor, size);
+    return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
+  }
+
+  @Operation(summary = "알림 읽음 처리", description = "사용자의 알림을 읽음 처리합니다.")
+  @PatchMapping("/{notificationId}/read")
+  public ResponseEntity<ApiResponse<NotificationReadResponse>> readNotification(
+      @AuthenticationPrincipal Long userId, @PathVariable Long notificationId) {
+    NotificationReadResponse response =
+        notificationService.readNotification(userId, notificationId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }
