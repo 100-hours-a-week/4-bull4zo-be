@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.vote.service;
 
+import com.moa.moa_server.domain.notification.producer.VoteNotificationProducerImpl;
 import com.moa.moa_server.domain.vote.dto.moderation.VoteModerationCallbackRequest;
 import com.moa.moa_server.domain.vote.dto.moderation.VoteModerationCallbackResponse;
 import com.moa.moa_server.domain.vote.dto.moderation.VoteModerationRequest;
@@ -27,6 +28,8 @@ public class VoteModerationService {
 
   private final VoteRepository voteRepository;
   private final VoteModerationLogRepository moderationLogRepository;
+
+  private final VoteNotificationProducerImpl voteNotificationProducer;
 
   private final RestTemplate restTemplate;
 
@@ -77,8 +80,10 @@ public class VoteModerationService {
     // 상태 반영
     if (reviewResult == VoteModerationLog.ReviewResult.REJECTED) {
       vote.updateModerationResult(Vote.VoteStatus.REJECTED);
+      voteNotificationProducer.notifyVoteRejected(vote);
     } else if (reviewResult == VoteModerationLog.ReviewResult.APPROVED) {
       vote.updateModerationResult(Vote.VoteStatus.OPEN);
+      voteNotificationProducer.notifyVoteApproved(vote);
     }
 
     // 로그 저장

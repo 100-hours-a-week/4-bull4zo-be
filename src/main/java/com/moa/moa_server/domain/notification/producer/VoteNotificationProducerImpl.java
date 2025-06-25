@@ -23,27 +23,41 @@ public class VoteNotificationProducerImpl implements NotificationProducer {
   private String frontendUrl;
 
   public void notifyVoteCommented(Long voteId, Long commenterId, String commentContent) {
-    Vote vote =
-        voteRepository
-            .findById(voteId)
-            .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+    sendSingleVoteNotification(
+        voteId, NotificationType.MY_VOTE_COMMENT, commentContent, commenterId);
+  }
+
+  public void notifyVoteApproved(Vote vote) {
+    sendSingleVoteNotification(
+        vote.getId(), NotificationType.VOTE_APPROVED, vote.getContent(), null);
+  }
+
+  public void notifyVoteRejected(Vote vote) {
+    sendSingleVoteNotification(
+        vote.getId(), NotificationType.VOTE_REJECTED, vote.getContent(), null);
+  }
+
+  private void sendSingleVoteNotification(
+      Long voteId, NotificationType type, String content, Long excludeUserId) {
+    Vote vote = getVoteOrThrow(voteId);
     Long authorId = vote.getUser().getId();
 
-    // 본인이 자기 투표에 댓글 단 경우는 알림 안 보냄
-    if (authorId.equals(commenterId)) {
-      return;
-    }
+    if (authorId.equals(excludeUserId)) return;
 
-    String content = NotificationContentFormatter.truncateComment(commentContent); // 알림 내용
-    String url = getCommentUrl(voteId); // 알림 URL
+    String truncated = NotificationContentFormatter.truncateContent(content); // 알림 내용
+    String url = getVoteUrl(voteId); // 알림 URL
 
-    // 이벤트 발행
-    NotificationEvent event =
-        NotificationEvent.forSingleUser(authorId, NotificationType.MY_VOTE_COMMENT, content, url);
+    NotificationEvent event = NotificationEvent.forSingleUser(authorId, type, truncated, url);
     eventPublisher.publish(event);
   }
 
-  private String getCommentUrl(Long voteId) {
+  private Vote getVoteOrThrow(Long voteId) {
+    return voteRepository
+        .findById(voteId)
+        .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
+  }
+
+  private String getVoteUrl(Long voteId) {
     return String.format("%s/research/%d", frontendUrl, voteId);
   }
 }
