@@ -14,6 +14,7 @@ import com.moa.moa_server.domain.comment.service.context.CommentPermissionContex
 import com.moa.moa_server.domain.comment.util.CommentNicknameUtil;
 import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
+import com.moa.moa_server.domain.notification.producer.VoteNotificationProducerImpl;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
@@ -31,6 +32,8 @@ public class CommentService {
 
   private final CommentRepository commentRepository;
   private final VoteRepository voteRepository;
+
+  private final VoteNotificationProducerImpl voteNotificationProducer;
 
   private final CommentPermissionContextFactory permissionContextFactory;
 
@@ -63,6 +66,8 @@ public class CommentService {
     String authorNickname =
         CommentNicknameUtil.generateNickname(
             request.anonymous(), anonymousNumber, user.getNickname());
+
+    voteNotificationProducer.notifyVoteCommented(voteId, userId);
 
     return new CommentCreateResponse(
         comment.getId(), comment.getContent(), authorNickname, comment.getCreatedAt());
