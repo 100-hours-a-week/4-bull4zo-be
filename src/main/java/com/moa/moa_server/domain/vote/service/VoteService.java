@@ -226,6 +226,7 @@ public class VoteService {
     return new VoteDetailResponse(
         vote.getId(),
         vote.getGroup().getId(),
+        vote.getGroup().getName(),
         vote.isAnonymous() ? "익명" : vote.getUser().getNickname(),
         vote.getContent(),
         vote.getImageUrl(),
