@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record VoteDetailResponse(
     @Schema(description = "투표 ID", example = "123") Long voteId,
     @Schema(description = "투표가 속한 그룹 ID", example = "1") Long groupId,
+    @Schema(description = "투표가 속한 그룹 이름", example = "공개") String groupName,
     @Schema(description = "투표 등록자 닉네임 (익명 투표인 경우, '익명'으로 전달)", example = "nickname")
         String authorNickname,
     @Schema(description = "투표 본문 내용", example = "에어컨 추우신 분?") String content,

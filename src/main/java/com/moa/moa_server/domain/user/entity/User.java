@@ -20,7 +20,7 @@ public class User extends BaseTimeEntity {
   @Column(length = 18, nullable = false, unique = true)
   private String nickname;
 
-  @Column(length = 255, unique = true)
+  @Column(length = 255)
   private String email;
 
   @Enumerated(EnumType.STRING)
