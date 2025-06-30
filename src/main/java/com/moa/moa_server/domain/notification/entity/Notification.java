@@ -28,7 +28,7 @@ public class Notification extends BaseTimeEntity {
   @Column(length = 255, nullable = false)
   private String content;
 
-  @Column(name = "isRead", nullable = false)
+  @Column(name = "is_read", nullable = false)
   @Builder.Default
   private boolean isRead = false;
 
