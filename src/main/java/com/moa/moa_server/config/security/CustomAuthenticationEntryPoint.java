@@ -27,7 +27,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
 
-    ApiResponse apiResponse = new ApiResponse("INVALID_TOKEN", null);
+    ApiResponse apiResponse = new ApiResponse(authException.getMessage(), null);
     response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
   }
 }

@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.notification.application.event;
 
+import com.moa.moa_server.domain.notification.application.sse.NotificationSseSender;
 import com.moa.moa_server.domain.notification.entity.Notification;
 import com.moa.moa_server.domain.notification.repository.NotificationRepository;
 import com.moa.moa_server.domain.user.entity.User;
@@ -20,6 +21,8 @@ public class NotificationHandler {
   private final NotificationRepository notificationRepository;
   private final UserRepository userRepository;
 
+  private final NotificationSseSender notificationSseSender;
+
   @Async("notificationExecutor")
   @TransactionalEventListener
   public void handle(NotificationEvent event) {
@@ -30,6 +33,7 @@ public class NotificationHandler {
     // 알림 객체들 생성
     List<Notification> notifications =
         event.userIds().stream()
+            .filter(userMap::containsKey) // 유저 null 방어
             .map(
                 userId ->
                     Notification.builder()
@@ -43,5 +47,8 @@ public class NotificationHandler {
 
     // 벌크 저장
     notificationRepository.saveAll(notifications);
+
+    // SSE 전송
+    notifications.forEach(notificationSseSender::send);
   }
 }
