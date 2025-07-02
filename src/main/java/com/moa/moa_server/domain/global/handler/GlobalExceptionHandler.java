@@ -3,12 +3,16 @@ package com.moa.moa_server.domain.global.handler;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.global.exception.BaseException;
 import com.moa.moa_server.domain.global.exception.GlobalErrorCode;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 
 @Slf4j
 @RestControllerAdvice
@@ -20,7 +24,19 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ApiResponse<Void>> handleUnhandled(Exception ex) {
+  public ResponseEntity<ApiResponse<Void>> handleUnhandled(
+      HttpServletRequest request, Exception ex) {
+    // 클라이언트 연결 끊김은 무시
+    if (ex instanceof AsyncRequestNotUsableException || ex.getCause() instanceof IOException) {
+      log.debug("클라이언트 연결 끊김으로 인한 예외 무시: {}", ex.getMessage());
+      return ResponseEntity.noContent().build();
+    }
+
+    // SSE 요청인 경우 별도 처리 (converter 에러 방지)
+    if ("text/event-stream".equals(request.getHeader("Accept"))) {
+      return ResponseEntity.noContent().build();
+    }
+
     log.error("Unhandled Exception Occurred", ex);
     return ResponseEntity.status(500)
         .body(new ApiResponse<>(GlobalErrorCode.UNEXPECTED_ERROR.name(), null));
@@ -43,5 +59,10 @@ public class GlobalExceptionHandler {
     }
 
     return ResponseEntity.badRequest().body(new ApiResponse<>(code, null));
+  }
+
+  @ExceptionHandler(AsyncRequestTimeoutException.class)
+  public void handleTimeout() {
+    log.debug("SSE 타임아웃 발생 - 이미 emitter에서 처리됨"); // 로그만 남기고 무시
   }
 }
