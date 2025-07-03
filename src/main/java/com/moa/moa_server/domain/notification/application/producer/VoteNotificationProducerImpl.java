@@ -8,6 +8,7 @@ import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,29 +25,35 @@ public class VoteNotificationProducerImpl implements NotificationProducer {
 
   public void notifyVoteCommented(Long voteId, Long commenterId, String commentContent) {
     sendSingleVoteNotification(
-        voteId, NotificationType.MY_VOTE_COMMENT, commentContent, commenterId);
+        voteId, NotificationType.MY_VOTE_COMMENT, commentContent, commenterId, getVoteUrl(voteId));
   }
 
   public void notifyVoteApproved(Vote vote) {
     sendSingleVoteNotification(
-        vote.getId(), NotificationType.VOTE_APPROVED, vote.getContent(), null);
+        vote.getId(),
+        NotificationType.VOTE_APPROVED,
+        vote.getContent(),
+        null,
+        getVoteUrl(vote.getId()));
   }
 
   public void notifyVoteRejected(Vote vote) {
     sendSingleVoteNotification(
-        vote.getId(), NotificationType.VOTE_REJECTED, vote.getContent(), null);
+        vote.getId(), NotificationType.VOTE_REJECTED, vote.getContent(), null, null);
   }
 
   private void sendSingleVoteNotification(
-      Long voteId, NotificationType type, String content, Long excludeUserId) {
+      Long voteId,
+      NotificationType type,
+      String content,
+      Long excludeUserId,
+      @Nullable String url) {
     Vote vote = getVoteOrThrow(voteId);
     Long authorId = vote.getUser().getId();
 
     if (authorId.equals(excludeUserId)) return;
 
     String truncated = NotificationContentFormatter.truncateContent(content); // 알림 내용
-    String url = getVoteUrl(voteId); // 알림 URL
-
     NotificationEvent event = NotificationEvent.forSingleUser(authorId, type, truncated, url);
     eventPublisher.publish(event);
   }
