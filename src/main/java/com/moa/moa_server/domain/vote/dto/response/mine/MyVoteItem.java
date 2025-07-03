@@ -18,9 +18,11 @@ public record MyVoteItem(
     @Schema(description = "투표 시작 시각", example = "2025-04-20T12:00:00") LocalDateTime createdAt,
     @Schema(description = "투표 종료 시각", example = "2025-04-21T12:00:00") LocalDateTime closedAt,
     @Schema(description = "항목별 결과 리스트 (voteStatus가 'PENDING', 'REJECTED'인 경우 null)")
-        List<VoteOptionResultWithId> results) {
+        List<VoteOptionResultWithId> results,
+    @Schema(description = "댓글 수", example = "10") int commentsCount) {
 
-  public static MyVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
+  public static MyVoteItem from(
+      Vote vote, List<VoteOptionResultWithId> results, int commentsCount) {
     String status;
     if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED
         || vote.getVoteStatus() == Vote.VoteStatus.PENDING) {
@@ -36,6 +38,7 @@ public record MyVoteItem(
         status,
         vote.getCreatedAt(),
         vote.getClosedAt(),
-        results);
+        results,
+        commentsCount);
   }
 }

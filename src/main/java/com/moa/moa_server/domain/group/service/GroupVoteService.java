@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.group.service;
 
+import com.moa.moa_server.domain.comment.service.CommentCountService;
 import com.moa.moa_server.domain.global.cursor.CreatedAtVoteIdCursor;
 import com.moa.moa_server.domain.group.dto.group_vote.GroupVoteItem;
 import com.moa.moa_server.domain.group.dto.group_vote.GroupVoteListResponse;
@@ -19,6 +20,7 @@ import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import jakarta.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ public class GroupVoteService {
   private final VoteRepository voteRepository;
 
   private final VoteResultService voteResultService;
+  private final CommentCountService commentCountService;
 
   /** 그룹 투표 목록 조회 */
   @Transactional(readOnly = true)
@@ -68,17 +71,25 @@ public class GroupVoteService {
             : new CreatedAtVoteIdCursor(votes.getLast().getCreatedAt(), votes.getLast().getId())
                 .encode();
 
+    // 댓글 수 집계하여 포함
+    List<Long> voteIds = votes.stream().map(Vote::getId).toList();
+    Map<Long, Integer> commentCounts = commentCountService.getCommentCountsByVoteIds(voteIds);
+
     // 각 투표별 집계 포함
     List<GroupVoteItem> voteItems =
         votes.stream()
             .map(
-                vote ->
-                    new GroupVoteItem(
-                        vote.getId(),
-                        vote.getContent(),
-                        vote.getCreatedAt(),
-                        vote.getClosedAt(),
-                        voteResultService.getResults(vote)))
+                vote -> {
+                  var results = voteResultService.getResults(vote);
+                  int commentsCount = commentCounts.getOrDefault(vote.getId(), 0);
+                  return new GroupVoteItem(
+                      vote.getId(),
+                      vote.getContent(),
+                      vote.getCreatedAt(),
+                      vote.getClosedAt(),
+                      results,
+                      commentsCount);
+                })
             .toList();
 
     // 응답 변환
