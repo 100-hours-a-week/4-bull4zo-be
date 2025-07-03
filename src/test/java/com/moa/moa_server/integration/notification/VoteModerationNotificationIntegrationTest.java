@@ -91,12 +91,13 @@ public class VoteModerationNotificationIntegrationTest {
             () -> {
               var notifications = notificationRepository.findAll();
               assertThat(notifications).hasSize(1);
-              assertThat(notifications.getFirst().getUser().getId()).isEqualTo(author.getId());
-              assertThat(notifications.getFirst().getType())
-                  .isEqualTo(NotificationType.VOTE_REJECTED);
-              assertThat(notifications.getFirst().getContent())
+              var notification = notifications.getFirst();
+              assertThat(notification.getUser().getId()).isEqualTo(author.getId());
+              assertThat(notification.getType()).isEqualTo(NotificationType.VOTE_REJECTED);
+              assertThat(notification.getContent())
                   .contains(
                       vote.getContent().substring(0, Math.min(10, vote.getContent().length())));
+              assertThat(notification.getRedirectUrl()).isNull();
             });
   }
 }

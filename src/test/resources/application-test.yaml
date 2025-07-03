@@ -56,3 +56,10 @@ logging:
     org.springframework.web.filter: DEBUG
     #    org.hibernate.type.descriptor.sql: trace
     com.moa.moa_server.domain.vote.service.v3: DEBUG
+
+sse:
+  timeout: 30000
+  ping-interval: 5000
+  stale-clean-interval: 1000
+  stale-threshold: 30000
+

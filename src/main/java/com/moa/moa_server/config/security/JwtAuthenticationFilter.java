@@ -21,6 +21,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtTokenService jwtTokenService; // 토큰 유효성 검증 및 userId 추출
+  private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
   @Override
   protected void doFilterInternal(
@@ -47,8 +48,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       filterChain.doFilter(request, response);
     } catch (AuthException e) {
-      // AuthException을 AuthenticationException으로 감싸서 Spring Security로 위임
-      throw new AuthenticationCredentialsNotFoundException(e.getCode(), e);
+      // AuthException을 AuthenticationException으로 감싸서 EntryPoint 호출
+      authenticationEntryPoint.commence(
+          request, response, new AuthenticationCredentialsNotFoundException(e.getCode(), e));
     }
   }
 

@@ -14,14 +14,17 @@ public record SubmittedVoteItem(
     @Schema(description = "투표 시작 시각", example = "2025-04-20T12:00:00") LocalDateTime createdAt,
     @Schema(description = "투표 종료 시각", example = "2025-04-21T12:00:00") LocalDateTime closedAt,
     @Schema(description = "항목별 결과 리스트 (voteStatus가 'PENDING', 'REJECTED'인 경우 null)")
-        List<VoteOptionResultWithId> results) {
-  public static SubmittedVoteItem from(Vote vote, List<VoteOptionResultWithId> results) {
+        List<VoteOptionResultWithId> results,
+    @Schema(description = "댓글 수", example = "10") int commentsCount) {
+  public static SubmittedVoteItem from(
+      Vote vote, List<VoteOptionResultWithId> results, int commentsCount) {
     return new SubmittedVoteItem(
         vote.getId(),
         vote.getGroup().getId(),
         vote.getContent(),
         vote.getCreatedAt(),
         vote.getClosedAt(),
-        results);
+        results,
+        commentsCount);
   }
 }

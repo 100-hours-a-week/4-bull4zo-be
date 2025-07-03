@@ -49,3 +49,9 @@ logging:
   level:
     root: INFO
     org.springframework.security: DEBUG
+
+sse:
+  timeout: 300000
+  ping-interval: 30000
+  stale-clean-interval: 1800000
+  stale-threshold: 600000

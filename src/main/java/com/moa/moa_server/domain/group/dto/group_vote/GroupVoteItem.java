@@ -11,4 +11,5 @@ public record GroupVoteItem(
     @Schema(description = "투표 본문 내용", example = "야식 메뉴 추천해주세요!") String content,
     @Schema(description = "투표 시작 시간", example = "2025-04-22T20:00:00") LocalDateTime createdAt,
     @Schema(description = "투표 종료 시간", example = "2025-04-23T20:00:00") LocalDateTime closedAt,
-    @Schema(description = "항목별 결과 리스트") List<VoteOptionResult> results) {}
+    @Schema(description = "항목별 결과 리스트") List<VoteOptionResult> results,
+    @Schema(description = "댓글 수", example = "10") int commentsCount) {}

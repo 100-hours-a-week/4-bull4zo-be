@@ -56,3 +56,9 @@ logging:
 #    org.hibernate.type.descriptor.sql: trace
     com.moa.moa_server.domain.vote.service.v3: DEBUG
     com.moa.moa_server.domain.comment: DEBUG
+
+sse:
+  timeout: 30000
+  ping-interval: 5000
+  stale-clean-interval: 10000
+  stale-threshold: 60000
