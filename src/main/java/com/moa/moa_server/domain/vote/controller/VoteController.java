@@ -10,6 +10,7 @@ import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
+import com.moa.moa_server.domain.vote.service.VoteListService;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class VoteController {
 
   private final VoteService voteService;
+  private final VoteListService voteListService;
 
   @Operation(summary = "투표 등록", description = "지정한 그룹 또는 전체 공개로 새 투표를 생성합니다.")
   @PostMapping
@@ -79,7 +81,7 @@ public class VoteController {
       @RequestParam(required = false) Long groupId,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) Integer size) {
-    ActiveVoteResponse response = voteService.getActiveVotes(userId, groupId, cursor, size);
+    ActiveVoteResponse response = voteListService.getActiveVotes(userId, groupId, cursor, size);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
@@ -90,7 +92,7 @@ public class VoteController {
       @RequestParam(required = false) Long groupId,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) Integer size) {
-    MyVoteResponse response = voteService.getMyVotes(userId, groupId, cursor, size);
+    MyVoteResponse response = voteListService.getMyVotes(userId, groupId, cursor, size);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
@@ -101,7 +103,8 @@ public class VoteController {
       @RequestParam(required = false) Long groupId,
       @RequestParam(required = false) String cursor,
       @RequestParam(required = false) Integer size) {
-    SubmittedVoteResponse response = voteService.getSubmittedVotes(userId, groupId, cursor, size);
+    SubmittedVoteResponse response =
+        voteListService.getSubmittedVotes(userId, groupId, cursor, size);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
