@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GroupAnalysisService {
+public class GroupAnalysisCommandService {
 
   private final GroupRepository groupRepository;
   private final GroupAnalysisJpaRepository analysisJpaRepository;
