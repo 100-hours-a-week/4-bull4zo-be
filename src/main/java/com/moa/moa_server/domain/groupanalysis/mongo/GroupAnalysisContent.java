@@ -3,9 +3,11 @@ package com.moa.moa_server.domain.groupanalysis.mongo;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -17,12 +19,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class GroupAnalysisContent {
 
   @Id private String id; // Mongo _id (자동 생성)
 
-  // 메타데이터
+  @Indexed(unique = true)
   private Long analysisId; // MySQL group_analysis.id
+
+  // 메타데이터
   private Long groupId;
   private LocalDateTime weekStartAt;
   private LocalDateTime generatedAt;

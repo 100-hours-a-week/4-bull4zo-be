@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.groupanalysis.entity;
 
+import com.moa.moa_server.domain.group.entity.Group;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -9,15 +10,18 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "group_analysis")
+@Table(
+    name = "group_analysis",
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "week_start_at"})})
 public class GroupAnalysis {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "group_id", nullable = false)
-  private Long groupId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "group_id", nullable = false)
+  private Group group;
 
   @Column(name = "week_start_at", nullable = false)
   private LocalDateTime weekStartAt;
@@ -31,5 +35,14 @@ public class GroupAnalysis {
   @PrePersist
   public void onCreate() {
     this.generatedAt = LocalDateTime.now();
+  }
+
+  public static GroupAnalysis of(
+      Group group, LocalDateTime weekStartAt, LocalDateTime publishedAt) {
+    return GroupAnalysis.builder()
+        .group(group)
+        .weekStartAt(weekStartAt)
+        .publishedAt(publishedAt)
+        .build();
   }
 }
