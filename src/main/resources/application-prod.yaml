@@ -20,6 +20,8 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
       timeout: 5000
+    mongodb:
+      uri: ${MONGODB_URI}
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}

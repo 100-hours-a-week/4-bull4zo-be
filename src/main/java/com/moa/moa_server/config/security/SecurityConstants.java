@@ -7,6 +7,7 @@ public class SecurityConstants {
     "/api/v1/test/**",
     "/api/v1/ai/votes/moderation/callback",
     "/api/v1/ai/votes",
+    "/api/v1/ai/groups/analysis",
     "/swagger-ui/**",
     "v3/api-docs/**",
     "/swagger-resources/**",

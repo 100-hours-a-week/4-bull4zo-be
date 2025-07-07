@@ -19,6 +19,9 @@ spring:
     redis:
       host: localhost
       port: 6379
+    mongodb:
+      uri: ${MONGODB_URI}
+      auto-index-creation: true
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}

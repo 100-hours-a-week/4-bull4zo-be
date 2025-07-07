@@ -64,6 +64,9 @@ dependencies {
   // Redis
   implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+  // MongoDB
+  implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
   // AWS
   implementation 'software.amazon.awssdk:s3'
 
