@@ -12,7 +12,11 @@ import lombok.*;
 @Builder
 @Table(
     name = "group_analysis",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "week_start_at"})})
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"group_id", "week_start_at"})},
+    indexes = {
+      @Index(name = "idx_group_week", columnList = "group_id, week_start_at DESC"),
+      @Index(name = "idx_published", columnList = "published_at")
+    })
 public class GroupAnalysis {
 
   @Id

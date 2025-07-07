@@ -1,8 +1,6 @@
 package com.moa.moa_server.domain.groupanalysis.service;
 
 import com.moa.moa_server.domain.group.entity.Group;
-import com.moa.moa_server.domain.group.handler.GroupErrorCode;
-import com.moa.moa_server.domain.group.handler.GroupException;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.groupanalysis.dto.AIGroupAnalysisCreateRequest;
 import com.moa.moa_server.domain.groupanalysis.dto.AIGroupAnalysisCreateResponse;
@@ -37,7 +35,7 @@ public class GroupAnalysisCommandService {
     Group group =
         groupRepository
             .findById(request.groupId())
-            .orElseThrow(() -> new GroupException(GroupErrorCode.GROUP_NOT_FOUND));
+            .orElseThrow(() -> new GroupAnalysisException(GroupAnalysisErrorCode.GROUP_NOT_FOUND));
 
     validateWeekStartAt(request.weekStartAt());
     validateDuplicateAnalysis(group.getId(), request.weekStartAt());

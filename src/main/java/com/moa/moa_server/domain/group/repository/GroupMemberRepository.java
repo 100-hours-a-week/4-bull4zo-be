@@ -35,4 +35,6 @@ public interface GroupMemberRepository
   List<GroupMember> findAllByGroupOrderByJoinedAtAsc(Group group);
 
   List<GroupMember> findAllByGroup(Group group);
+
+  boolean existsByGroupAndUser(Group group, User user);
 }
