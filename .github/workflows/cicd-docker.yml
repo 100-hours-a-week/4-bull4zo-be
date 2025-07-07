@@ -161,6 +161,7 @@ jobs:
           OTEL_EXPORTER_OTLP_ENDPOINT=${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
           OTEL_RESOURCE_ATTRIBUTES=${{ secrets.OTEL_RESOURCE_ATTRIBUTES }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
           EENV
             else
               cat <<EENV | sudo tee /home/cicd/moa-backend.env > /dev/null
@@ -184,6 +185,7 @@ jobs:
           ELASTIC_APM_SERVER_URL=${{ secrets.ELASTIC_APM_SERVER_URL }}
           ELASTIC_APM_SERVICE_NAME=${{ secrets.ELASTIC_APM_SERVICE_NAME }}
           ELASTIC_APM_ENVIRONMENT=${{ secrets.ELASTIC_APM_ENVIRONMENT }}
+          MONGODB_URI=${{ secrets.MONGODB_URI }}
           EENV
             fi
 
