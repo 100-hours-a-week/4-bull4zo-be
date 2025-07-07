@@ -25,7 +25,8 @@ public class AuthService {
           "http://localhost:5173/auth/callback",
           "https://b4z.moagenda.com/auth/callback",
           "https://moagenda.com/auth/callback",
-          "http://localhost:8080/api/v1/auth/login/oauth");
+          "http://localhost:8080/api/v1/auth/login/oauth",
+          "https://eks.moagenda.com/auth/callback");
 
   private final Map<String, OAuthLoginStrategy> strategies;
   private final JwtTokenService jwtTokenService;
