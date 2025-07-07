@@ -5,6 +5,9 @@ import org.springframework.http.HttpStatus;
 
 public enum GroupAnalysisErrorCode implements BaseErrorCode {
   INVALID_TIME(HttpStatus.BAD_REQUEST),
+  NOT_GROUP_MEMBER(HttpStatus.FORBIDDEN),
+  PUBLIC_GROUP_FORBIDDEN(HttpStatus.FORBIDDEN),
+  GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
   DUPLICATE_ANALYSIS(HttpStatus.CONFLICT),
   MONGO_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR),
   ;

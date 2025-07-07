@@ -3,7 +3,7 @@ package com.moa.moa_server.domain.groupanalysis.controller;
 import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.groupanalysis.dto.AIGroupAnalysisCreateRequest;
 import com.moa.moa_server.domain.groupanalysis.dto.AIGroupAnalysisCreateResponse;
-import com.moa.moa_server.domain.groupanalysis.service.GroupAnalysisService;
+import com.moa.moa_server.domain.groupanalysis.service.GroupAnalysisCommandService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class GroupAnalysisCommandController {
 
-  private final GroupAnalysisService groupAnalysisService;
+  private final GroupAnalysisCommandService groupAnalysisService;
 
   @Operation(summary = "그룹 분석 데이터 저장", description = "AI가 생성한 그룹 주간 분석 데이터를 저장합니다.")
   @PostMapping
