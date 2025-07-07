@@ -27,22 +27,21 @@ public record GroupAnalysisResponse(
       @Schema(description = "그룹 전체 분위기 정보") SentimentDto sentiment,
       @Schema(description = "모델이 생성한 총평 문장 리스트") List<String> modelReview) {}
 
-  public static GroupAnalysisResponse empty(Group group) {
-    return new GroupAnalysisResponse(
-        group.getId(),
-        group.getName(),
-        null,
-        new ParticipationStats(0.0, 0.0),
-        new AnalysisContent(new OverviewDto("", ""), new SentimentDto("", List.of()), List.of()));
+  public static GroupAnalysisResponse empty(
+      Group group, LocalDateTime weekStartAt, ParticipationStats stats) {
+    return new GroupAnalysisResponse(group.getId(), group.getName(), weekStartAt, stats, null);
   }
 
   public static GroupAnalysisResponse from(
-      Group group, GroupAnalysis metadata, GroupAnalysisContent analysisContent) {
+      Group group,
+      GroupAnalysis metadata,
+      GroupAnalysisContent analysisContent,
+      ParticipationStats stats) {
     return new GroupAnalysisResponse(
         group.getId(),
         group.getName(),
         metadata.getWeekStartAt(),
-        new ParticipationStats(0.0, 0.0),
+        stats,
         new AnalysisContent(
             new OverviewDto(
                 analysisContent.getOverview().getVoteSummary(),
