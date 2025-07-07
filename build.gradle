@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'com.moa'
-version = 'v2.2.0'
+version = 'v3.0.0'
 
 java {
 	toolchain {
@@ -63,6 +63,9 @@ dependencies {
 
   // Redis
   implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+  // MongoDB
+  implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 
   // AWS
   implementation 'software.amazon.awssdk:s3'
