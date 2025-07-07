@@ -55,7 +55,7 @@ public class GroupAnalysisContent {
   @AllArgsConstructor
   @NoArgsConstructor
   public static class Sentiment {
-    private String emotion; // 예: 긍정적, 부정적
+    private List<String> emotion; // 감성 리스트
     private List<String> topKeywords; // 주요 키워드 리스트
   }
 
