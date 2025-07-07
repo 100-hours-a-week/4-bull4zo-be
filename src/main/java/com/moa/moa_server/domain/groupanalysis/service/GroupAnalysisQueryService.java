@@ -44,7 +44,7 @@ public class GroupAnalysisQueryService {
 
     // 참여율 계산 (현재 시간 기준 일주일간 참여율)
     LocalDateTime todayStart = LocalDateTime.now(ZoneOffset.UTC);
-    LocalDateTime oneWeekAgo = todayStart.minusWeeks(7);
+    LocalDateTime oneWeekAgo = todayStart.minusDays(7);
     GroupAnalysisResponse.ParticipationStats participationStats =
         calculateParticipationStats(group, oneWeekAgo, todayStart);
 
