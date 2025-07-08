@@ -73,7 +73,7 @@ public class VoteModerationService {
     try {
       reviewResult = VoteModerationLog.ReviewResult.valueOf(request.result().toUpperCase());
       reviewReason = VoteModerationLog.ReviewReason.valueOf(request.reason().toUpperCase());
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException | NullPointerException e) {
       throw new VoteException(VoteErrorCode.INVALID_MODERATION_RESULT);
     }
 
