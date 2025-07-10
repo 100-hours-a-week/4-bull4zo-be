@@ -17,7 +17,7 @@ public class AIVoteOpenScheduler {
 
   private final VoteRepository voteRepository;
 
-  @Scheduled(cron = "0 5 10 * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일
+  @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul") // 초 분 시 일 월 요일 (1시간)
   @Transactional
   public void openAIVotes() {
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
