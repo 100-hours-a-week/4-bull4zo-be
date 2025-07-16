@@ -5,9 +5,9 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
-import com.moa.moa_server.domain.group.util.GroupLookupHelper;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
+import com.moa.moa_server.domain.ranking.service.RankingRedisService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -60,12 +60,12 @@ public class VoteService {
   private final VoteResponseRepository voteResponseRepository;
   private final VoteModerationLogRepository voteModerationLogRepository;
 
-  private final GroupLookupHelper groupLookupHelper;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
   private final VoteResultRedisService voteResultRedisService;
   private final ImageService imageService;
   private final VoteRelatedDataCleaner voteRelatedDataCleaner;
+  private final RankingRedisService rankingRedisService;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -191,6 +191,8 @@ public class VoteService {
 
     // Redis에 투표 결과 반영
     voteResultRedisService.incrementOptionCount(voteId, response);
+    // 랭킹 갱신을 위해 수정된 투표를 Redis ZSet에 기록
+    rankingRedisService.trackUpdatedVote(voteId);
   }
 
   @Transactional
