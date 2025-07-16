@@ -30,4 +30,6 @@ public interface VoteResponseRepository extends JpaRepository<VoteResponse, Long
       @Param("groupId") Long groupId,
       @Param("start") LocalDateTime start,
       @Param("end") LocalDateTime end);
+
+  int countByVoteId(Long voteId);
 }
