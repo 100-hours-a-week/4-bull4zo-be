@@ -19,4 +19,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, Comment
 
   @Query("SELECT c.vote.id, COUNT(c) FROM Comment c WHERE c.vote.id IN :voteIds GROUP BY c.vote.id")
   List<Object[]> countCommentsByVoteIds(@Param("voteIds") List<Long> voteIds);
+
+  int countByVoteId(Long voteId);
 }
