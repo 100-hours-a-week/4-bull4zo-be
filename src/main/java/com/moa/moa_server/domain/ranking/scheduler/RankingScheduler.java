@@ -25,7 +25,7 @@ public class RankingScheduler {
   private final CommentRepository commentRepository;
   private final VoteResponseRepository voteResponseRepository;
 
-  @Scheduled(cron = "0 * * * * *") // 매 정시
+  @Scheduled(cron = "0 0 * * * *") // 매 정시
   public void updateVoteRanking() {
     // 1. 최근 1시간 내로 수정된 투표 가져오기
     Set<String> updatedVoteIds = getRecentlyModifiedVotes();
@@ -46,7 +46,7 @@ public class RankingScheduler {
           "ranking:"
               + vote.getGroup().getId()
               + ":"
-              + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+              + LocalDate.now(ZoneOffset.UTC).format(DateTimeFormatter.BASIC_ISO_DATE);
       redisTemplate.opsForZSet().add(key, voteIdStr, score);
     }
 
