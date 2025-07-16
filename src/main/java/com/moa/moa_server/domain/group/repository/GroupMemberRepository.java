@@ -39,4 +39,7 @@ public interface GroupMemberRepository
   boolean existsByGroupAndUser(Group group, User user);
 
   int countByGroup(Group group);
+
+  @Query("SELECT gm.group.id FROM GroupMember gm WHERE gm.user = :user")
+  List<Long> findGroupIdsByUser(@Param("user") User user);
 }
