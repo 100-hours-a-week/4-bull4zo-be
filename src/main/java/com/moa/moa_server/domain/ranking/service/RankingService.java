@@ -40,7 +40,7 @@ public class RankingService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
 
-  @Transactional(readOnly = true)
+  @Transactional
   public TopVoteResponse getTopVotes(Long userId, Long groupId) {
     // 유저/그룹/멤버십 검증
     User user = validateAndGetuser(userId);
