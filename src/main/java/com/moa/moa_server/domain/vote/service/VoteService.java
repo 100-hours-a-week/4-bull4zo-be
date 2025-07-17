@@ -8,6 +8,7 @@ import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.ranking.service.RankingRedisService;
+import com.moa.moa_server.domain.ranking.util.RankingPermissionValidator;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -66,6 +67,7 @@ public class VoteService {
   private final ImageService imageService;
   private final VoteRelatedDataCleaner voteRelatedDataCleaner;
   private final RankingRedisService rankingRedisService;
+  private final RankingPermissionValidator rankingPermissionValidator;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -395,15 +397,8 @@ public class VoteService {
   private void validateVoteAccess(User user, Vote vote) {
     if (isVoteAuthor(user, vote)) return;
     if (hasParticipatedWithValidOption(user, vote)) return;
-    if (isAccessibleAsTopRankedVote(user, vote)) return;
+    if (rankingPermissionValidator.isAccessibleAsTopRankedVote(user, vote)) return;
     throw new VoteException(VoteErrorCode.FORBIDDEN);
-  }
-
-  private boolean isAccessibleAsTopRankedVote(User user, Vote vote) {
-    // top3 투표는 그룹 멤버인 경우 허용
-    if (!rankingRedisService.isTopRankedVote(vote)) return false;
-    Group group = vote.getGroup();
-    return group.isPublicGroup() || groupMemberRepository.existsByGroupAndUser(group, user);
   }
 
   private boolean isVoteAuthor(User user, Vote vote) {
