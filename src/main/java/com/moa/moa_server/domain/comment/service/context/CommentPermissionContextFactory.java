@@ -2,6 +2,9 @@ package com.moa.moa_server.domain.comment.service.context;
 
 import com.moa.moa_server.domain.comment.handler.CommentErrorCode;
 import com.moa.moa_server.domain.comment.handler.CommentException;
+import com.moa.moa_server.domain.group.entity.Group;
+import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
+import com.moa.moa_server.domain.ranking.service.RankingRedisService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -22,6 +25,8 @@ public class CommentPermissionContextFactory {
   private final UserRepository userRepository;
   private final VoteRepository voteRepository;
   private final VoteResponseRepository voteResponseRepository;
+  private final GroupMemberRepository groupMemberRepository;
+  private final RankingRedisService rankingRedisService;
 
   @Transactional(readOnly = true)
   public CommentPermissionContext validateAndGetContext(Long userId, Long voteId) {
@@ -43,11 +48,19 @@ public class CommentPermissionContextFactory {
     boolean isParticipant =
         voteResponseRepository.existsByVoteIdAndUserIdAndOptionNumberIn(
             vote.getId(), user.getId(), List.of(1, 2));
-    if (!(isOwner || isParticipant)) {
+    boolean isTop3Accessible = isAccessibleAsTopRankedVote(user, vote);
+
+    if (!(isOwner || isParticipant || isTop3Accessible)) {
       throw new CommentException(CommentErrorCode.FORBIDDEN);
     }
-    // TODO: 권한 추가 - top3 투표인 경우 모든 사용자가 댓글 작성 가능
 
     return new CommentPermissionContext(user, vote);
+  }
+
+  private boolean isAccessibleAsTopRankedVote(User user, Vote vote) {
+    // top3 투표는 그룹 멤버인 경우 허용
+    if (!rankingRedisService.isTopRankedVote(vote)) return false;
+    Group group = vote.getGroup();
+    return group.isPublicGroup() || groupMemberRepository.existsByGroupAndUser(group, user);
   }
 }
