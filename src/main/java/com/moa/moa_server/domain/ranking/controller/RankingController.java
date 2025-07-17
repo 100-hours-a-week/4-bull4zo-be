@@ -22,10 +22,8 @@ public class RankingController {
   @Operation(summary = "Top3 투표 목록 조회", description = "그룹 내 하루 동안의 Top3 투표 목록을 조회합니다.")
   @GetMapping
   public ResponseEntity<ApiResponse<TopVoteResponse>> getTopVotes(
-      @AuthenticationPrincipal Long userId,
-      @RequestParam @Nullable Long groupId,
-      @RequestParam String type) {
-    TopVoteResponse response = rankingService.getTopVotes(userId, groupId, type);
+      @AuthenticationPrincipal Long userId, @RequestParam @Nullable Long groupId) {
+    TopVoteResponse response = rankingService.getTopVotes(userId, groupId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }
