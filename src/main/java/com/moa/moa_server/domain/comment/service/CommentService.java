@@ -15,6 +15,7 @@ import com.moa.moa_server.domain.comment.util.CommentNicknameUtil;
 import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.util.XssUtil;
 import com.moa.moa_server.domain.notification.application.producer.VoteNotificationProducerImpl;
+import com.moa.moa_server.domain.ranking.service.RankingRedisService;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
@@ -32,6 +33,7 @@ public class CommentService {
 
   private final CommentRepository commentRepository;
   private final VoteRepository voteRepository;
+  private final RankingRedisService rankingRedisService;
 
   private final VoteNotificationProducerImpl voteNotificationProducer;
 
@@ -68,6 +70,9 @@ public class CommentService {
             request.anonymous(), anonymousNumber, user.getNickname());
 
     voteNotificationProducer.notifyVoteCommented(voteId, userId, comment.getContent());
+
+    // 랭킹 갱신을 위해 수정된 투표를 Redis ZSet에 기록
+    rankingRedisService.trackUpdatedVote(voteId);
 
     return new CommentCreateResponse(
         comment.getId(), comment.getContent(), authorNickname, comment.getCreatedAt());

@@ -5,9 +5,10 @@ import com.moa.moa_server.domain.group.entity.Group;
 import com.moa.moa_server.domain.group.entity.GroupMember;
 import com.moa.moa_server.domain.group.repository.GroupMemberRepository;
 import com.moa.moa_server.domain.group.repository.GroupRepository;
-import com.moa.moa_server.domain.group.util.GroupLookupHelper;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
+import com.moa.moa_server.domain.ranking.service.RankingRedisService;
+import com.moa.moa_server.domain.ranking.util.RankingPermissionValidator;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -60,12 +61,13 @@ public class VoteService {
   private final VoteResponseRepository voteResponseRepository;
   private final VoteModerationLogRepository voteModerationLogRepository;
 
-  private final GroupLookupHelper groupLookupHelper;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
   private final VoteResultRedisService voteResultRedisService;
   private final ImageService imageService;
   private final VoteRelatedDataCleaner voteRelatedDataCleaner;
+  private final RankingRedisService rankingRedisService;
+  private final RankingPermissionValidator rankingPermissionValidator;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -191,6 +193,8 @@ public class VoteService {
 
     // Redis에 투표 결과 반영
     voteResultRedisService.incrementOptionCount(voteId, response);
+    // 랭킹 갱신을 위해 수정된 투표를 Redis ZSet에 기록
+    rankingRedisService.trackUpdatedVote(voteId);
   }
 
   @Transactional
@@ -206,7 +210,8 @@ public class VoteService {
     Vote vote = findVoteOrThrow(voteId);
 
     // 상태/권한 검사
-    validateVoteContentReadable(vote, userId);
+    validateVoteContentReadable(vote, user);
+    validateVoteAccess(user, vote);
 
     return new VoteDetailResponse(
         vote.getId(),
@@ -368,18 +373,19 @@ public class VoteService {
   }
 
   /** 투표 내용 조회 가능 상태 및 권한 검사 */
-  private void validateVoteContentReadable(Vote vote, Long userId) {
+  private void validateVoteContentReadable(Vote vote, User user) {
     if (vote.getVoteStatus() == Vote.VoteStatus.OPEN
         || vote.getVoteStatus() == Vote.VoteStatus.CLOSED) {
       return;
     }
-    if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED && vote.getUser().getId().equals(userId)) {
+    if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED
+        && vote.getUser().getId().equals(user.getId())) {
       return;
     }
     throw new VoteException(VoteErrorCode.FORBIDDEN);
   }
 
-  /** 투표 조회 가능한 상태인지 검사 (내용, 결과, 댓글 읽기) 허용 상태: OPEN, CLOSED */
+  /** 투표 조회 가능한 상태인지 검사 (내용, 결과) 허용 상태: OPEN, CLOSED */
   private void validateVoteReadable(Vote vote) {
     if (vote.getVoteStatus() != Vote.VoteStatus.OPEN
         && vote.getVoteStatus() != Vote.VoteStatus.CLOSED) {
@@ -387,12 +393,11 @@ public class VoteService {
     }
   }
 
-  /** 투표 조회 권한 검사 (내용, 결과, 댓글 읽기) 조건: 등록자이거나 참여자(기권 불가)여야 함 * top3 투표는 추후 그룹 멤버 여부로도 허용 예정 */
+  /** 투표 결과 조회 권한 검사 (조건: 등록자이거나 참여자(기권 불가)여야 함) */
   private void validateVoteAccess(User user, Vote vote) {
     if (isVoteAuthor(user, vote)) return;
     if (hasParticipatedWithValidOption(user, vote)) return;
-
-    // TODO: top3 투표일 경우 isGroupMember 검사 후 허용
+    if (rankingPermissionValidator.isAccessibleAsTopRankedVote(user, vote)) return;
     throw new VoteException(VoteErrorCode.FORBIDDEN);
   }
 
