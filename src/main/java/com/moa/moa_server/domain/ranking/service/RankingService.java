@@ -41,13 +41,10 @@ public class RankingService {
   private final GroupMemberRepository groupMemberRepository;
 
   @Transactional(readOnly = true)
-  public TopVoteResponse getTopVotes(Long userId, Long groupId, String type) {
+  public TopVoteResponse getTopVotes(Long userId, Long groupId) {
     // 유저/그룹/멤버십 검증
     User user = validateAndGetuser(userId);
     validateGroupMembership(user, groupId);
-
-    // 기본값 설정
-    String period = (type == null || type.isBlank()) ? "daily" : type;
 
     // 랭킹 기준 시간 계산
     LocalDate date = LocalDate.now(ZoneOffset.UTC);
@@ -57,12 +54,12 @@ public class RankingService {
     List<TopVoteItem> topItems;
 
     if (groupId != null) {
-      topItems = getTopVotesByGroup(groupId, period);
+      topItems = getTopVotesByGroup(groupId);
     } else {
-      topItems = getTopVotesByAllGroups(user, period);
+      topItems = getTopVotesByAllGroups(user);
     }
 
-    return TopVoteResponse.of(groupId, period, from, to, topItems);
+    return TopVoteResponse.of(groupId, from, to, topItems);
   }
 
   private User validateAndGetuser(Long userId) {
@@ -93,8 +90,8 @@ public class RankingService {
     }
   }
 
-  private List<TopVoteItem> getTopVotesByGroup(Long groupId, String period) {
-    String key = buildRankingKey(groupId, period);
+  private List<TopVoteItem> getTopVotesByGroup(Long groupId) {
+    String key = buildRankingKey(groupId);
 
     // top3 조회
     Set<String> voteIds = redisTemplate.opsForZSet().reverseRange(key, 0, 2);
@@ -111,26 +108,26 @@ public class RankingService {
     return votes.stream().map(this::toTopVoteItem).collect(Collectors.toList());
   }
 
-  private List<TopVoteItem> getTopVotesByAllGroups(User user, String period) {
+  private List<TopVoteItem> getTopVotesByAllGroups(User user) {
     List<Long> groupIds = groupMemberRepository.findGroupIdsByUser(user);
 
     return groupIds.stream()
-        .flatMap(gid -> getTopVotesWithScore(gid, period).stream())
+        .flatMap(gid -> getTopVotesWithScore(gid).stream())
         .sorted(Map.Entry.<TopVoteItem, Double>comparingByValue().reversed())
         .limit(3)
         .map(Map.Entry::getKey)
         .collect(Collectors.toList());
   }
 
-  private String buildRankingKey(Long groupId, String type) {
+  private String buildRankingKey(Long groupId) {
     String base = "ranking";
     String date = LocalDate.now(ZoneOffset.UTC).format(DateTimeFormatter.BASIC_ISO_DATE);
     String g = (groupId != null) ? String.valueOf(groupId) : "all";
     return base + ":" + g + ":" + date; // 예: ranking:3:20250716
   }
 
-  private List<Map.Entry<TopVoteItem, Double>> getTopVotesWithScore(Long groupId, String period) {
-    String key = buildRankingKey(groupId, period);
+  private List<Map.Entry<TopVoteItem, Double>> getTopVotesWithScore(Long groupId) {
+    String key = buildRankingKey(groupId);
     Set<ZSetOperations.TypedTuple<String>> tuples =
         redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, 2);
 
