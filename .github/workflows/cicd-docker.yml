@@ -3,9 +3,8 @@ name: SpringBoot Docker CI/CD - Unified
 on:
   push:
     branches:
-#      - main
+      # - main
       - develop
-      - cicd/**
       - release/**
 
 jobs:
