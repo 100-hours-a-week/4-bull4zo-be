@@ -110,6 +110,7 @@ public class RankingService {
 
   private List<TopVoteItem> getTopVotesByAllGroups(User user) {
     List<Long> groupIds = groupMemberRepository.findGroupIdsByUser(user);
+    groupIds.add(1L); // 공개 그룹 포함
 
     return groupIds.stream()
         .flatMap(gid -> getTopVotesWithScore(gid).stream())
