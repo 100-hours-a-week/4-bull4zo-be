@@ -1,7 +1,5 @@
 package com.moa.moa_server.domain.notification.application.sse;
 
-import static com.moa.moa_server.domain.global.util.JsonUtil.toJson;
-
 import com.moa.moa_server.domain.notification.dto.NotificationItem;
 import com.moa.moa_server.domain.notification.entity.Notification;
 import com.moa.moa_server.domain.notification.repository.NotificationEmitterRepository;
@@ -18,12 +16,11 @@ public class NotificationSseBroadcaster {
   private final NotificationEmitterRepository emitterRepository;
 
   public void send(Notification notification) {
-    String payload = toJson(NotificationItem.from(notification));
     SseEmitter.SseEventBuilder event =
         SseEmitter.event()
             .id(String.valueOf(notification.getId()))
             .name("notification")
-            .data(payload);
+            .data(NotificationItem.from(notification));
 
     emitterRepository
         .findAllByUserId(notification.getUser().getId())
