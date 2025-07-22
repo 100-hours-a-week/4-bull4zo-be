@@ -7,6 +7,7 @@ import com.moa.moa_server.domain.auth.entity.Token;
 import com.moa.moa_server.domain.auth.handler.AuthErrorCode;
 import com.moa.moa_server.domain.auth.handler.AuthException;
 import com.moa.moa_server.domain.auth.service.strategy.OAuthLoginStrategy;
+import com.moa.moa_server.domain.notification.repository.NotificationEmitterRepository;
 import com.moa.moa_server.domain.user.entity.User;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ public class AuthService {
   private final Map<String, OAuthLoginStrategy> strategies;
   private final JwtTokenService jwtTokenService;
   private final RefreshTokenService refreshTokenService;
+  private final NotificationEmitterRepository notificationEmitterRepository;
 
   public LoginResult login(String provider, String code, String redirectUri) {
     if (!OAuth.ProviderCode.isSupported(provider)) {
@@ -69,6 +71,8 @@ public class AuthService {
   }
 
   public boolean logout(Long userId) {
+    notificationEmitterRepository.deleteAllByUserId(userId);
+    log.info("[AuthService#logout] userId={} 로그아웃 - SSE emitters 제거 완료", userId);
     return refreshTokenService.deleteRefreshTokenByUserId(
         userId); // true면 SUCCESS, false면 ALREADY_LOGGED_OUT
   }

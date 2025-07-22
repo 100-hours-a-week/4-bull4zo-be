@@ -36,6 +36,10 @@ public class NotificationEmitterRepository implements EmitterRepository {
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
+  public void deleteAllByUserId(Long userId) {
+    findAllByUserId(userId).keySet().forEach(this::deleteById);
+  }
+
   @Transactional(readOnly = true)
   public List<Notification> findCachedEventsAfter(Long userId, String lastEventId) {
     Long lastId = Long.parseLong(lastEventId);
