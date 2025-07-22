@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +46,7 @@ public class NotificationController {
   }
 
   @Operation(summary = "알림 SSE", description = "알림 SSE 커넥션을 열고, SseEmitter를 반환합니다.")
-  @GetMapping("/subscribe")
+  @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter subscribe(
       @AuthenticationPrincipal Long userId,
       @RequestHeader(value = "Last-Event-ID", required = false) String lastEventId,

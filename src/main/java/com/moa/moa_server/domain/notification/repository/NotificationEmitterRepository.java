@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Component
 @RequiredArgsConstructor
-public class NotificationEmitterRepository {
+public class NotificationEmitterRepository implements EmitterRepository {
 
   private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
@@ -34,6 +34,10 @@ public class NotificationEmitterRepository {
     return emitters.entrySet().stream()
         .filter(e -> e.getKey().startsWith(userId + "_"))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  public void deleteAllByUserId(Long userId) {
+    findAllByUserId(userId).keySet().forEach(this::deleteById);
   }
 
   @Transactional(readOnly = true)

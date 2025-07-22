@@ -1,7 +1,5 @@
 package com.moa.moa_server.domain.notification.application.sse;
 
-import static com.moa.moa_server.domain.global.util.JsonUtil.toJson;
-
 import com.moa.moa_server.domain.notification.dto.NotificationItem;
 import com.moa.moa_server.domain.notification.entity.Notification;
 import com.moa.moa_server.domain.notification.repository.NotificationEmitterRepository;
@@ -39,12 +37,11 @@ public class NotificationSseConnectionHelper {
 
     for (Notification notification : lostEvents) {
       try {
-        String payload = toJson(NotificationItem.from(notification));
         SseEmitter.SseEventBuilder event =
             SseEmitter.event()
                 .id(String.valueOf(notification.getId()))
                 .name("notification")
-                .data(payload);
+                .data(NotificationItem.from(notification));
         emitter.send(event);
       } catch (IOException e) {
         log.warn("초기 SSE 이벤트 전송 실패. emitter는 유지", e); // 초기 전송 실패는 일시적일 수 있으므로 무시하고 연결 유지
