@@ -36,8 +36,6 @@ public class Notification extends BaseTimeEntity {
   private String redirectUrl;
 
   public void markAsRead() {
-    if (!this.isRead) {
-      this.isRead = true;
-    }
+    this.isRead = true;
   }
 }
