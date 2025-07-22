@@ -41,11 +41,14 @@ public class AsyncConfig {
 
   // NotificationHandler 전용 스레드풀
   @Bean(name = "notificationExecutor")
-  public Executor notificationExecutor() {
+  public ThreadPoolTaskExecutor notificationExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(3); // 자주 발생하지만 빠르게 끝나는 작업이므로 작게 시작
     executor.setMaxPoolSize(6);
     executor.setQueueCapacity(100); // 초당 수십 건 수준이면 충분
+    executor.setRejectedExecutionHandler(
+        new ThreadPoolExecutor.AbortPolicy() // 작업 거부 및 예외 발생 (FE에서 재요청 유도)
+        ); // 풀이 가득 찼을 때 대응
     executor.setThreadNamePrefix("notification-async-");
     executor.initialize();
     return executor;
