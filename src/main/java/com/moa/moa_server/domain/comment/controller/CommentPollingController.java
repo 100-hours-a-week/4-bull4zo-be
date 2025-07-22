@@ -8,6 +8,8 @@ import com.moa.moa_server.domain.global.dto.ApiResponse;
 import com.moa.moa_server.domain.global.exception.BaseException;
 import com.moa.moa_server.domain.global.exception.GlobalErrorCode;
 import com.moa.moa_server.domain.global.security.SecurityContextUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
 @Slf4j
+@Tag(name = "Comment")
 @RestController
 @RequestMapping("/api/v1/votes")
 public class CommentPollingController {
@@ -33,6 +36,7 @@ public class CommentPollingController {
     this.executor = executor;
   }
 
+  @Operation(summary = "댓글 목록 롱폴링 조회", description = "지정된 시점 이후로 추가된 댓글을 실시간으로 반환합니다.")
   @GetMapping("/{voteId}/comments/poll")
   public DeferredResult<ResponseEntity<ApiResponse<CommentListResponse>>> pollComments(
       @AuthenticationPrincipal Long userId,
