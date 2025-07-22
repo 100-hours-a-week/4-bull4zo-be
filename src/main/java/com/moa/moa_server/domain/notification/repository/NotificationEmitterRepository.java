@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Component
 @RequiredArgsConstructor
-public class NotificationEmitterRepository {
+public class NotificationEmitterRepository implements EmitterRepository {
 
   private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 

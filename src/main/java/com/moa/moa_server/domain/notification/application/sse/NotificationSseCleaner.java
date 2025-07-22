@@ -1,7 +1,7 @@
 package com.moa.moa_server.domain.notification.application.sse;
 
 import com.moa.moa_server.domain.notification.config.SseProperties;
-import com.moa.moa_server.domain.notification.repository.NotificationEmitterRepository;
+import com.moa.moa_server.domain.notification.repository.EmitterRepository;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 public class NotificationSseCleaner {
 
-  private final NotificationEmitterRepository emitterRepository;
+  private final EmitterRepository emitterRepository;
   private final SseProperties sseProperties;
 
   @Scheduled(fixedRateString = "#{@sseProperties.staleCleanInterval}")
