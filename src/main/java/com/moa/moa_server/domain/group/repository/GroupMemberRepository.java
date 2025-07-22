@@ -42,4 +42,8 @@ public interface GroupMemberRepository
 
   @Query("SELECT gm.group.id FROM GroupMember gm WHERE gm.user = :user")
   List<Long> findGroupIdsByUser(@Param("user") User user);
+
+  @Query("select gm.user.id from GroupMember gm where gm.group = :group and gm.user.id <> :ownerId")
+  List<Long> findUserIdsByGroupExcludingOwner(
+      @Param("group") Group group, @Param("ownerId") Long ownerId);
 }
