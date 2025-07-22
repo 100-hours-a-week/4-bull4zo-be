@@ -34,8 +34,7 @@ public class NotificationSseCleaner {
     }
   }
 
-  private boolean isExpiredEmitterEntry(
-      Map.Entry<String, SseEmitter> entry, long now, long threshold) {
+  boolean isExpiredEmitterEntry(Map.Entry<String, SseEmitter> entry, long now, long threshold) {
     String key = entry.getKey(); // userId_timestamp
     int idx = key.lastIndexOf('_');
     if (idx == -1 || idx == key.length() - 1) return true;
