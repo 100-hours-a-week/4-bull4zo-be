@@ -45,7 +45,10 @@ public class NotificationController {
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
-  @Operation(summary = "알림 SSE", description = "알림 SSE 커넥션을 열고, SseEmitter를 반환합니다.")
+  @Operation(
+      summary = "알림 SSE",
+      description =
+          "SSE(Server-Sent Events)를 통해 알림 수신을 위한 연결을 생성합니다. 연결이 유지되는 동안 주기적인 ping 이벤트와 실시간 알림 이벤트가 전송됩니다.")
   @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter subscribe(
       @AuthenticationPrincipal Long userId,
