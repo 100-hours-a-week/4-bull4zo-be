@@ -21,7 +21,7 @@ public class GroupAnalysisQueryController {
 
   private final GroupAnalysisQueryService groupAnalysisService;
 
-  @Operation()
+  @Operation(summary = "그룹 분석 데이터 조회", description = "그룹 분석 데이터를 조회합니다.")
   @GetMapping("/{groupId}/analysis")
   public ResponseEntity<ApiResponse<GroupAnalysisResponse>> getGroupAnalysis(
       @PathVariable Long groupId, @AuthenticationPrincipal Long userId) {
