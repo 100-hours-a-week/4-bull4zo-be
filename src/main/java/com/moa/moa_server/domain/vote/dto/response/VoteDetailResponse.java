@@ -1,5 +1,6 @@
 package com.moa.moa_server.domain.vote.dto.response;
 
+import com.moa.moa_server.domain.vote.entity.Vote;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
@@ -16,4 +17,18 @@ public record VoteDetailResponse(
     @Schema(description = "투표 이미지 이름 (없으면 빈문자열)", example = "이미지.jpeg") String imageName,
     @Schema(description = "투표 시작 시각", example = "2025-04-20T12:00:00") LocalDateTime createdAt,
     @Schema(description = "투표 종료 시각", example = "2025-04-21T12:00:00") LocalDateTime closedAt,
-    @Schema(description = "관리자 투표 여부 (0: 일반 투표, 1: 그룹 관리자 생성 투표)", example = "0") int adminVote) {}
+    @Schema(description = "관리자 투표 여부 (0: 일반 투표, 1: 그룹 관리자 생성 투표)", example = "0") int adminVote) {
+  public static VoteDetailResponse of(Vote vote) {
+    return new VoteDetailResponse(
+        vote.getId(),
+        vote.getGroup().getId(),
+        vote.getGroup().getName(),
+        vote.isAnonymous() ? "익명" : vote.getUser().getNickname(),
+        vote.getContent(),
+        vote.getImageUrl(),
+        vote.getImageName(),
+        vote.getCreatedAt(),
+        vote.getClosedAt(),
+        vote.isAnonymous() ? 0 : (vote.isAdminVote() ? 1 : 0));
+  }
+}

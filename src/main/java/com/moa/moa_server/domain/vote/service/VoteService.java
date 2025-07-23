@@ -184,17 +184,7 @@ public class VoteService {
     validateVoteContentReadable(vote, user);
     validateVoteAccess(user, vote);
 
-    return new VoteDetailResponse(
-        vote.getId(),
-        vote.getGroup().getId(),
-        vote.getGroup().getName(),
-        vote.isAnonymous() ? "익명" : vote.getUser().getNickname(),
-        vote.getContent(),
-        vote.getImageUrl(),
-        vote.getImageName(),
-        vote.getCreatedAt(),
-        vote.getClosedAt(),
-        vote.isAnonymous() ? 0 : (vote.isAdminVote() ? 1 : 0));
+    return VoteDetailResponse.of(vote);
   }
 
   @Transactional
