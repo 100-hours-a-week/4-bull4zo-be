@@ -268,9 +268,7 @@ public class VoteService {
     Vote vote = findVoteOrThrow(voteId);
 
     // 조회 권한 검증 - 등록자여야 함
-    if (!vote.getUser().getId().equals(userId)) {
-      throw new VoteException(VoteErrorCode.FORBIDDEN);
-    }
+    validateVoteOwner(vote, userId);
 
     VoteModerationLog log =
         voteModerationLogRepository
@@ -293,7 +291,7 @@ public class VoteService {
             .findById(voteId)
             .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
 
-    if (!vote.getUser().getId().equals(userId)) throw new VoteException(VoteErrorCode.FORBIDDEN);
+    validateVoteOwner(vote, userId);
 
     // 2. 상태/수정 가능 체크 (REJECTED 상태만 수정 가능)
     if (vote.getVoteStatus() != Vote.VoteStatus.REJECTED)
@@ -341,7 +339,7 @@ public class VoteService {
             .findById(voteId)
             .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
 
-    if (!vote.getUser().getId().equals(userId)) throw new VoteException(VoteErrorCode.FORBIDDEN);
+    validateVoteOwner(vote, userId);
 
     // 2. 삭제 가능 체크 (REJECTED 상태만 수정 가능)
     if (vote.getVoteStatus() != Vote.VoteStatus.REJECTED)
@@ -403,6 +401,13 @@ public class VoteService {
 
   private boolean isVoteAuthor(User user, Vote vote) {
     return vote.getUser().equals(user);
+  }
+
+  /** 투표 작성자인지 검사 */
+  private void validateVoteOwner(Vote vote, Long userId) {
+    if (!vote.getUser().getId().equals(userId)) {
+      throw new VoteException(VoteErrorCode.FORBIDDEN);
+    }
   }
 
   private boolean hasParticipatedWithValidOption(User user, Vote vote) {
