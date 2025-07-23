@@ -1,6 +1,5 @@
 package com.moa.moa_server.domain.notification.application.service;
 
-import com.moa.moa_server.domain.global.cursor.CreatedAtCommentIdCursor;
 import com.moa.moa_server.domain.global.cursor.CreatedAtNotificationIdCursor;
 import com.moa.moa_server.domain.notification.dto.NotificationItem;
 import com.moa.moa_server.domain.notification.dto.NotificationListResponse;
@@ -52,7 +51,7 @@ public class NotificationService {
 
     String nextCursor =
         hasNext
-            ? new CreatedAtCommentIdCursor(
+            ? new CreatedAtNotificationIdCursor(
                     notifications.getLast().getCreatedAt(), notifications.getLast().getId())
                 .encode()
             : null;
