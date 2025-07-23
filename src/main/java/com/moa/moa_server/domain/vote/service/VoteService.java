@@ -71,20 +71,9 @@ public class VoteService {
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
-    // 유저 조회 및 유효성 검사
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    // 그룹 조회
-    Group group =
-        groupRepository
-            .findById(request.groupId())
-            .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
-
-    // 멤버십 확인
+    // 유저, 그룹 조회 및 멤버십 검사
+    User user = validateAndGetUser(userId);
+    Group group = validateAndGetGroup(request.groupId());
     GroupMember groupMember = validateGroupMembership(user, group);
 
     // 관리자 투표 여부 판단
@@ -148,11 +137,7 @@ public class VoteService {
   @Transactional
   public void submitVote(Long userId, Long voteId, VoteSubmitRequest request) {
     // 유저 조회 및 유효성 검사
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
+    User user = validateAndGetUser(userId);
 
     // 응답 값 유효성 검증
     int response = request.userResponse();
@@ -168,15 +153,9 @@ public class VoteService {
       throw new VoteException(VoteErrorCode.VOTE_NOT_OPENED);
     }
 
-    // 투표 권한 조회
-    Group group = vote.getGroup();
-    if (!group.isPublicGroup()) {
-      boolean isGroupMember = groupMemberRepository.findByGroupAndUser(group, user).isPresent();
-
-      if (!isGroupMember) {
-        throw new VoteException(VoteErrorCode.NOT_GROUP_MEMBER);
-      }
-    }
+    // 멤버십 검사
+    Group group = validateAndGetGroup(voteId);
+    validateGroupMembership(user, group);
 
     // 중복 투표 확인
     if (voteResponseRepository.existsByVoteAndUser(vote, user)) {
@@ -199,17 +178,9 @@ public class VoteService {
 
   @Transactional
   public VoteDetailResponse getVoteDetail(Long userId, Long voteId) {
-    // 유저 조회 및 유효성 검사
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    // 투표 조회
+    // 유저, 투표 조회 및 상태/권한 검사
+    User user = validateAndGetUser(userId);
     Vote vote = findVoteOrThrow(voteId);
-
-    // 상태/권한 검사
     validateVoteContentReadable(vote, user);
     validateVoteAccess(user, vote);
 
@@ -228,17 +199,9 @@ public class VoteService {
 
   @Transactional
   public VoteResultResponse getVoteResult(Long userId, Long voteId) {
-    // 유저 조회 및 유효성 검사
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    // 투표 조회
+    // 유저, 투표 조회 및 상태/권한 검사
+    User user = validateAndGetUser(userId);
     Vote vote = findVoteOrThrow(voteId);
-
-    // 상태/권한 검사
     validateVoteReadable(vote);
     validateVoteAccess(user, vote);
 
@@ -258,16 +221,9 @@ public class VoteService {
 
   @Transactional(readOnly = true)
   public VoteModerationReasonResponse getModerationReason(Long userId, Long voteId) {
-    // 유저 조회 및 검증
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
+    // 유저, 투표 조회 및 소유권 체크
+    User user = validateAndGetUser(userId);
     Vote vote = findVoteOrThrow(voteId);
-
-    // 조회 권한 검증 - 등록자여야 함
     validateVoteOwner(vote, userId);
 
     VoteModerationLog log =
@@ -279,18 +235,9 @@ public class VoteService {
 
   @Transactional
   public VoteUpdateResponse updateVote(Long userId, Long voteId, VoteUpdateRequest request) {
-    // 1. 유저/투표 조회 및 권한 체크
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    Vote vote =
-        voteRepository
-            .findById(voteId)
-            .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
-
+    // 유저, 투표 조회 및 소유권 체크
+    User user = validateAndGetUser(userId);
+    Vote vote = findVoteOrThrow(voteId);
     validateVoteOwner(vote, userId);
 
     // 2. 상태/수정 가능 체크 (REJECTED 상태만 수정 가능)
@@ -327,18 +274,9 @@ public class VoteService {
 
   @Transactional
   public VoteDeleteResponse deleteVote(Long userId, Long voteId) {
-    // 1. 유저/투표 조회 및 권한 체크
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
-    AuthUserValidator.validateActive(user);
-
-    Vote vote =
-        voteRepository
-            .findById(voteId)
-            .orElseThrow(() -> new VoteException(VoteErrorCode.VOTE_NOT_FOUND));
-
+    // 유저, 투표 조회 및 소유권 체크
+    User user = validateAndGetUser(userId);
+    Vote vote = findVoteOrThrow(voteId);
     validateVoteOwner(vote, userId);
 
     // 2. 삭제 가능 체크 (REJECTED 상태만 수정 가능)
@@ -352,6 +290,21 @@ public class VoteService {
     voteRelatedDataCleaner.cleanup(voteId);
 
     return new VoteDeleteResponse(voteId);
+  }
+
+  private User validateAndGetUser(Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
+    AuthUserValidator.validateActive(user);
+    return user;
+  }
+
+  private Group validateAndGetGroup(Long groupId) {
+    return groupRepository
+        .findById(groupId)
+        .orElseThrow(() -> new VoteException(VoteErrorCode.GROUP_NOT_FOUND));
   }
 
   /** 투표 조회 */
