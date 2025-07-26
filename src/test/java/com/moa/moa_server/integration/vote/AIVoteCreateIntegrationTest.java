@@ -1,20 +1,14 @@
 package com.moa.moa_server.integration.vote;
 
-import static com.moa.moa_server.util.TestFixture.group;
-import static com.moa.moa_server.util.TestFixture.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.moa.moa_server.domain.group.repository.GroupRepository;
-import com.moa.moa_server.domain.user.entity.User;
-import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.vote.dto.ai_vote.AIVoteCreateRequest;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import java.time.LocalDateTime;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,26 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Sql(scripts = "/data-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class AIVoteCreateIntegrationTest {
+
+  private static final Long AI_USER_ID = 100L;
 
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
   @Autowired private VoteRepository voteRepository;
-  @Autowired private UserRepository userRepository;
-  @Autowired private GroupRepository groupRepository;
-
-  @BeforeEach
-  void setUp() {
-    // 보장: 시스템 유저 & 공개 그룹 존재
-    User user =
-        userRepository
-            .findById(1L)
-            .orElseGet(() -> userRepository.saveAndFlush(user("SYSTEM_USER")));
-
-    groupRepository
-        .findById(1L)
-        .orElseGet(() -> groupRepository.saveAndFlush(group(user, "공개 그룹")));
-  }
 
   @Nested
   class 성공_테스트 {
@@ -75,7 +58,7 @@ public class AIVoteCreateIntegrationTest {
       Vote saved = voteRepository.findAll().getFirst();
       assertThat(saved.getContent()).contains("점심");
       assertThat(saved.getVoteType()).isEqualTo(Vote.VoteType.AI);
-      assertThat(saved.getUser().getId()).isEqualTo(1L);
+      assertThat(saved.getUser().getId()).isEqualTo(AI_USER_ID);
     }
   }
 }
