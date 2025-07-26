@@ -78,9 +78,7 @@ public class VoteCommandService {
     String imageName = request.imageName().isBlank() ? null : request.imageName().trim();
 
     // 투표 종료 시간 변환
-    ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
-    LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-    VoteValidator.validateUserVoteClosedAt(utcTime);
+    LocalDateTime utcTime = convertAndValidateClosedAt(request.closedAt());
 
     // VoteStatus 결정 (prod 환경에서만)
     Vote.VoteStatus status =
@@ -134,9 +132,7 @@ public class VoteCommandService {
 
     // 3. 본문, 종료 시각 유효성 검사
     VoteValidator.validateContent(request.content());
-    ZonedDateTime koreaTime = request.closedAt().atZone(ZoneId.of("Asia/Seoul"));
-    LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
-    VoteValidator.validateUserVoteClosedAt(utcTime);
+    LocalDateTime utcTime = convertAndValidateClosedAt(request.closedAt());
 
     // 4. 이미지 URL/이름 처리
     ImageProcessResult imageResult =
@@ -259,5 +255,12 @@ public class VoteCommandService {
     if (!vote.getUser().getId().equals(userId)) {
       throw new VoteException(VoteErrorCode.FORBIDDEN);
     }
+  }
+
+  private LocalDateTime convertAndValidateClosedAt(LocalDateTime closedAt) {
+    ZonedDateTime koreaTime = closedAt.atZone(ZoneId.of("Asia/Seoul"));
+    LocalDateTime utcTime = koreaTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+    VoteValidator.validateUserVoteClosedAt(utcTime);
+    return utcTime;
   }
 }
