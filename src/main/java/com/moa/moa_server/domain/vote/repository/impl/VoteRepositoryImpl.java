@@ -133,7 +133,12 @@ public class VoteRepositoryImpl implements VoteRepositoryCustom {
     QVote vote = QVote.vote;
 
     BooleanBuilder builder =
-        new BooleanBuilder().and(vote.group.eq(group)).and(vote.deletedAt.isNull());
+        new BooleanBuilder()
+            .and(vote.group.eq(group))
+            .and(vote.deletedAt.isNull())
+            .and(
+                vote.voteStatus.in(
+                    Vote.VoteStatus.OPEN, Vote.VoteStatus.CLOSED)); // PENDING, REJECTED 제외
 
     if (cursor != null) {
       builder.and(
