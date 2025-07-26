@@ -22,6 +22,7 @@ import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
+import com.moa.moa_server.domain.vote.service.VoteCleanerService;
 import com.moa.moa_server.domain.vote.service.VoteService;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +42,7 @@ public class GroupService {
   private final ImageService imageService;
   private final VoteService voteService;
   private final GroupNotificationProducerImpl groupNotificationProducer;
+  private final VoteCleanerService voteCleanerService;
 
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
@@ -110,7 +112,7 @@ public class GroupService {
     group.softDelete();
 
     // 관련 데이터 처리
-    voteService.deleteVoteByGroupId(groupId); // 투표
+    voteCleanerService.deleteVoteByGroupId(groupId); // 투표
 
     // 알림 이벤트 발생
     groupNotificationProducer.notifyAllMembersGroupDeleted(group);

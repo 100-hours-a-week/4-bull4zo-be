@@ -61,11 +61,11 @@ public class VoteService {
   private final VoteResponseRepository voteResponseRepository;
   private final VoteModerationLogRepository voteModerationLogRepository;
 
+  private final VoteCleanerService voteCleanerService;
   private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
   private final VoteResultRedisService voteResultRedisService;
   private final ImageService imageService;
-  private final VoteRelatedDataCleaner voteRelatedDataCleaner;
   private final RankingRedisService rankingRedisService;
   private final RankingPermissionValidator rankingPermissionValidator;
 
@@ -358,16 +358,5 @@ public class VoteService {
         .findByVoteAndUser(vote, user)
         .map(vr -> vr.getOptionNumber() > 0)
         .orElse(false);
-  }
-
-  public void deleteVoteByGroupId(Long groupId) {
-    // 1. 해당 그룹의 모든 투표 soft delete
-    voteRepository.softDeleteByGroupId(groupId);
-
-    // 2. 각 투표의 연관 데이터 정리
-    List<Long> voteIds = voteRepository.findAllIdsByGroupId(groupId);
-    for (Long voteId : voteIds) {
-      voteRelatedDataCleaner.cleanup(voteId);
-    }
   }
 }
