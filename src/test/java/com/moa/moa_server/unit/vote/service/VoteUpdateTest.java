@@ -59,7 +59,7 @@ public class VoteUpdateTest {
       // then
       assertThat(resp.voteId()).isEqualTo(voteId); // 서비스 응답 값 검사
       verify(vote)
-          .updateForEdit(
+          .update(
               eq("본문"),
               eq("vote/abc.jpg"),
               eq("파일이름.jpeg"),
@@ -98,8 +98,7 @@ public class VoteUpdateTest {
 
       // then
       assertThat(resp.voteId()).isEqualTo(voteId);
-      verify(vote)
-          .updateForEdit(eq("본문"), eq(oldImageUrl), eq(oldImageName), any(LocalDateTime.class));
+      verify(vote).update(eq("본문"), eq(oldImageUrl), eq(oldImageName), any(LocalDateTime.class));
       verify(voteRepository).save(any(Vote.class));
       verify(imageService, never()).deleteImage(any());
     }
@@ -135,7 +134,7 @@ public class VoteUpdateTest {
 
       // then
       assertThat(resp.voteId()).isEqualTo(voteId);
-      verify(vote).updateForEdit(eq("본문"), eq(""), eq(""), any(LocalDateTime.class));
+      verify(vote).update(eq("본문"), eq(""), eq(""), any(LocalDateTime.class));
       verify(voteRepository).save(any(Vote.class));
       verify(imageService).processImageOnUpdate(eq("vote"), any(), any(), any(), any());
     }

@@ -149,7 +149,8 @@ public class VoteCommandService {
 
     // 5. content, url, closedAt 업데이트 및 저장
     String sanitizedContent = XssUtil.sanitize(request.content());
-    vote.updateForEdit(sanitizedContent, imageResult.imageUrl(), imageResult.imageName(), utcTime);
+    vote.update(sanitizedContent, imageResult.imageUrl(), imageResult.imageName(), utcTime);
+    vote.pending();
     voteRepository.save(vote);
 
     // 6. AI 서버로 검열 요청 (prod 환경에서만)
