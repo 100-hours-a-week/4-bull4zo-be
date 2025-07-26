@@ -199,8 +199,7 @@ public class VoteCommandService {
     }
 
     // 멤버십 검사
-    Group group = validateAndGetGroup(voteId);
-    validateGroupMembership(user, group);
+    validateGroupMembership(user, vote.getGroup());
 
     // 중복 투표 확인
     if (voteResponseRepository.existsByVoteAndUser(vote, user)) {
