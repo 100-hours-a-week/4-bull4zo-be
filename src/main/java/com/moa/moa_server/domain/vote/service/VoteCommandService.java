@@ -8,7 +8,6 @@ import com.moa.moa_server.domain.group.repository.GroupRepository;
 import com.moa.moa_server.domain.image.model.ImageProcessResult;
 import com.moa.moa_server.domain.image.service.ImageService;
 import com.moa.moa_server.domain.ranking.service.RankingRedisService;
-import com.moa.moa_server.domain.ranking.util.RankingPermissionValidator;
 import com.moa.moa_server.domain.user.entity.User;
 import com.moa.moa_server.domain.user.handler.UserErrorCode;
 import com.moa.moa_server.domain.user.handler.UserException;
@@ -18,29 +17,20 @@ import com.moa.moa_server.domain.vote.dto.request.VoteCreateRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteDeleteResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteDetailResponse;
-import com.moa.moa_server.domain.vote.dto.response.VoteModerationReasonResponse;
 import com.moa.moa_server.domain.vote.dto.response.VoteUpdateResponse;
-import com.moa.moa_server.domain.vote.dto.response.result.VoteOptionResult;
-import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
-import com.moa.moa_server.domain.vote.entity.VoteModerationLog;
 import com.moa.moa_server.domain.vote.entity.VoteResponse;
 import com.moa.moa_server.domain.vote.handler.VoteErrorCode;
 import com.moa.moa_server.domain.vote.handler.VoteException;
-import com.moa.moa_server.domain.vote.repository.VoteModerationLogRepository;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
 import com.moa.moa_server.domain.vote.repository.VoteResponseRepository;
 import com.moa.moa_server.domain.vote.service.vote_result.VoteResultRedisService;
-import com.moa.moa_server.domain.vote.service.vote_result.VoteResultService;
 import com.moa.moa_server.domain.vote.util.VoteValidator;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class VoteService {
+public class VoteCommandService {
 
   @Value("${spring.profiles.active:}")
   private String activeProfile;
@@ -59,15 +49,12 @@ public class VoteService {
   private final GroupRepository groupRepository;
   private final GroupMemberRepository groupMemberRepository;
   private final VoteResponseRepository voteResponseRepository;
-  private final VoteModerationLogRepository voteModerationLogRepository;
 
   private final VoteCleanerService voteCleanerService;
-  private final VoteResultService voteResultService;
   private final VoteModerationService voteModerationService;
   private final VoteResultRedisService voteResultRedisService;
   private final ImageService imageService;
   private final RankingRedisService rankingRedisService;
-  private final RankingPermissionValidator rankingPermissionValidator;
 
   @Transactional
   public Long createVote(Long userId, VoteCreateRequest request) {
@@ -135,95 +122,6 @@ public class VoteService {
   }
 
   @Transactional
-  public void submitVote(Long userId, Long voteId, VoteSubmitRequest request) {
-    // 유저 조회 및 유효성 검사
-    User user = validateAndGetUser(userId);
-
-    // 응답 값 유효성 검증
-    int response = request.userResponse();
-    if (response < 0 || response > 2) {
-      throw new VoteException(VoteErrorCode.INVALID_OPTION);
-    }
-
-    // 투표 조회
-    Vote vote = findVoteOrThrow(voteId);
-
-    // 투표 상태 체크
-    if (!vote.isOpen()) {
-      throw new VoteException(VoteErrorCode.VOTE_NOT_OPENED);
-    }
-
-    // 멤버십 검사
-    Group group = validateAndGetGroup(voteId);
-    validateGroupMembership(user, group);
-
-    // 중복 투표 확인
-    if (voteResponseRepository.existsByVoteAndUser(vote, user)) {
-      throw new VoteException(VoteErrorCode.ALREADY_VOTED);
-    }
-
-    // 투표 응답 저장
-    VoteResponse voteResponse = VoteResponse.create(vote, user, response);
-    try {
-      voteResponseRepository.save(voteResponse);
-    } catch (DataIntegrityViolationException e) {
-      throw new VoteException(VoteErrorCode.ALREADY_VOTED);
-    }
-
-    // Redis에 투표 결과 반영
-    voteResultRedisService.incrementOptionCount(voteId, response);
-    // 랭킹 갱신을 위해 수정된 투표를 Redis ZSet에 기록
-    rankingRedisService.trackUpdatedVote(voteId);
-  }
-
-  @Transactional
-  public VoteDetailResponse getVoteDetail(Long userId, Long voteId) {
-    // 유저, 투표 조회 및 상태/권한 검사
-    User user = validateAndGetUser(userId);
-    Vote vote = findVoteOrThrow(voteId);
-    validateVoteContentReadable(vote, user);
-    validateVoteAccess(user, vote);
-
-    return VoteDetailResponse.of(vote);
-  }
-
-  @Transactional
-  public VoteResultResponse getVoteResult(Long userId, Long voteId) {
-    // 유저, 투표 조회 및 상태/권한 검사
-    User user = validateAndGetUser(userId);
-    Vote vote = findVoteOrThrow(voteId);
-    validateVoteReadable(vote);
-    validateVoteAccess(user, vote);
-
-    // 사용자 응답 조회 (없으면 null)
-    Optional<VoteResponse> userVoteResponse = voteResponseRepository.findByVoteAndUser(vote, user);
-    Integer userResponse = userVoteResponse.map(VoteResponse::getOptionNumber).orElse(null);
-
-    // 전체 참여자 수 계산
-    List<VoteResponse> responses = voteResponseRepository.findAllByVote(vote);
-    int totalCount = (int) responses.stream().filter(vr -> vr.getOptionNumber() > 0).count();
-
-    // 결과 조회
-    List<VoteOptionResult> results = voteResultService.getResults(vote);
-
-    return new VoteResultResponse(voteId, userResponse, totalCount, results);
-  }
-
-  @Transactional(readOnly = true)
-  public VoteModerationReasonResponse getModerationReason(Long userId, Long voteId) {
-    // 유저, 투표 조회 및 소유권 체크
-    User user = validateAndGetUser(userId);
-    Vote vote = findVoteOrThrow(voteId);
-    validateVoteOwner(vote, userId);
-
-    VoteModerationLog log =
-        voteModerationLogRepository
-            .findFirstByVote_IdOrderByCreatedAtDesc(voteId)
-            .orElseThrow(() -> new VoteException(VoteErrorCode.MODERATION_LOG_NOT_FOUND));
-    return new VoteModerationReasonResponse(voteId, log.getReviewReason().name());
-  }
-
-  @Transactional
   public VoteUpdateResponse updateVote(Long userId, Long voteId, VoteUpdateRequest request) {
     // 유저, 투표 조회 및 소유권 체크
     User user = validateAndGetUser(userId);
@@ -277,9 +175,51 @@ public class VoteService {
     vote.softDelete();
 
     // 4. 관련 데이터 정리 (존재할 수 있는 경우)
-    voteRelatedDataCleaner.cleanup(voteId);
+    voteCleanerService.cleanup(voteId);
 
     return new VoteDeleteResponse(voteId);
+  }
+
+  @Transactional
+  public void submitVote(Long userId, Long voteId, VoteSubmitRequest request) {
+    // 유저 조회 및 유효성 검사
+    User user = validateAndGetUser(userId);
+
+    // 응답 값 유효성 검증
+    int response = request.userResponse();
+    if (response < 0 || response > 2) {
+      throw new VoteException(VoteErrorCode.INVALID_OPTION);
+    }
+
+    // 투표 조회
+    Vote vote = findVoteOrThrow(voteId);
+
+    // 투표 상태 체크
+    if (!vote.isOpen()) {
+      throw new VoteException(VoteErrorCode.VOTE_NOT_OPENED);
+    }
+
+    // 멤버십 검사
+    Group group = validateAndGetGroup(voteId);
+    validateGroupMembership(user, group);
+
+    // 중복 투표 확인
+    if (voteResponseRepository.existsByVoteAndUser(vote, user)) {
+      throw new VoteException(VoteErrorCode.ALREADY_VOTED);
+    }
+
+    // 투표 응답 저장
+    VoteResponse voteResponse = VoteResponse.create(vote, user, response);
+    try {
+      voteResponseRepository.save(voteResponse);
+    } catch (DataIntegrityViolationException e) {
+      throw new VoteException(VoteErrorCode.ALREADY_VOTED);
+    }
+
+    // Redis에 투표 결과 반영
+    voteResultRedisService.incrementOptionCount(voteId, response);
+    // 랭킹 갱신을 위해 수정된 투표를 Redis ZSet에 기록
+    rankingRedisService.trackUpdatedVote(voteId);
   }
 
   private User validateAndGetUser(Long userId) {
@@ -313,50 +253,10 @@ public class VoteService {
         .orElseThrow(() -> new VoteException(VoteErrorCode.NOT_GROUP_MEMBER));
   }
 
-  /** 투표 내용 조회 가능 상태 및 권한 검사 */
-  private void validateVoteContentReadable(Vote vote, User user) {
-    if (vote.getVoteStatus() == Vote.VoteStatus.OPEN
-        || vote.getVoteStatus() == Vote.VoteStatus.CLOSED) {
-      return;
-    }
-    if (vote.getVoteStatus() == Vote.VoteStatus.REJECTED
-        && vote.getUser().getId().equals(user.getId())) {
-      return;
-    }
-    throw new VoteException(VoteErrorCode.FORBIDDEN);
-  }
-
-  /** 투표 조회 가능한 상태인지 검사 (내용, 결과) 허용 상태: OPEN, CLOSED */
-  private void validateVoteReadable(Vote vote) {
-    if (vote.getVoteStatus() != Vote.VoteStatus.OPEN
-        && vote.getVoteStatus() != Vote.VoteStatus.CLOSED) {
-      throw new VoteException(VoteErrorCode.FORBIDDEN);
-    }
-  }
-
-  /** 투표 결과 조회 권한 검사 (조건: 등록자이거나 참여자(기권 불가)여야 함) */
-  private void validateVoteAccess(User user, Vote vote) {
-    if (isVoteAuthor(user, vote)) return;
-    if (hasParticipatedWithValidOption(user, vote)) return;
-    if (rankingPermissionValidator.isAccessibleAsTopRankedVote(user, vote)) return;
-    throw new VoteException(VoteErrorCode.FORBIDDEN);
-  }
-
-  private boolean isVoteAuthor(User user, Vote vote) {
-    return vote.getUser().equals(user);
-  }
-
   /** 투표 작성자인지 검사 */
   private void validateVoteOwner(Vote vote, Long userId) {
     if (!vote.getUser().getId().equals(userId)) {
       throw new VoteException(VoteErrorCode.FORBIDDEN);
     }
-  }
-
-  private boolean hasParticipatedWithValidOption(User user, Vote vote) {
-    return voteResponseRepository
-        .findByVoteAndUser(vote, user)
-        .map(vr -> vr.getOptionNumber() > 0)
-        .orElse(false);
   }
 }

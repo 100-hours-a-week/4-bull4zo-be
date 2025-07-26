@@ -23,7 +23,7 @@ import com.moa.moa_server.domain.user.handler.UserException;
 import com.moa.moa_server.domain.user.repository.UserRepository;
 import com.moa.moa_server.domain.user.util.AuthUserValidator;
 import com.moa.moa_server.domain.vote.service.VoteCleanerService;
-import com.moa.moa_server.domain.vote.service.VoteService;
+import com.moa.moa_server.domain.vote.service.VoteCommandService;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class GroupService {
   private static final int MAX_INVITE_CODE_RETRY = 10;
 
   private final ImageService imageService;
-  private final VoteService voteService;
+  private final VoteCommandService voteCommandService;
   private final GroupNotificationProducerImpl groupNotificationProducer;
   private final VoteCleanerService voteCleanerService;
 

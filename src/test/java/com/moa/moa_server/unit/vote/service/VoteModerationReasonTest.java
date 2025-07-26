@@ -13,7 +13,7 @@ import com.moa.moa_server.domain.vote.entity.VoteModerationLog;
 import com.moa.moa_server.domain.vote.handler.VoteException;
 import com.moa.moa_server.domain.vote.repository.VoteModerationLogRepository;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
-import com.moa.moa_server.domain.vote.service.VoteService;
+import com.moa.moa_server.domain.vote.service.VoteQueryService;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +31,7 @@ public class VoteModerationReasonTest {
   @Mock VoteRepository voteRepository;
   @Mock VoteModerationLogRepository voteModerationLogRepository;
 
-  @InjectMocks VoteService voteService;
+  @InjectMocks VoteQueryService voteQueryService;
 
   @Nested
   class 성공_테스트 {
@@ -64,7 +64,7 @@ public class VoteModerationReasonTest {
           .thenReturn(Optional.of(log));
 
       // when
-      VoteModerationReasonResponse response = voteService.getModerationReason(userId, voteId);
+      VoteModerationReasonResponse response = voteQueryService.getModerationReason(userId, voteId);
 
       // then
       assertThat(response.voteId()).isEqualTo(voteId);
@@ -95,7 +95,7 @@ public class VoteModerationReasonTest {
           .thenReturn(Optional.empty());
 
       // when & then
-      assertThatThrownBy(() -> voteService.getModerationReason(userId, voteId))
+      assertThatThrownBy(() -> voteQueryService.getModerationReason(userId, voteId))
           .isInstanceOf(VoteException.class)
           .hasMessageContaining("MODERATION_LOG_NOT_FOUND");
     }

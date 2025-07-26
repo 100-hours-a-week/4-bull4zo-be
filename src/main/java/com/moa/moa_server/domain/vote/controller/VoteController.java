@@ -7,8 +7,8 @@ import com.moa.moa_server.domain.vote.dto.request.VoteSubmitRequest;
 import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
 import com.moa.moa_server.domain.vote.dto.response.*;
 import com.moa.moa_server.domain.vote.dto.response.result.VoteResultResponse;
-import com.moa.moa_server.domain.vote.service.VoteListService;
-import com.moa.moa_server.domain.vote.service.VoteService;
+import com.moa.moa_server.domain.vote.service.VoteCommandService;
+import com.moa.moa_server.domain.vote.service.VoteQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,15 +24,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/votes")
 public class VoteController {
 
-  private final VoteService voteService;
-  private final VoteListService voteListService;
+  private final VoteCommandService voteCommandService;
+  private final VoteQueryService voteQueryService;
 
   @Operation(summary = "투표 등록", description = "지정한 그룹 또는 전체 공개로 새 투표를 생성합니다.")
   @PostMapping
   public ResponseEntity<ApiResponse<VoteCreateResponse>> createVote(
       @AuthenticationPrincipal Long userId, @RequestBody VoteCreateRequest request) {
     // 투표 등록 로직 수행
-    Long voteId = voteService.createVote(userId, request);
+    Long voteId = voteCommandService.createVote(userId, request);
 
     return ResponseEntity.status(201)
         .body(new ApiResponse<>("SUCCESS", new VoteCreateResponse(voteId)));
@@ -51,7 +51,7 @@ public class VoteController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long voteId,
       @RequestBody VoteSubmitRequest request) {
-    voteService.submitVote(userId, voteId, request);
+    voteCommandService.submitVote(userId, voteId, request);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", null));
   }
 
@@ -59,7 +59,7 @@ public class VoteController {
   @GetMapping("/{voteId}")
   public ResponseEntity<ApiResponse<VoteDetailResponse>> getVoteDetail(
       @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
-    VoteDetailResponse response = voteService.getVoteDetail(userId, voteId);
+    VoteDetailResponse response = voteQueryService.getVoteDetail(userId, voteId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
@@ -67,7 +67,7 @@ public class VoteController {
   @GetMapping("/{voteId}/result")
   public ResponseEntity<ApiResponse<VoteResultResponse>> getVoteResult(
       @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
-    VoteResultResponse response = voteService.getVoteResult(userId, voteId);
+    VoteResultResponse response = voteQueryService.getVoteResult(userId, voteId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
@@ -75,7 +75,7 @@ public class VoteController {
   @GetMapping("/{voteId}/review")
   public ResponseEntity<ApiResponse<VoteModerationReasonResponse>> getModerationReason(
       @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
-    VoteModerationReasonResponse response = voteService.getModerationReason(userId, voteId);
+    VoteModerationReasonResponse response = voteQueryService.getModerationReason(userId, voteId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
@@ -85,7 +85,7 @@ public class VoteController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long voteId,
       @RequestBody VoteUpdateRequest request) {
-    VoteUpdateResponse response = voteService.updateVote(userId, voteId, request);
+    VoteUpdateResponse response = voteCommandService.updateVote(userId, voteId, request);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 
@@ -93,7 +93,7 @@ public class VoteController {
   @DeleteMapping("/{voteId}")
   public ResponseEntity<ApiResponse<VoteDeleteResponse>> deleteVote(
       @AuthenticationPrincipal Long userId, @PathVariable Long voteId) {
-    VoteDeleteResponse response = voteService.deleteVote(userId, voteId);
+    VoteDeleteResponse response = voteCommandService.deleteVote(userId, voteId);
     return ResponseEntity.ok(new ApiResponse<>("SUCCESS", response));
   }
 }
