@@ -41,6 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class VoteCommandService {
 
+  private static final String PROFILE_PROD = "prod";
+
   @Value("${spring.profiles.active:}")
   private String activeProfile;
 
@@ -82,7 +84,7 @@ public class VoteCommandService {
 
     // VoteStatus 결정 (prod 환경에서만)
     Vote.VoteStatus status =
-        "prod".equals(activeProfile) ? Vote.VoteStatus.PENDING : Vote.VoteStatus.OPEN;
+        PROFILE_PROD.equals(activeProfile) ? Vote.VoteStatus.PENDING : Vote.VoteStatus.OPEN;
 
     // XSS 필터링
     String sanitizedContent = XssUtil.sanitize(request.content());
@@ -112,7 +114,7 @@ public class VoteCommandService {
     voteResultRedisService.setCountsWithTTL(vote.getId(), Map.of(1, 0, 2, 0), vote.getClosedAt());
 
     // AI 서버로 검열 요청 (prod 환경에서만)
-    if ("prod".equals(activeProfile)) {
+    if (PROFILE_PROD.equals(activeProfile)) {
       voteModerationService.requestModeration(vote.getId(), vote.getContent());
     }
 
@@ -150,7 +152,7 @@ public class VoteCommandService {
     voteRepository.save(vote);
 
     // 6. AI 서버로 검열 요청 (prod 환경에서만)
-    if ("prod".equals(activeProfile)) {
+    if (PROFILE_PROD.equals(activeProfile)) {
       voteModerationService.requestModeration(vote.getId(), vote.getContent());
     }
 
