@@ -5,7 +5,6 @@ import com.moa.moa_server.domain.vote.dto.response.active.ActiveVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.mine.MyVoteResponse;
 import com.moa.moa_server.domain.vote.dto.response.submitted.SubmittedVoteResponse;
 import com.moa.moa_server.domain.vote.service.VoteListService;
-import com.moa.moa_server.domain.vote.service.VoteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/votes")
 public class VoteListController {
 
-  private final VoteService voteService;
   private final VoteListService voteListService;
 
   @Operation(summary = "진행 중인 투표 목록 조회", description = "사용자가 참여할 수 있는 진행 중인 투표 목록을 조회합니다.")

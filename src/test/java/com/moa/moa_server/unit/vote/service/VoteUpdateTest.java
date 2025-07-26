@@ -11,7 +11,7 @@ import com.moa.moa_server.domain.vote.dto.request.VoteUpdateRequest;
 import com.moa.moa_server.domain.vote.dto.response.VoteUpdateResponse;
 import com.moa.moa_server.domain.vote.entity.Vote;
 import com.moa.moa_server.domain.vote.repository.VoteRepository;
-import com.moa.moa_server.domain.vote.service.VoteService;
+import com.moa.moa_server.domain.vote.service.VoteCommandService;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +30,7 @@ public class VoteUpdateTest {
   @Mock VoteRepository voteRepository;
   @Mock ImageService imageService;
 
-  @InjectMocks VoteService voteService;
+  @InjectMocks VoteCommandService voteCommandService;
 
   @Nested
   class 성공_케이스 {
@@ -54,12 +54,12 @@ public class VoteUpdateTest {
           .thenReturn(new ImageProcessResult("vote/abc.jpg", "파일이름.jpeg"));
 
       // when
-      VoteUpdateResponse resp = voteService.updateVote(userId, voteId, req);
+      VoteUpdateResponse resp = voteCommandService.updateVote(userId, voteId, req);
 
       // then
       assertThat(resp.voteId()).isEqualTo(voteId); // 서비스 응답 값 검사
       verify(vote)
-          .updateForEdit(
+          .update(
               eq("본문"),
               eq("vote/abc.jpg"),
               eq("파일이름.jpeg"),
@@ -94,12 +94,11 @@ public class VoteUpdateTest {
           .thenReturn(new ImageProcessResult(oldImageUrl, oldImageName));
 
       // when
-      VoteUpdateResponse resp = voteService.updateVote(userId, voteId, req);
+      VoteUpdateResponse resp = voteCommandService.updateVote(userId, voteId, req);
 
       // then
       assertThat(resp.voteId()).isEqualTo(voteId);
-      verify(vote)
-          .updateForEdit(eq("본문"), eq(oldImageUrl), eq(oldImageName), any(LocalDateTime.class));
+      verify(vote).update(eq("본문"), eq(oldImageUrl), eq(oldImageName), any(LocalDateTime.class));
       verify(voteRepository).save(any(Vote.class));
       verify(imageService, never()).deleteImage(any());
     }
@@ -131,11 +130,11 @@ public class VoteUpdateTest {
           .thenReturn(new ImageProcessResult("", ""));
 
       // when
-      VoteUpdateResponse resp = voteService.updateVote(userId, voteId, req);
+      VoteUpdateResponse resp = voteCommandService.updateVote(userId, voteId, req);
 
       // then
       assertThat(resp.voteId()).isEqualTo(voteId);
-      verify(vote).updateForEdit(eq("본문"), eq(""), eq(""), any(LocalDateTime.class));
+      verify(vote).update(eq("본문"), eq(""), eq(""), any(LocalDateTime.class));
       verify(voteRepository).save(any(Vote.class));
       verify(imageService).processImageOnUpdate(eq("vote"), any(), any(), any(), any());
     }

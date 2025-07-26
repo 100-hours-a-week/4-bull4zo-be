@@ -125,14 +125,12 @@ public class Vote extends BaseTimeEntity {
   }
 
   // ======= 상태 변화/비즈니스 메서드 =======
-  /** 투표 수정 (본문, 이미지, 종료일, 상태 PENDING으로) */
-  public void updateForEdit(
-      String content, String imageUrl, String imageName, LocalDateTime closedAt) {
+  /** 투표 수정 (본문, 이미지, 종료일) */
+  public void update(String content, String imageUrl, String imageName, LocalDateTime closedAt) {
     this.content = content;
     this.imageUrl = imageUrl;
     this.imageName = imageName;
     this.closedAt = closedAt;
-    this.voteStatus = VoteStatus.PENDING; // 항상 상태 초기화
   }
 
   /** 투표 삭제 */
@@ -153,6 +151,11 @@ public class Vote extends BaseTimeEntity {
   /** 투표를 open 상태로 변경 */
   public void open() {
     this.voteStatus = VoteStatus.OPEN;
+  }
+
+  /** 투표를 pending 상태로 변경 */
+  public void pending() {
+    this.voteStatus = VoteStatus.PENDING;
   }
 
   /** 마지막 익명 번호 증가 */
