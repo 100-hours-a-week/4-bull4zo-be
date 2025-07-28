@@ -63,6 +63,7 @@ public class VoteQueryService {
     // 전체 참여자 수 계산
     List<VoteResponse> responses = voteResponseRepository.findAllByVote(vote);
     int totalCount = (int) responses.stream().filter(vr -> vr.getOptionNumber() > 0).count();
+    // TODO: totalCount에서 COUNT 쿼리 발생. results 이후에 합치도록 개선
 
     // 결과 조회
     List<VoteOptionResult> results = voteResultService.getResults(vote);
